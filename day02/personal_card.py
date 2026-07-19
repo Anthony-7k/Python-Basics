@@ -1,0 +1,13 @@
+name = input("请输入姓名:")
+school = input("请输入毕业院校：")
+skill = input("请输入技能(若有多项请用逗号隔开)：")
+target_job = input("请输入目标岗位：")
+print("姓名：",name)
+print("毕业院校：",school)
+print("技能：",skill)
+print("目标岗位：",target_job)
+
+print("name的类型",type(name))
+print("school的类型",type(school))
+print("skil的类型",type(skill))
+print("target_job的类型",type(target_job))

@@ -1,0 +1,27 @@
+# Python缓存
+__pycache__/
+*.py[cod]
+*.pyc
+
+# Python虚拟环境
+.venv/
+venv/
+env/
+
+# 环境变量和密钥
+.env
+.env.*
+!.env.example
+
+# 编辑器配置
+.idea/
+.vscode/
+
+# 测试和工具缓存
+.pytest_cache/
+.mypy_cache/
+
+# 日志和系统文件
+*.log
+.DS_Store
+Thumbs.db
