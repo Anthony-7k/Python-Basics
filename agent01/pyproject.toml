@@ -1,0 +1,25 @@
+[project]
+name = "agent01"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "Anthony-7k", email = "2652424619@qq.com" }
+]
+requires-python = ">=3.11"
+dependencies = [
+    "openai>=2.53.0",
+    "pytest>=9.1.1",
+    "python-dotenv>=1.2.2",
+]
+
+[project.scripts]
+agent01 = "agent01:main"
+
+[[tool.uv.index]]
+url = "https://pypi.tuna.tsinghua.edu.cn/simple"
+default = true
+
+[build-system]
+requires = ["uv_build>=0.12.1,<0.13.0"]
+build-backend = "uv_build"
