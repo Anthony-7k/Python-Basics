@@ -687,4 +687,64 @@ feat: add text cleaning and chunking pipeline
 
 
 ## Day4
+# Day 4 复盘｜Embedding 与 Chroma 入库
 
+## 今日重点
+
+今天完成了 RAG 前半段的核心链路：
+
+文件 → Loader → Cleaner → Chunker → Embedding → Chroma
+
+主要完成：
+
+- 使用 `text-embedding-v4` 生成 1024 维向量
+- 实现批量 Embedding
+- 使用 Chroma 持久化向量
+- 实现 `upsert / query / delete_by_document`
+- 使用 `content_hash + embedding_model` 实现幂等入库
+- 实现 TXT / PDF / DOCX 统一入库流程
+- 新增 `ingest.py` 一键入库命令
+- 完成真实语义检索
+- 全量测试 `10 passed`
+
+## 今日难点
+
+### 1. Chat 模型和 Embedding 模型的区别
+
+DeepSeek Chat 主要负责：
+
+文本 → 文本
+
+Embedding 模型负责：
+
+文本 → 向量
+
+所以最终使用：
+
+- LLM：DeepSeek Chat
+- Embedding：text-embedding-v4
+- 向量维度：1024
+
+### 2. 幂等入库
+
+为了避免同一个 Chunk 重复生成向量，入库前检查：
+
+`content_hash + embedding_model`
+
+如果内容和模型都没有变化，就跳过 Embedding。
+
+这样可以避免重复调用 API 和重复计算。
+
+### 3. document_id 与 chunk_id 设计
+
+一份 PDF 应该共享同一个 `document_id`，页码单独记录。
+
+Chunk ID 最终设计为：
+
+```text
+TXT / DOCX：
+document_id_0
+
+PDF：
+document_id_p1_0
+document_id_p2_0
