@@ -11,5 +11,5 @@ __pycache__/
 # IDE
 .idea/
 
-# uv
-uv.lock
+# Chroma vector database
+data/chroma/

@@ -21,3 +21,24 @@ def test_split_text():
     assert chunks[0].start_index == 0
 
     assert chunks[0].content
+
+def test_split_text_chunk_id_with_page():
+    page1_chunks = split_text(
+        text="第一页内容",
+        document_id="pdf001",
+        page=1,
+    )
+
+    page2_chunks = split_text(
+        text="第二页内容",
+        document_id="pdf001",
+        page=2,
+    )
+
+    assert page1_chunks[0].chunk_id == "pdf001_p1_0"
+    assert page2_chunks[0].chunk_id == "pdf001_p2_0"
+
+    assert (
+        page1_chunks[0].chunk_id
+        != page2_chunks[0].chunk_id
+    )

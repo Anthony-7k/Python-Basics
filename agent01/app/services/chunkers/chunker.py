@@ -7,6 +7,8 @@ def split_text(
     document_id: str,
     chunk_size: int = 500,
     chunk_overlap: int = 50,
+    source: str | None = None,
+    page: int | None = None,
 ):
     chunks = []
 
@@ -14,16 +16,23 @@ def split_text(
     index = 0
 
     while start < len(text):
-        end = start + chunk_size
+        end = min(start + chunk_size, len(text))
 
         chunk_content = text[start:end]
 
+        if page is not None:
+            chunk_id = f"{document_id}_p{page}_{index}"
+        else:
+            chunk_id = f"{document_id}_{index}"
+
         chunk = ChunkRecord(
-            chunk_id=f"{document_id}_{index}",
+            chunk_id=chunk_id,
             document_id=document_id,
             content=chunk_content,
             start_index=start,
             end_index=end,
+            source=source,
+            page=page,
             content_hash=hashlib.md5(
                 chunk_content.encode()
             ).hexdigest(),
@@ -32,6 +41,9 @@ def split_text(
         chunks.append(chunk)
 
         index += 1
+
+        if end == len(text):
+            break
 
         start = end - chunk_overlap
 

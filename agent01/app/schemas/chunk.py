@@ -13,4 +13,6 @@ class ChunkRecord(BaseModel):
 
     page: int | None = None
 
+    source: str | None = None
+
     content_hash: str
