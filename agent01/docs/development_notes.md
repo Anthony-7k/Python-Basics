@@ -748,3 +748,536 @@ document_id_0
 PDF：
 document_id_p1_0
 document_id_p2_0
+```
+
+---
+
+# Day 5｜语义检索与召回评估
+
+## 今日目标
+
+完成 RAG 的检索阶段，让用户问题能够从 Chroma 中召回正确的 Chunk。
+
+整体流程：
+
+```text
+User Query
+↓
+Embedding
+↓
+Chroma
+↓
+Top-K
+↓
+Retriever
+↓
+Distance Filter
+↓
+Evidence
+```
+
+## 今日完成内容
+
+- 实现 Retriever 检索服务
+- 实现 Top-K 检索调试工具
+- 创建正式测试文档 `employee_handbook.txt`
+- 员工手册切分为 5 个 Chunk 并写入 Chroma
+- 创建 20 道检索评测题
+- 实现 Recall@K 自动评测
+- 对比 Top-K = 3 / 5 / 8
+- 实现 `max_distance` 低置信度过滤
+- 完成不可回答问题测试
+- 新增 Retriever 单元测试
+- 全量测试达到 `12 passed`
+
+---
+
+## 1. Retriever 检索服务
+
+新增：
+
+```text
+app/services/retrieval/retriever.py
+```
+
+主要流程：
+
+```text
+用户问题
+↓
+query_chunks()
+↓
+Query Embedding
+↓
+Chroma 相似度检索
+↓
+Top-K Chunk
+↓
+整理检索结果
+```
+
+Retriever 最终返回：
+
+- `chunk_id`
+- `content`
+- `distance`
+- `metadata`
+
+其中：
+
+```text
+distance 越小
+通常表示语义越相关
+```
+
+---
+
+## 2. Top-K 与 Recall@K
+
+Top-K 表示：
+
+> 每次检索返回最相关的前 K 个 Chunk。
+
+Recall@K 表示：
+
+> 正确证据是否能够进入前 K 个检索结果。
+
+本次实验结果：
+
+| Top-K | 命中 | Recall |
+|---|---:|---:|
+| 3 | 18/18 | 100% |
+| 5 | 18/18 | 100% |
+| 8 | 18/18 | 100% |
+
+当前测试集中：
+
+```text
+Top-K = 3
+```
+
+已经能够召回全部正确证据。
+
+但当前正式知识库只有 5 个 Chunk，后续知识库扩大后需要重新评测 K 值。
+
+---
+
+## 3. 重难点：旧测试向量污染检索结果
+
+测试问题：
+
+```text
+工作满12年的员工有多少天年假？
+```
+
+正确证据应该是：
+
+```text
+工作满10年但不满20年的员工，
+每年享有10天带薪年假。
+```
+
+第一次测试时，正确证据只排在：
+
+```text
+Top 3
+```
+
+排查发现 Chroma 中还存在 Day 4 的旧测试向量和 `demo_doc`，导致旧数据参与相似度排序。
+
+通过：
+
+```python
+delete_by_document()
+```
+
+删除旧测试数据后，正确证据提升到：
+
+```text
+Top 1
+```
+
+总结：
+
+> 正式检索评测前必须保证向量数据库中的数据干净，否则历史测试数据会影响召回排序。
+
+---
+
+## 4. 同义改写检索
+
+测试问题：
+
+```text
+正式员工辞职要提前多久？
+```
+
+知识库原文使用的是：
+
+```text
+离职
+```
+
+原文：
+
+```text
+正式员工主动提出离职，
+原则上应至少提前30天提交书面离职申请。
+```
+
+最终正确证据：
+
+```text
+Top 1
+distance ≈ 0.5518
+```
+
+说明 Embedding 可以进行一定程度的语义匹配，而不是只能匹配完全相同的关键词。
+
+---
+
+## 5. 检索评测集
+
+新增：
+
+```text
+eval/datasets/retrieval_questions.jsonl
+```
+
+共准备：
+
+```text
+20 道问题
+```
+
+其中：
+
+```text
+18 道可回答题
+2 道不可回答题
+```
+
+题型包括：
+
+- `answerable`
+- `paraphrase`
+- `boundary`
+- `unanswerable`
+
+新增：
+
+```text
+eval/eval_retrieval.py
+```
+
+自动评测流程：
+
+```text
+读取问题
+↓
+Retriever
+↓
+Top-K
+↓
+检查 expected_keyword
+↓
+HIT / MISS
+↓
+计算 Recall@K
+```
+
+---
+
+## 6. 重难点：不可回答问题
+
+向量数据库不会主动判断：
+
+```text
+知识库里没有答案
+```
+
+例如问题：
+
+```text
+公司提供免费健身房吗？
+```
+
+虽然员工手册中完全没有相关信息，但 Chroma 仍然会从已有 Chunk 中返回几个“相对最像”的结果。
+
+因此：
+
+> 有 Top-K 结果，不代表知识库真的能够回答这个问题。
+
+需要结合 `distance` 做低置信度过滤。
+
+---
+
+## 7. Distance 阈值实验
+
+两个不可回答问题的 Top 1 distance：
+
+```text
+免费健身房：1.0420
+住房补贴：1.0165
+```
+
+18 道可回答问题的 Top 1 distance：
+
+```text
+最小：0.5518
+最大：0.9749
+```
+
+因此当前实验初步设置：
+
+```text
+max_distance = 1.0
+```
+
+规则：
+
+```text
+distance <= 1.0
+→ 保留
+
+distance > 1.0
+→ 过滤
+```
+
+最终不可回答题测试：
+
+```text
+2/2 PASS
+```
+
+需要注意：
+
+> `1.0` 只是当前文档、Embedding 模型和测试集下得到的基线阈值，不是固定万能阈值。
+
+后续知识库扩大后需要重新评测。
+
+---
+
+## 8. Embedding 不等于逻辑推理
+
+例如：
+
+```text
+工作满12年的员工有多少天年假？
+```
+
+Embedding 主要负责找到和以下内容语义相关的 Chunk：
+
+```text
+员工
+工作年限
+年假
+多少天
+```
+
+Embedding 本身并不是先执行：
+
+```text
+12 >= 10
+12 < 20
+所以属于10～20年
+```
+
+真正的条件判断和最终回答，后续仍然需要交给 LLM。
+
+因此：
+
+> Retriever 的主要任务是找到证据，而不是完成所有推理。
+
+---
+
+## 9. Retriever 单元测试
+
+新增：
+
+```text
+tests/test_retriever.py
+```
+
+新增两个测试：
+
+```text
+test_retrieve_returns_results
+test_retrieve_filters_by_distance
+```
+
+测试中使用 `monkeypatch` 替换真实的：
+
+```text
+query_chunks()
+```
+
+避免单元测试依赖：
+
+- Embedding API
+- 网络
+- Chroma 实际数据
+
+Retriever 单独测试：
+
+```text
+2 passed
+```
+
+全量测试：
+
+```text
+12 passed
+```
+
+---
+
+## 今日重难点总结
+
+### 1. Retriever 与 Vector Store 的区别
+
+Vector Store 负责：
+
+```text
+存储向量
+查询向量
+删除向量
+```
+
+Retriever 负责：
+
+```text
+接收用户问题
+↓
+调用 Vector Store
+↓
+整理 Top-K
+↓
+处理 distance
+↓
+返回证据
+```
+
+### 2. Top-K 不是越大越好
+
+K 增大会提高候选数量，但同时也可能增加：
+
+- 无关 Chunk
+- LLM 上下文长度
+- Token 消耗
+- 噪声
+
+因此应该通过 Recall 实验选择合适的 K。
+
+### 3. 数据质量会直接影响检索质量
+
+旧测试向量会参与相似度计算，从而影响正式检索结果。
+
+因此 RAG 不只是模型问题，也包含数据治理问题。
+
+### 4. Distance 阈值不能随便设置
+
+应该先统计：
+
+```text
+可回答问题 distance 分布
++
+不可回答问题 distance 分布
+```
+
+再根据实验结果选择阈值。
+
+---
+
+## Day 5 最终结果
+
+```text
+正式知识库：
+5 Chunks
+
+评测集：
+20 Questions
+
+可回答问题：
+18
+
+不可回答问题：
+2
+
+Recall@3：
+18/18 = 100%
+
+Recall@5：
+18/18 = 100%
+
+Recall@8：
+18/18 = 100%
+
+不可回答题：
+2/2 PASS
+
+max_distance：
+1.0
+
+pytest：
+12 passed
+```
+
+Day 4 完成了：
+
+```text
+把知识存进去
+```
+
+Day 5 完成了：
+
+```text
+把正确知识找出来
+```
+
+目前项目已经形成：
+
+```text
+Document
+↓
+Loader
+↓
+Cleaner
+↓
+Chunker
+↓
+Embedding
+↓
+Chroma
+```
+
+以及：
+
+```text
+User Question
+↓
+Retriever
+↓
+Top-K Evidence
+↓
+Distance Filter
+```
+
+下一阶段进入：
+
+```text
+User Question
+↓
+Retriever
+↓
+Evidence
+↓
+RAG Service
+↓
+LLM
+↓
+Grounded Answer
+↓
+Citation
+```
+
+---
