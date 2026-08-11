@@ -1281,3 +1281,180 @@ Citation
 ```
 
 ---
+
+
+# Day6 RAG问答链路与LLM接入
+
+
+## 今日目标
+
+完成知识库 Agent 的 RAG 闭环：
+
+- 接入 LLM
+- 完成 RAG Service
+- 实现 Prompt 拼接
+- 实现结构化返回
+- 增加拒答机制
+
+
+---
+
+# Day6 开发记录
+
+
+## 1. LLM 服务封装
+
+新增：
+
+app/services/llm/llm_client.py
+
+实现：
+
+- OpenAI Client 初始化
+- 环境变量读取
+- generate_answer 方法
+
+将模型调用从测试代码中独立出来。
+
+
+---
+
+## 2. RAG Service实现
+
+新增：
+
+app/services/rag/rag_service.py
+
+实现流程：
+
+用户问题
+ ↓
+Retriever检索
+ ↓
+构造Context
+ ↓
+Prompt拼接
+ ↓
+LLM生成答案
+
+
+主要函数：
+
+- build_context()
+  - 添加来源编号[S1]
+
+- retrieve_context()
+  - 完成检索和上下文构造
+
+- answer_question()
+  - 完整执行RAG问答流程
+
+
+---
+
+## 3. Prompt模板
+
+新增：
+
+app/prompts/rag_prompt.py
+
+实现：
+
+- SYSTEM_PROMPT
+- build_user_prompt()
+
+
+约束模型：
+
+- 根据知识库回答
+- 禁止编造信息
+- 信息不足时拒答
+- 输出来源引用
+
+
+---
+
+## 4. 结构化返回
+
+接入：
+
+app/schemas/rag.py
+
+返回：
+
+RAGResponse
+
+包含：
+
+- answer
+- sources
+- used_chunk_ids
+- request_id
+
+
+方便后续追踪回答来源。
+
+
+---
+
+## 5. 拒答机制
+
+问题：
+
+无关问题可能召回低相关内容，导致模型产生幻觉。
+
+
+解决：
+
+增加：
+
+max_distance
+
+过滤低相关结果。
+
+
+当没有有效知识时返回：
+
+知识库中没有足够的信息回答这个问题。
+
+
+---
+
+## 6. 测试验证
+
+
+测试命令：
+
+```bash
+.\.venv\Scripts\python.exe -m pytest
+结果：
+12 passed
+真实问答测试：
+问题：
+员工每年有多少天年假？
+结果：
+成功根据知识库生成答案，并返回引用。
+拒答测试：
+问题：
+公司的老板喜欢什么颜色？
+结果：
+知识库中没有足够的信息回答这个问题。
+测试通过。
+今日总结
+Day6完成RAG最小闭环：
+文档
+ ↓
+Chunk
+ ↓
+Embedding
+ ↓
+检索
+ ↓
+Prompt
+ ↓
+LLM回答
+目前 Agent 已具备：
+知识检索
+基于知识回答
+来源引用
+无答案拒答
