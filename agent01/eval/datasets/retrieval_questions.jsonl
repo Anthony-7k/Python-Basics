@@ -1,7 +1,7 @@
 {"id": 1, "question": "工作满12年的员工有多少天年假？", "expected_source": "employee_handbook.txt", "expected_keyword": "10天带薪年假", "type": "answerable"}
 {"id": 2, "question": "正式员工辞职要提前多久？", "expected_source": "employee_handbook.txt", "expected_keyword": "提前30天", "type": "paraphrase"}
 {"id": 3, "question": "公司通常每个月几号发工资？", "expected_source": "employee_handbook.txt", "expected_keyword": "每月10日", "type": "answerable"}
-{"id": 4, "question": "一笔1200元的费用报销有什么额外要求？", "expected_source": "employee_handbook.txt", "expected_keyword": "直属主管进行额外审批", "type": "boundary"}
+{"id":4,"question":"一笔12000元的费用报销有什么额外要求？","expected_source":"employee_handbook.txt","expected_keyword":"直属主管进行额外审批","type":"boundary"}
 {"id": 5, "question": "公司提供免费健身房吗？", "expected_source": null, "expected_keyword": null, "type": "unanswerable"}
 {"id": 6, "question": "员工每天正常工作几个小时？", "expected_source": "employee_handbook.txt", "expected_keyword": "每天工作8小时", "type": "answerable"}
 {"id": 7, "question": "新员工通常要试用多久？", "expected_source": "employee_handbook.txt", "expected_keyword": "3个月试用期", "type": "paraphrase"}
@@ -14,7 +14,17 @@
 {"id": 14, "question": "工作费用发生后多久内应该提交报销？", "expected_source": "employee_handbook.txt", "expected_keyword": "30天内提交", "type": "answerable"}
 {"id": 15, "question": "出差申请需要填写哪些基本信息？", "expected_source": "employee_handbook.txt", "expected_keyword": "出差地点、时间、工作目的以及预计费用", "type": "answerable"}
 {"id": 16, "question": "公司会报销未经审批的外部培训课程吗？", "expected_source": "employee_handbook.txt", "expected_keyword": "原则上不承担相关培训费用", "type": "paraphrase"}
-{"id": 17, "question": "公司发的电脑离职时需要归还吗？", "expected_source": "employee_handbook.txt", "expected_keyword": "归还公司配发的所有设备", "type": "answerable"}
+{"id": 17, "question": "公司发的电脑离职时需要归还吗？", "expected_source": "employee_handbook.txt", "expected_keyword":"归还电脑、门禁卡及其他公司资产", "type": "answerable"}
 {"id": 18, "question": "发现公司账号异常登录应该找谁处理？", "expected_source": "employee_handbook.txt", "expected_keyword": "联系信息技术人员", "type": "answerable"}
 {"id": 19, "question": "试用期员工离职需要提前多久通知公司？", "expected_source": "employee_handbook.txt", "expected_keyword": "提前3天通知公司", "type": "boundary"}
 {"id": 20, "question": "公司是否给员工提供住房补贴？", "expected_source": null, "expected_keyword": null, "type": "unanswerable"}
+{"id":21,"question":"员工迟到早退累计超过规定次数会怎么处理？","expected_source":"employee_handbook.txt","expected_keyword":"直属主管进行提醒","type":"answerable"}
+{"id":22,"question":"如果工资发放日碰到节假日，公司什么时候发工资？","expected_source":"employee_handbook.txt","expected_keyword":"提前或顺延发放","type":"paraphrase"}
+{"id":23,"question":"员工申请年假需要提前多久提交？","expected_source":"employee_handbook.txt","expected_keyword":"至少提前3个工作日","type":"answerable"}
+{"id":24,"question":"工作满25年的员工每年有多少天带薪年假？","expected_source":"employee_handbook.txt","expected_keyword":"15天带薪年假","type":"boundary"}
+{"id":25,"question":"员工参加公司安排的内部培训是否必须参加？","expected_source":"employee_handbook.txt","expected_keyword":"应按要求参加","type":"answerable"}
+{"id":26,"question":"公司是否提供免费的午餐福利？","expected_source":null,"expected_keyword":null,"type":"unanswerable"}
+{"id":27,"question":"员工主动辞职时需要提前多久提交申请？","expected_source":"employee_handbook.txt","expected_keyword":"提前30天","type":"paraphrase"}
+{"id":28,"question":"未经审批自己参加外部培训，公司一定会承担费用吗？","expected_source":"employee_handbook.txt","expected_keyword":"未经审批自行参加的外部课程","type":"boundary"}
+{"id":29,"question":"员工离职时需要完成哪些交接事项？","expected_source":"employee_handbook.txt","expected_keyword":"完成工作交接","type":"answerable"}
+{"id":30,"question":"公司是否为员工提供免费健身会员？","expected_source":null,"expected_keyword":null,"type":"unanswerable"}

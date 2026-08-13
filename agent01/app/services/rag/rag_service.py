@@ -1,5 +1,7 @@
 import uuid
 
+import time
+
 from app.services.retrieval.retriever import retrieve
 
 from app.prompts.rag_prompt import (
@@ -14,6 +16,9 @@ from app.schemas.rag import (
     RAGSource,
 )
 
+from app.core.logging_config import get_logger
+
+logger = get_logger(__name__)
 
 def build_context(results: list[dict]):
     """
@@ -55,7 +60,7 @@ def retrieve_context(
     results = retrieve(
         query_text=question,
         top_k=top_k,
-        max_distance=0.5,
+        max_distance=0.98,
     )
 
     context, sources = build_context(results)
@@ -70,20 +75,48 @@ def answer_question(
     question: str,
     top_k: int = 5,
 ):
+    request_id = str(uuid.uuid4())
+
+    total_start = time.perf_counter()
+
+    retrieval_start = time.perf_counter()
 
     retrieval_result = retrieve_context(
         question=question,
         top_k=top_k,
     )
 
+    retrieval_ms = (
+                           time.perf_counter() - retrieval_start
+                   ) * 1000
+
+    logger.info(
+        "rag retrieval completed request_id=%s "
+        "sources=%s retrieval_ms=%.2f",
+        request_id,
+        len(retrieval_result["sources"]),
+        retrieval_ms,
+    )
+
     context = retrieval_result["context"]
 
     if not context.strip():
+        total_ms = (
+                           time.perf_counter() - total_start
+                   ) * 1000
+
+        logger.info(
+            "rag request completed request_id=%s "
+            "status=refused total_ms=%.2f",
+            request_id,
+            total_ms,
+        )
+
         return RAGResponse(
             answer="知识库中没有足够的信息回答这个问题。",
             sources=[],
             used_chunk_ids=[],
-            request_id=str(uuid.uuid4()),
+            request_id=request_id,
         )
 
     user_prompt = build_user_prompt(
@@ -91,10 +124,16 @@ def answer_question(
         context=context,
     )
 
+    generation_start = time.perf_counter()
+
     answer = generate_answer(
         system_prompt=SYSTEM_PROMPT,
         user_prompt=user_prompt,
     )
+
+    generation_ms = (
+                            time.perf_counter() - generation_start
+                    ) * 1000
 
     sources = [
         RAGSource(
@@ -107,6 +146,20 @@ def answer_question(
         for item in retrieval_result["sources"]
     ]
 
+    total_ms = (
+        time.perf_counter() - total_start
+    ) * 1000
+
+    logger.info(
+        "rag request completed request_id=%s "
+        "status=answered sources=%s "
+        "generation_ms=%.2f total_ms=%.2f",
+        request_id,
+        len(sources),
+        generation_ms,
+        total_ms,
+    )
+
     return RAGResponse(
         answer=answer,
         sources=sources,
@@ -114,5 +167,5 @@ def answer_question(
             item["chunk_id"]
             for item in retrieval_result["sources"]
         ],
-        request_id=str(uuid.uuid4()),
+        request_id=request_id,
     )
