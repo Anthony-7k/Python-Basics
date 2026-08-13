@@ -1458,3 +1458,366 @@ LLM回答
 基于知识回答
 来源引用
 无答案拒答
+
+---
+
+# Day7 RAG工程化完善与评估体系
+
+## 今日目标
+
+完善企业知识库 Agent 的 RAG 闭环。
+
+主要完成：
+
+- CLI问答入口完善
+- RAG拒答机制优化
+- 请求链路日志记录
+- RAG自动化评估脚本
+- 完善测试覆盖
+
+
+---
+
+# Day7 开发记录
+
+
+## 1. 增加 CLI 命令行调用能力
+
+
+### 实现内容
+
+新增 CLI 入口：
+
+支持：
+
+- 文档导入 ingest
+- 知识库问答 chat
+
+
+可以直接通过命令行测试 RAG 流程：
+
+```bash
+.\.venv\Scripts\python.exe -m app.cli chat "问题"
+```
+
+
+实现效果：
+
+用户输入问题后，可以完成：
+
+用户问题
+
+↓
+
+向量检索
+
+↓
+
+上下文构建
+
+↓
+
+LLM生成回答
+
+↓
+
+返回答案和来源
+
+
+---
+
+## 2. 完善 RAG 拒答机制
+
+
+### 问题
+
+之前模型可能在没有相关知识库内容时继续生成答案。
+
+例如：
+
+问题：
+
+```text
+公司提供免费健身房吗？
+```
+
+
+如果知识库不存在相关信息，模型可能产生幻觉回答。
+
+
+### 解决方式
+
+增加检索结果判断：
+
+当没有有效知识库上下文时：
+
+直接返回：
+
+```text
+知识库中没有足够的信息回答这个问题。
+```
+
+
+避免：
+
+- 编造答案
+- 无来源回答
+- 幻觉问题
+
+
+测试：
+
+```text
+公司提供免费健身房吗？
+```
+
+
+结果：
+
+```text
+Answer:
+知识库中没有足够的信息回答这个问题。
+
+Sources:
+No sources
+```
+
+
+---
+
+## 3. 增加 RAG 请求链路日志
+
+
+### 实现内容
+
+新增统一 logging 配置。
+
+
+记录内容：
+
+- request_id
+- retrieval耗时
+- generation耗时
+- total耗时
+- 检索来源数量
+- 请求状态
+
+
+示例：
+
+```text
+rag retrieval completed
+
+request_id=xxx
+
+sources=3
+
+retrieval_ms=xxx
+
+
+rag request completed
+
+status=answered
+
+generation_ms=xxx
+
+total_ms=xxx
+```
+
+
+同时记录拒答状态：
+
+```text
+status=refused
+```
+
+
+方便后续：
+
+- 性能分析
+- 问题定位
+- 线上排查
+
+
+---
+
+## 4. 增加 RAG 自动化评估
+
+
+### 新增文件
+
+```text
+eval/
+ ├── datasets/
+ │    └── retrieval_questions.jsonl
+ │
+ └── eval_rag.py
+```
+
+
+建立测试数据集：
+
+共30条问题。
+
+
+覆盖类型：
+
+- answerable（可回答）
+- paraphrase（语义改写）
+- boundary（边界问题）
+- unanswerable（不可回答）
+
+
+例如：
+
+可回答：
+
+```text
+工作满12年的员工有多少天年假？
+```
+
+
+不可回答：
+
+```text
+公司是否提供免费健身会员？
+```
+
+
+---
+
+## 5. RAG评估结果
+
+
+运行：
+
+```bash
+.\.venv\Scripts\python.exe eval\eval_rag.py
+```
+
+
+最终结果：
+
+```text
+Score: 27/30
+```
+
+引用来源测试：
+
+```text
+Citation Hit Rate:
+
+26/26 (100%)
+```
+
+
+说明：
+
+- 基础问答能力正常
+- 来源引用完整
+- 拒答机制有效
+
+
+---
+
+## 6. 测试结果
+
+
+运行：
+
+```bash
+.\.venv\Scripts\python.exe -m pytest
+```
+
+
+结果：
+
+```text
+15 passed
+```
+
+
+已有测试：
+
+- chunk切分测试
+- 文档解析测试
+- retriever测试
+- vector store测试
+- CLI测试
+
+
+全部通过。
+
+
+---
+
+# 今日总结
+
+
+Day7完成了企业知识库 Agent 从 Demo 到工程化版本的升级。
+
+
+新增能力：
+
+- CLI调用
+- RAG拒答
+- 请求日志追踪
+- 自动化评估
+- 来源引用验证
+
+
+当前 RAG 流程：
+
+用户问题
+
+↓
+
+Embedding检索
+
+↓
+
+召回知识片段
+
+↓
+
+构建上下文
+
+↓
+
+LLM回答
+
+↓
+
+来源追踪
+
+↓
+
+日志记录
+
+
+项目已经具备一个基础企业知识库 Agent 的完整闭环。
+
+
+---
+
+# Git提交记录
+
+
+Commit:
+
+```text
+feat: complete rag evaluation and logging
+```
+
+
+提交内容：
+
+- CLI入口
+- logging模块
+- RAG服务优化
+- Prompt优化
+- RAG评估脚本
+- CLI测试
+
+
+---
