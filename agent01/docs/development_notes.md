@@ -1821,3 +1821,174 @@ feat: complete rag evaluation and logging
 
 
 ---
+
+---
+
+# Day8 FastAPI 服务化与 API 工程化
+
+
+## 今日目标
+
+将已有 CLI 版本 RAG Agent 服务化，使用 FastAPI 提供 HTTP API。
+
+完成：
+
+- FastAPI 项目入口
+- API 路由拆分
+- Chat API
+- 请求响应模型
+- request_id 全链路追踪
+- 统一异常处理
+- API 自动化测试
+
+
+## Day8 开发内容
+
+
+### 1. FastAPI 服务搭建
+
+新增 FastAPI 应用入口：
+
+- app/main.py
+
+实现：
+
+- FastAPI 初始化
+- 路由注册
+- Swagger 文档
+
+
+新增接口：
+
+GET /health
+
+返回服务健康状态。
+
+
+GET /ready
+
+返回服务就绪状态。
+
+
+POST /api/v1/chat
+
+提供 RAG 问答接口。
+
+
+---
+
+### 2. 请求与响应模型
+
+新增：
+
+- ChatRequest
+- RAGResponse
+- RAGSource
+
+
+实现：
+
+- 请求参数校验
+- 响应结构统一
+
+
+例如：
+
+question：
+
+- 最小长度 1
+- 最大长度 2000
+
+
+---
+
+### 3. request_id 链路追踪
+
+
+新增 middleware：
+
+每个 HTTP 请求生成唯一 request_id。
+
+
+实现：
+
+请求：
+
+HTTP Request
+↓
+middleware
+↓
+chat API
+↓
+rag_service
+
+
+统一：
+
+- 日志 request_id
+- Response request_id
+- Header X-Request-ID
+
+
+方便后续线上问题定位。
+
+
+---
+
+### 4. 统一异常处理
+
+
+新增全局异常处理：
+
+异常返回：
+
+{
+    "error": "internal_server_error",
+    "message": "服务内部异常",
+    "request_id": "xxx"
+}
+
+
+保证异常情况下仍然返回统一格式。
+
+
+---
+
+### 5. API 自动化测试
+
+
+新增：
+
+tests/test_api.py
+
+
+测试：
+
+- health接口
+- ready接口
+- chat正常请求
+- chat参数校验
+
+
+测试结果：
+
+4 passed
+
+
+---
+
+## 今日总结
+
+Day8 完成 RAG Agent 从 CLI 到 Web API 服务化。
+
+项目现在具备：
+
+- HTTP API入口
+- 参数校验
+- 统一响应
+- 请求追踪
+- 异常处理
+- 自动化测试
+
+
+从单机脚本升级为具备后端服务基础能力的 Agent 应用。

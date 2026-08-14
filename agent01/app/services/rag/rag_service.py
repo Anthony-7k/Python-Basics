@@ -74,8 +74,10 @@ def retrieve_context(
 def answer_question(
     question: str,
     top_k: int = 5,
+    request_id: str | None = None,
 ):
-    request_id = str(uuid.uuid4())
+    if request_id is None:
+        request_id = str(uuid.uuid4())
 
     total_start = time.perf_counter()
 
