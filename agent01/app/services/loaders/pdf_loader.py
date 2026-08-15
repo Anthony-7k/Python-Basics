@@ -7,13 +7,13 @@ from app.schemas.document import DocumentRecord
 
 
 def calculate_hash(text: str) -> str:
-    return hashlib.md5(
+    return hashlib.sha256(
         text.encode("utf-8")
     ).hexdigest()
 
 
 def calculate_file_hash(file_path: str) -> str:
-    return hashlib.md5(
+    return hashlib.sha256(
         Path(file_path).read_bytes()
     ).hexdigest()
 

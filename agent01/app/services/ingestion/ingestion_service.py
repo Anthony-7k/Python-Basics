@@ -8,7 +8,8 @@ from app.services.cleaners.text_cleaner import clean_text
 from app.services.chunkers.chunker import split_text
 from app.schemas.chunk import ChunkRecord
 from app.services.vector_stores.vector_store import upsert_chunks
-
+from app.schemas.document import IngestionStatus
+from app.services.ingestion.task_manager import update_task_status
 
 def load_documents(file_path: str) -> list[DocumentRecord]:
     suffix = Path(file_path).suffix.lower()
@@ -63,3 +64,18 @@ def ingest_file(file_path: str) -> list[ChunkRecord]:
     )
 
     return chunks
+
+def run_ingestion_task(task_id: str, file_path: str) -> None:
+    update_task_status(task_id, IngestionStatus.RUNNING)
+
+    try:
+        ingest_file(file_path)
+    except Exception as exc:
+        update_task_status(
+            task_id,
+            IngestionStatus.FAILED,
+            error=str(exc),
+        )
+        return
+
+    update_task_status(task_id, IngestionStatus.SUCCEEDED)

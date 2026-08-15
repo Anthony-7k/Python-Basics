@@ -20,12 +20,12 @@ def load_docx(file_path: str):
 
     return [
         DocumentRecord(
-            document_id=hashlib.md5(
+            document_id=hashlib.sha256(
                 Path(file_path).read_bytes()
             ).hexdigest(),
             source=file_path,
             content=text,
-            content_hash=hashlib.md5(text.encode()).hexdigest(),
+            content_hash=hashlib.sha256(text.encode()).hexdigest(),
             file_name=Path(file_path).name,
         )
     ]

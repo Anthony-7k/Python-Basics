@@ -6,6 +6,7 @@ from fastapi.responses import JSONResponse
 from app.api.routes.health import router as health_router
 from app.api.routes.chat import router as chat_router
 
+from app.api.routes.documents import router as documents_router
 
 app = FastAPI(
     title="Enterprise Knowledge Agent",
@@ -53,3 +54,5 @@ async def global_exception_handler(
 
 app.include_router(health_router)
 app.include_router(chat_router)
+
+app.include_router(documents_router)

@@ -1,9 +1,25 @@
 import os
 
 from dotenv import load_dotenv
+from pathlib import Path
 
 
 load_dotenv()
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+
+UPLOAD_DIR = Path(
+    os.getenv(
+        "UPLOAD_DIR",
+        str(PROJECT_ROOT / "data" / "uploads"),
+    )
+)
+
+MAX_UPLOAD_SIZE_BYTES = int(
+    os.getenv(
+        "MAX_UPLOAD_SIZE_BYTES",
+        str(10 * 1024 * 1024),
+    )
+)
 
 
 LLM_API_KEY = os.getenv("LLM_API_KEY")
