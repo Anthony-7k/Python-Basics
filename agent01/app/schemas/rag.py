@@ -2,6 +2,16 @@ from pydantic import BaseModel, Field
 
 
 class ChatRequest(BaseModel):
+    conversation_id: str | None = Field(
+        default=None,
+        min_length=1,
+        max_length=100,
+    )
+    knowledge_base_id: str | None = Field(
+        default=None,
+        min_length=1,
+        max_length=100,
+    )
     question: str = Field(
         ...,
         min_length=1,
@@ -22,3 +32,7 @@ class RAGResponse(BaseModel):
     sources: list[RAGSource]
     used_chunk_ids: list[str]
     request_id: str
+    latency_ms: float = Field(
+        default=0.0,
+        ge=0,
+    )

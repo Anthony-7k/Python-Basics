@@ -1,11 +1,15 @@
-from fastapi.testclient import TestClient
-
-from app.main import app
-
 from unittest.mock import patch
 
+from fastapi.testclient import TestClient
+
+from app.core.exceptions import (
+    UpstreamServiceError,
+    UpstreamTimeoutError,
+)
+from app.main import app
 from app.services.ingestion.ingestion_service import run_ingestion_task
 from app.services.ingestion.task_manager import create_task, get_task
+
 
 client = TestClient(app)
 
@@ -36,6 +40,21 @@ def test_chat_validation_error():
 
     assert response.status_code == 422
 
+def test_chat_rejects_empty_context_ids():
+    for field_name in (
+        "conversation_id",
+        "knowledge_base_id",
+    ):
+        response = client.post(
+            "/api/v1/chat",
+            json={
+                "question": "测试问题",
+                field_name: "",
+            },
+        )
+
+        assert response.status_code == 422
+
 
 def test_chat_success():
     fake_response = {
@@ -62,6 +81,9 @@ def test_chat_success():
 
     assert data["answer"] == "测试答案"
     assert "request_id" in data
+    assert "latency_ms" in data
+    assert isinstance(data["latency_ms"], float)
+    assert data["latency_ms"] >= 0
 
 def test_upload_rejects_unsupported_extension():
     response = client.post(
@@ -235,3 +257,47 @@ def test_ingestion_task_fails():
     assert saved_task is not None
     assert saved_task.status.value == "failed"
     assert saved_task.error == "ingestion failed"
+
+def test_chat_upstream_timeout():
+    with patch(
+        "app.api.routes.chat.answer_question",
+        side_effect=UpstreamTimeoutError("模型调用超时"),
+    ):
+        response = client.post(
+            "/api/v1/chat",
+            json={
+                "question": "测试问题",
+            },
+        )
+
+    assert response.status_code == 504
+
+    data = response.json()
+
+    assert data["error"] == "upstream_timeout"
+    assert data["message"] == "上游服务响应超时，请稍后重试"
+    assert data["request_id"]
+    assert response.headers["X-Request-ID"] == data["request_id"]
+
+
+def test_chat_upstream_service_error():
+    with patch(
+        "app.api.routes.chat.answer_question",
+        side_effect=UpstreamServiceError("上游返回敏感错误"),
+    ):
+        response = client.post(
+            "/api/v1/chat",
+            json={
+                "question": "测试问题",
+            },
+        )
+
+    assert response.status_code == 502
+
+    data = response.json()
+
+    assert data["error"] == "upstream_service_error"
+    assert data["message"] == "上游服务暂时不可用，请稍后重试"
+    assert data["request_id"]
+    assert "上游返回敏感错误" not in response.text
+    assert response.headers["X-Request-ID"] == data["request_id"]

@@ -7,7 +7,10 @@ from app.api.routes.health import router as health_router
 from app.api.routes.chat import router as chat_router
 
 from app.api.routes.documents import router as documents_router
-
+from app.core.exceptions import (
+    UpstreamServiceError,
+    UpstreamTimeoutError,
+)
 app = FastAPI(
     title="Enterprise Knowledge Agent",
     version="1.0.0",
@@ -23,6 +26,56 @@ async def add_request_id(request, call_next):
     response = await call_next(request)
 
     response.headers["X-Request-ID"] = request_id
+
+    return response
+
+@app.exception_handler(UpstreamServiceError)
+async def upstream_service_exception_handler(
+    request: Request,
+    exc: UpstreamServiceError,
+):
+    request_id = getattr(
+        request.state,
+        "request_id",
+        None,
+    )
+
+    response = JSONResponse(
+        status_code=502,
+        content={
+            "error": "upstream_service_error",
+            "message": "上游服务暂时不可用，请稍后重试",
+            "request_id": request_id,
+        },
+    )
+
+    if request_id:
+        response.headers["X-Request-ID"] = request_id
+
+    return response
+
+@app.exception_handler(UpstreamTimeoutError)
+async def upstream_timeout_exception_handler(
+    request: Request,
+    exc: UpstreamTimeoutError,
+):
+    request_id = getattr(
+        request.state,
+        "request_id",
+        None,
+    )
+
+    response = JSONResponse(
+        status_code=504,
+        content={
+            "error": "upstream_timeout",
+            "message": "上游服务响应超时，请稍后重试",
+            "request_id": request_id,
+        },
+    )
+
+    if request_id:
+        response.headers["X-Request-ID"] = request_id
 
     return response
 
