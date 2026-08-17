@@ -1,3 +1,5 @@
+from app.models import DocumentStatus
+
 from pydantic import BaseModel
 
 from enum import Enum
@@ -30,3 +32,7 @@ class IngestionTaskResponse(BaseModel):
     document_id: str
     status: IngestionStatus
     error: str | None = None
+
+class DocumentDeleteResponse(BaseModel):
+    document_id: str
+    status: DocumentStatus

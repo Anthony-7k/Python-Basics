@@ -1,18 +1,42 @@
 from pathlib import Path
 
-from app.schemas.document import DocumentRecord
-from app.services.loaders.txt_loader import load_txt
-from app.services.loaders.pdf_loader import load_pdf
-from app.services.loaders.docx_loader import load_docx
-from app.services.cleaners.text_cleaner import clean_text
-from app.services.chunkers.chunker import split_text
+from app.db.session import SessionLocal
+from app.models import (
+    IngestionJobStatus,
+)
 from app.schemas.chunk import ChunkRecord
-from app.services.vector_stores.vector_store import upsert_chunks
-from app.schemas.document import IngestionStatus
-from app.services.ingestion.task_manager import update_task_status
+from app.schemas.document import (
+    DocumentRecord,
+)
+from app.services.chunkers.chunker import (
+    split_text,
+)
+from app.services.cleaners.text_cleaner import (
+    clean_text,
+)
+from app.services.documents import (
+    DocumentService,
+)
+from app.services.loaders.docx_loader import (
+    load_docx,
+)
+from app.services.loaders.pdf_loader import (
+    load_pdf,
+)
+from app.services.loaders.txt_loader import (
+    load_txt,
+)
+from app.services.vector_stores.vector_store import (
+    upsert_chunks,
+)
 
-def load_documents(file_path: str) -> list[DocumentRecord]:
-    suffix = Path(file_path).suffix.lower()
+
+def load_documents(
+    file_path: str,
+) -> list[DocumentRecord]:
+    suffix = Path(
+        file_path
+    ).suffix.lower()
 
     if suffix == ".txt":
         return [
@@ -29,7 +53,10 @@ def load_documents(file_path: str) -> list[DocumentRecord]:
         f"Unsupported file type: {suffix}"
     )
 
-def build_chunks(file_path: str) -> list[ChunkRecord]:
+
+def build_chunks(
+    file_path: str,
+) -> list[ChunkRecord]:
     documents = load_documents(
         file_path
     )
@@ -48,34 +75,64 @@ def build_chunks(file_path: str) -> list[ChunkRecord]:
             page=document.page,
         )
 
-        all_chunks.extend(
-            chunks
-        )
+        all_chunks.extend(chunks)
 
     return all_chunks
 
-def ingest_file(file_path: str) -> list[ChunkRecord]:
+
+def ingest_file(
+    file_path: str,
+) -> list[ChunkRecord]:
     chunks = build_chunks(
         file_path
     )
 
-    upsert_chunks(
-        chunks
-    )
+    upsert_chunks(chunks)
 
     return chunks
 
-def run_ingestion_task(task_id: str, file_path: str) -> None:
-    update_task_status(task_id, IngestionStatus.RUNNING)
+
+def run_ingestion_task(
+    task_id: str,
+    file_path: str,
+) -> None:
+    db = SessionLocal()
 
     try:
-        ingest_file(file_path)
-    except Exception as exc:
-        update_task_status(
-            task_id,
-            IngestionStatus.FAILED,
-            error=str(exc),
-        )
-        return
+        service = DocumentService(db)
 
-    update_task_status(task_id, IngestionStatus.SUCCEEDED)
+        running_job = (
+            service.update_ingestion_status(
+                task_id=task_id,
+                status=(
+                    IngestionJobStatus.RUNNING
+                ),
+            )
+        )
+
+        if running_job is None:
+            return
+
+        try:
+            ingest_file(file_path)
+
+        except Exception as exc:
+            service.update_ingestion_status(
+                task_id=task_id,
+                status=(
+                    IngestionJobStatus.FAILED
+                ),
+                error=str(exc),
+            )
+
+            return
+
+        service.update_ingestion_status(
+            task_id=task_id,
+            status=(
+                IngestionJobStatus.SUCCEEDED
+            ),
+        )
+
+    finally:
+        db.close()

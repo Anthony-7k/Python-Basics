@@ -8,11 +8,15 @@ authors = [
 ]
 requires-python = ">=3.11"
 dependencies = [
+    "alembic>=1.13",
     "chromadb>=1.5.9",
+    "cryptography>=42",
     "openai>=2.53.0",
+    "pymysql>=1.1",
     "pytest>=9.1.1",
     "python-dotenv>=1.2.2",
     "python-multipart>=0.0.32",
+    "sqlalchemy>=2.0",
 ]
 
 [project.scripts]

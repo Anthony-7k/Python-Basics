@@ -63,3 +63,15 @@ def validate_settings():
             "Missing required settings: "
             + ", ".join(missing_settings)
         )
+
+DATABASE_URL = os.getenv("DATABASE_URL")
+
+DEFAULT_USER_EMAIL = os.getenv(
+    "DEFAULT_USER_EMAIL",
+    "local-user@agent01.local",
+)
+
+DEFAULT_KNOWLEDGE_BASE_NAME = os.getenv(
+    "DEFAULT_KNOWLEDGE_BASE_NAME",
+    "Default Knowledge Base",
+)

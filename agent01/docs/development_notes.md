@@ -2267,3 +2267,334 @@ OpenAI SDK 异常转换：
 Day10 完成了问答 API 契约、真实耗时统计、明确的模型超时配置、安全错误映射和异常转换测试。
 
 项目当前具备更稳定、更安全、更容易排查的企业级问答 API 基础。
+
+
+
+# Day11：关系数据库持久化与会话历史
+
+日期：2026-08-17
+
+## 今日目标
+
+将用户、知识库、文档、入库任务、会话和消息从临时内存状态迁移到关系数据库，并使用 Alembic 管理数据库结构变更。
+
+## 1. SQLAlchemy 数据模型
+
+新增 SQLAlchemy 2.0 数据模型：
+
+- `users`
+- `knowledge_bases`
+- `documents`
+- `ingestion_jobs`
+- `conversations`
+- `messages`
+
+模型之间通过外键和 ORM Relationship 建立关联。
+
+消息表增加了 `sequence_number` 字段，并使用以下组合唯一约束：
+
+```text
+(conversation_id, sequence_number)
+```
+
+该约束保证同一个会话中的消息顺序稳定且不会重复。
+
+## 2. MySQL 与数据库 Session
+
+新增数据库基础设施：
+
+- SQLAlchemy Engine
+- `SessionLocal`
+- FastAPI `get_db`
+- Repository 数据访问层
+- Service 事务管理层
+
+数据库连接通过 `.env` 文件中的 `DATABASE_URL` 配置，数据库密码不会直接写在代码中。
+
+连接格式：
+
+```text
+mysql+pymysql://用户名:密码@127.0.0.1:3306/agent01?charset=utf8mb4
+```
+
+## 3. Alembic 数据库迁移
+
+项目已经接入 Alembic，共创建两次迁移：
+
+```text
+3c1068922c5b  create initial relational tables
+7af58a1df946  add message sequence number
+```
+
+当前数据库迁移版本：
+
+```text
+7af58a1df946 (head)
+```
+
+可以通过以下命令将空数据库迁移到最新版本：
+
+```powershell
+uv run alembic upgrade head
+```
+
+可以通过以下命令查看当前数据库版本：
+
+```powershell
+uv run alembic current
+```
+
+## 4. Repository 与事务边界
+
+新增 Repository：
+
+- `ConversationRepository`
+- `DocumentRepository`
+
+Repository 负责执行数据库查询和数据写入。
+
+Service 层负责：
+
+- 提交事务
+- 出错时回滚事务
+- 组合多个 Repository 操作
+- 处理业务规则
+
+这样可以避免把数据库事务逻辑散落在 API 路由中。
+
+## 5. 会话与消息持久化
+
+`POST /api/v1/chat` 现在会执行以下流程：
+
+1. 获取或创建用户；
+2. 获取或创建知识库；
+3. 获取或创建会话；
+4. 执行 RAG 问答；
+5. 保存用户消息；
+6. 保存助手消息；
+7. 保存回答的来源摘要；
+8. 返回 `conversation_id`。
+
+用户消息和助手消息在同一个数据库事务中保存。
+
+如果助手消息保存失败，用户消息也会一起回滚，避免数据库中出现不完整的问答记录。
+
+消息按照 `sequence_number` 排序：
+
+```text
+1  user
+2  assistant
+3  user
+4  assistant
+```
+
+## 6. 来源摘要持久化
+
+助手消息会保存来源摘要，包括：
+
+- `source_id`
+- `chunk_id`
+- 来源文件信息
+
+数据库只保存必要的来源摘要，不重复保存完整 Chunk 内容。
+
+示例：
+
+```json
+{
+  "sources": [
+    {
+      "source_id": "S1",
+      "chunk_id": "chunk-1"
+    }
+  ]
+}
+```
+
+## 7. 会话历史 API
+
+新增接口：
+
+```text
+GET /api/v1/conversations/{conversation_id}/messages
+```
+
+接口按照 `sequence_number` 返回会话消息。
+
+每条消息包含：
+
+- 消息 ID
+- 消息顺序
+- 消息角色
+- 消息内容
+- 来源摘要
+- 创建时间
+
+不存在的会话返回：
+
+```text
+HTTP 404
+```
+
+## 8. 文档与入库任务持久化
+
+文档上传和后台入库任务已经从进程内存迁移到 MySQL。
+
+数据库会保存：
+
+- 文档 ID
+- 知识库 ID
+- 原始文件名
+- 内容哈希
+- 文档状态
+- 入库任务状态
+- 入库失败原因
+- 创建时间
+- 更新时间
+
+文档状态包括：
+
+```text
+pending
+ready
+failed
+deleted
+```
+
+入库任务状态包括：
+
+```text
+pending
+running
+succeeded
+failed
+```
+
+相同文件内容重复上传时，会根据 SHA-256 内容哈希复用已有文档和入库任务，保证上传接口幂等。
+
+旧的内存任务管理器：
+
+```text
+app/services/ingestion/task_manager.py
+```
+
+已经删除。
+
+## 9. 后台入库任务
+
+FastAPI 后台任务会创建独立的数据库 Session。
+
+后台任务执行流程：
+
+1. 将任务状态更新为 `running`；
+2. 解析并切分文档；
+3. 生成 Embedding；
+4. 写入 Chroma；
+5. 成功后将任务状态更新为 `succeeded`；
+6. 将文档状态更新为 `ready`；
+7. 失败后将任务和文档状态更新为 `failed`；
+8. 记录安全的失败原因；
+9. 关闭数据库 Session。
+
+这样可以避免请求 Session 被后台任务继续使用。
+
+## 10. 文档删除 API
+
+新增接口：
+
+```text
+DELETE /api/v1/documents/{document_id}
+```
+
+接口成功后返回：
+
+```json
+{
+  "document_id": "文档ID",
+  "status": "deleted"
+}
+```
+
+文档不存在时返回：
+
+```text
+HTTP 404
+```
+
+## 11. MySQL 与 Chroma 删除一致性
+
+文档删除采用以下策略：
+
+1. 查询 MySQL 中的文档记录；
+2. 如果文档已经是 `deleted`，直接返回，保证接口幂等；
+3. 先删除 Chroma 中属于该文档的向量；
+4. Chroma 删除成功后，将 MySQL 文档状态更新为 `deleted`；
+5. 提交 MySQL 事务；
+6. 如果 Chroma 删除失败，则回滚数据库事务。
+
+项目不会直接物理删除 MySQL 文档记录，而是使用软删除状态，便于审计、问题排查和故障恢复。
+
+因为 Chroma 删除操作本身具有幂等性，如果数据库提交出现异常，可以重新调用删除接口完成最终一致性修复。
+
+## 12. 自动化测试
+
+新增和完善了以下测试：
+
+- Repository 数据写入与查询
+- 数据库事务回滚
+- 默认用户创建
+- 默认知识库创建
+- 会话创建
+- 用户消息保存
+- 助手消息保存
+- 消息顺序校验
+- 来源摘要保存
+- 问答消息事务提交
+- 问答消息事务回滚
+- 会话历史 API
+- 会话不存在时返回 404
+- 文档记录创建
+- 入库任务创建
+- 文档上传幂等
+- 入库任务状态更新
+- 后台任务成功状态
+- 后台任务失败状态
+- 文档删除成功
+- Chroma 删除失败时数据库回滚
+- 文档删除 API
+- 删除不存在的文档返回 404
+
+最终全量测试结果：
+
+```text
+48 passed, 1 warning
+```
+
+当前 warning 来自 FastAPI/Starlette TestClient 的依赖弃用提醒，不影响项目功能和测试结果。
+
+## Day11 验收结果
+
+- [x] SQLAlchemy 2.0 接入完成
+- [x] MySQL 数据库连接完成
+- [x] 六张核心业务表创建完成
+- [x] Alembic 迁移完成
+- [x] 数据库处于最新迁移版本
+- [x] Repository 层完成
+- [x] Service 事务边界完成
+- [x] 问答消息持久化完成
+- [x] 来源摘要持久化完成
+- [x] 会话历史 API 完成
+- [x] 文档和入库任务持久化完成
+- [x] 上传幂等完成
+- [x] 文档删除 API 完成
+- [x] MySQL 与 Chroma 删除一致性策略完成
+- [x] 旧内存任务管理器删除完成
+- [x] 全量自动化测试通过
+
+## 今日总结
+
+Day11 完成了 SQLAlchemy 关系数据模型、MySQL 持久化、Alembic 数据库迁移、Repository 数据访问层、Service 事务边界、会话与消息历史、问答来源摘要、文档与入库任务持久化，以及 MySQL 与 Chroma 的文档删除一致性策略。
+
+项目不再依赖进程内存保存核心业务状态。服务重启以后，用户、知识库、文档、入库任务、会话和消息数据仍然可以保留。
+
+至此，Day11 开发任务完成。

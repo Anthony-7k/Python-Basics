@@ -28,6 +28,7 @@ class RAGSource(BaseModel):
 
 
 class RAGResponse(BaseModel):
+    conversation_id: str | None = None
     answer: str
     sources: list[RAGSource]
     used_chunk_ids: list[str]

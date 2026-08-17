@@ -1,9 +1,24 @@
 from time import perf_counter
 
-from fastapi import APIRouter, Request
+from fastapi import (
+    APIRouter,
+    Depends,
+    Request,
+)
 
-from app.schemas.rag import ChatRequest, RAGResponse
-from app.services.rag.rag_service import answer_question
+from app.api.dependencies import (
+    get_conversation_service,
+)
+from app.schemas.rag import (
+    ChatRequest,
+    RAGResponse,
+)
+from app.services.conversations import (
+    ConversationService,
+)
+from app.services.rag.rag_service import (
+    answer_question,
+)
 
 
 router = APIRouter(
@@ -19,17 +34,73 @@ router = APIRouter(
 def chat(
     request: ChatRequest,
     http_request: Request,
+    conversation_service: (
+        ConversationService
+    ) = Depends(
+        get_conversation_service
+    ),
 ):
     started_at = perf_counter()
 
-    result = answer_question(
-        question=request.question,
-        request_id=http_request.state.request_id,
+    conversation = (
+        conversation_service
+        .get_or_create_conversation(
+            conversation_id=(
+                request.conversation_id
+            ),
+            knowledge_base_id=(
+                request.knowledge_base_id
+            ),
+        )
     )
 
-    result["latency_ms"] = round(
-        (perf_counter() - started_at) * 1000,
+    rag_result = answer_question(
+        question=request.question,
+        request_id=(
+            http_request.state.request_id
+        ),
+    )
+
+    response = RAGResponse.model_validate(
+        rag_result
+    )
+
+    response.conversation_id = (
+        conversation.id
+    )
+
+    response.latency_ms = round(
+        (
+            perf_counter()
+            - started_at
+        )
+        * 1000,
         2,
     )
 
-    return result
+    source_summary = {
+        "sources": [
+            {
+                "source_id": (
+                    source.source_id
+                ),
+                "chunk_id": (
+                    source.chunk_id
+                ),
+                "file_name": (
+                    source.file_name
+                ),
+                "page": source.page,
+            }
+            for source in response.sources
+        ]
+    }
+
+    conversation_service.save_exchange(
+        conversation_id=conversation.id,
+        user_content=request.question,
+        assistant_content=response.answer,
+        source_summary=source_summary,
+    )
+
+    return response
