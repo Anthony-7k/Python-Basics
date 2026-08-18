@@ -24,15 +24,28 @@ SYSTEM_PROMPT = """
 """
 
 
-def build_user_prompt(question: str, context: str) -> str:
+def build_user_prompt(
+    question: str,
+    context: str,
+    standalone_question: str | None = None,
+) -> str:
+    retrieval_question = (
+        standalone_question
+        or question
+    )
+
     return f"""
-用户问题：
+用户原始问题：
 {question}
+
+用于理解上下文的独立问题：
+{retrieval_question}
 
 知识库证据：
 {context}
 
-请根据以上知识库证据回答用户问题。
+请根据独立问题理解用户原始问题的指代和省略，
+并围绕用户原始问题作答。
 
 如果证据能够直接回答，或者能够根据证据进行简单且确定的推断，
 请给出答案并引用对应来源编号。

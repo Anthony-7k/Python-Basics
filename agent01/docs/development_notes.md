@@ -2598,3 +2598,124 @@ Day11 完成了 SQLAlchemy 关系数据模型、MySQL 持久化、Alembic 数据
 项目不再依赖进程内存保存核心业务状态。服务重启以后，用户、知识库、文档、入库任务、会话和消息数据仍然可以保留。
 
 至此，Day11 开发任务完成。
+
+
+---
+
+# Day12：多轮对话与上下文控制
+
+日期：2026-08-18
+
+## 今日目标
+
+让含指代或省略的追问可以用于准确检索，同时限制历史消息和摘要进入模型的规模。
+
+## 1. 问题改写器
+
+新增：
+
+- `app/services/conversations/query_rewriter.py`
+- `app/prompts/query_rewrite_prompt.py`
+
+`condense_question()` 接收会话摘要、受限的最近历史和用户当前问题，输出可独立检索的 `standalone_question`。
+
+安全策略：
+
+- 空历史直接使用原问题，不产生无意义模型调用。
+- 改写超时、异常、空输出或超长输出时退回原问题。
+- Prompt 明确把历史消息视为数据，不能覆盖系统规则。
+- 数据库中的 user 消息始终保存用户原话。
+
+## 2. 检索问题与回答问题分离
+
+RAG 服务现在同时保留：
+
+- `original_question`：作为最终回答目标，保持用户真实表达。
+- `standalone_question`：只用于向量检索。
+
+最终回答 Prompt 会同时提供原始问题与独立问题：独立问题只帮助模型理解指代和省略，回答仍围绕用户原始问题生成。这样可避免“正式员工呢？”已经召回正确年假证据、但生成模型因缺少追问主题而拒答。
+
+检索日志同时记录 request_id、original_question 与 standalone_question，便于调试和审计。
+
+CLI 和旧调用仍可继续传入 `question`，保持向后兼容。
+
+## 3. 历史窗口与 token 预算
+
+新增配置：
+
+```text
+CONVERSATION_HISTORY_MAX_TURNS=3
+CONVERSATION_HISTORY_TOKEN_BUDGET=1800
+CONVERSATION_SUMMARY_MAX_CHARS=2000
+```
+
+一轮固定定义为一组 user/assistant 消息。问题改写器优先保留最近消息，并为已有摘要保留预算，超过预算的更早内容不会进入请求体。
+
+token 数采用不依赖额外第三方库的保守估算：中文字符按一个 token 估算，其他字符按约四个字符一个 token 估算。
+
+## 4. 增量会话摘要
+
+`conversations` 表新增：
+
+- `summary`
+- `summary_through_sequence_number`
+- `summary_updated_at`
+
+新增迁移：
+
+```text
+c4d82f6a1b30  add conversation summary fields
+```
+
+窗口之外的旧消息按受限批次增量合并到摘要。`summary_through_sequence_number` 记录摘要已经覆盖到的消息序号，避免每次请求重复总结完整历史。
+
+摘要失败时不会阻塞主问答流程，系统会安全降级为只使用最近历史；成功摘要会持久化到 MySQL。
+
+## 5. 自动化测试
+
+新增或扩展测试覆盖：
+
+- 空历史不改写。
+- 改写失败退回原问题。
+- 10 组含指代、省略、条件追问和话题切换场景。
+- 历史输入遵守 token 预算。
+- 最近 N 轮窗口语义。
+- 超限旧消息只增量摘要一次。
+- 摘要失败仍返回受限最近历史。
+- 检索只使用 standalone_question。
+- 最终回答仍使用 original_question。
+- 日志同时包含原问题与独立问题。
+- Chat API 正确连接上下文、改写器和 RAG。
+
+## Day12 验收结果
+
+- [x] 实现 `condense_question`。
+- [x] 空历史直接使用原问题。
+- [x] 检索只使用 `standalone_question`。
+- [x] 最终回答使用 `original_question`。
+- [x] 数据库保存用户原始问题。
+- [x] 历史限制为最近 N 轮。
+- [x] 超限历史增量摘要并持久化。
+- [x] 请求历史具有 token 预算硬上限。
+- [x] 日志区分原问题和独立问题。
+- [x] 10 组追问测试全部命中预期主题。
+- [x] Day11 基线测试全部保留。
+
+## 6. MySQL 中文字符集修复
+
+真实 API 验收时发现初始数据库继承了 MySQL 的 `latin1_swedish_ci`，导致中文 user/assistant 消息写入 `messages.content` 时触发 MySQL 1366 错误。
+
+新增迁移：
+
+```text
+e91a7c3f2b64  enable utf8mb4 for business tables
+```
+
+迁移将数据库默认字符集及 6 张业务表统一转换为：
+
+```text
+CHARACTER SET utf8mb4
+COLLATE utf8mb4_unicode_ci
+```
+
+这样消息、会话摘要、知识库名称、文档文件名和任务错误信息都可以安全保存中文及其他 Unicode 字符。

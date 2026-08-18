@@ -236,6 +236,27 @@ class Conversation(TimestampMixin, Base):
         nullable=True,
     )
 
+    summary: Mapped[str | None] = mapped_column(
+        Text,
+        nullable=True,
+    )
+
+    summary_through_sequence_number: Mapped[
+        int
+    ] = mapped_column(
+        Integer,
+        nullable=False,
+        default=0,
+        server_default="0",
+    )
+
+    summary_updated_at: Mapped[
+        datetime | None
+    ] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
+
     user: Mapped[User] = relationship(
         back_populates="conversations",
     )

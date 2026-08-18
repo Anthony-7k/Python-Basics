@@ -54,6 +54,16 @@ class FakeConversationService:
             exchange
         )
 
+    def prepare_context(
+        self,
+        conversation_id,
+    ):
+        return SimpleNamespace(
+            summary=None,
+            history=[],
+            estimated_tokens=0,
+        )
+
     def get_messages(
         self,
         conversation_id,
@@ -274,6 +284,64 @@ def test_chat_success(
     ] == {
         "sources": []
     }
+
+
+def test_chat_uses_rewritten_question_for_rag(
+    fake_conversation_service,
+):
+    fake_conversation_service.prepare_context = (
+        lambda conversation_id: SimpleNamespace(
+            summary="上一轮讨论年假",
+            history=[
+                {
+                    "role": "assistant",
+                    "content": "年假按工龄计算",
+                }
+            ],
+            estimated_tokens=20,
+        )
+    )
+    fake_response = {
+        "answer": "正式员工按工龄享有年假。[S1]",
+        "sources": [],
+        "used_chunk_ids": [],
+        "request_id": "rewrite-request-id",
+    }
+
+    with patch(
+        "app.api.routes.chat.condense_question",
+        return_value=(
+            "正式员工的年假规定是什么？"
+        ),
+    ) as mocked_condense, patch(
+        "app.api.routes.chat.answer_question",
+        return_value=fake_response,
+    ) as mocked_answer:
+        response = client.post(
+            "/api/v1/chat",
+            json={
+                "question": "正式员工呢？"
+            },
+        )
+
+    assert response.status_code == 200
+    assert (
+        mocked_condense.call_args.kwargs[
+            "current_question"
+        ]
+        == "正式员工呢？"
+    )
+    answer_kwargs = (
+        mocked_answer.call_args.kwargs
+    )
+
+    assert answer_kwargs[
+        "original_question"
+    ] == "正式员工呢？"
+    assert answer_kwargs[
+        "standalone_question"
+    ] == "正式员工的年假规定是什么？"
+    assert answer_kwargs["request_id"]
 
 def test_upload_rejects_unsupported_extension():
     response = client.post(

@@ -15,6 +15,7 @@ from app.schemas.rag import (
 )
 from app.services.conversations import (
     ConversationService,
+    condense_question,
 )
 from app.services.rag.rag_service import (
     answer_question,
@@ -54,8 +55,28 @@ def chat(
         )
     )
 
+    conversation_context = (
+        conversation_service.prepare_context(
+            conversation.id
+        )
+    )
+    standalone_question = condense_question(
+        history=(
+            conversation_context.history
+        ),
+        current_question=request.question,
+        conversation_summary=(
+            conversation_context.summary
+        ),
+    )
+
     rag_result = answer_question(
-        question=request.question,
+        original_question=(
+            request.question
+        ),
+        standalone_question=(
+            standalone_question
+        ),
         request_id=(
             http_request.state.request_id
         ),

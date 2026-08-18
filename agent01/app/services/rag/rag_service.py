@@ -72,10 +72,26 @@ def retrieve_context(
 
 
 def answer_question(
-    question: str,
+    question: str | None = None,
     top_k: int = 5,
     request_id: str | None = None,
+    *,
+    original_question: str | None = None,
+    standalone_question: str | None = None,
 ):
+    if original_question is None:
+        original_question = question
+
+    if original_question is None:
+        raise ValueError(
+            "original_question is required"
+        )
+
+    if standalone_question is None:
+        standalone_question = (
+            original_question
+        )
+
     if request_id is None:
         request_id = str(uuid.uuid4())
 
@@ -84,7 +100,7 @@ def answer_question(
     retrieval_start = time.perf_counter()
 
     retrieval_result = retrieve_context(
-        question=question,
+        question=standalone_question,
         top_k=top_k,
     )
 
@@ -94,8 +110,12 @@ def answer_question(
 
     logger.info(
         "rag retrieval completed request_id=%s "
+        "original_question=%r "
+        "standalone_question=%r "
         "sources=%s retrieval_ms=%.2f",
         request_id,
+        original_question,
+        standalone_question,
         len(retrieval_result["sources"]),
         retrieval_ms,
     )
@@ -122,8 +142,11 @@ def answer_question(
         )
 
     user_prompt = build_user_prompt(
-        question=question,
+        question=original_question,
         context=context,
+        standalone_question=(
+            standalone_question
+        ),
     )
 
     generation_start = time.perf_counter()

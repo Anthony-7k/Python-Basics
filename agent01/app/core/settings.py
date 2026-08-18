@@ -75,3 +75,40 @@ DEFAULT_KNOWLEDGE_BASE_NAME = os.getenv(
     "DEFAULT_KNOWLEDGE_BASE_NAME",
     "Default Knowledge Base",
 )
+
+CONVERSATION_HISTORY_MAX_TURNS = int(
+    os.getenv(
+        "CONVERSATION_HISTORY_MAX_TURNS",
+        "3",
+    )
+)
+
+CONVERSATION_HISTORY_TOKEN_BUDGET = int(
+    os.getenv(
+        "CONVERSATION_HISTORY_TOKEN_BUDGET",
+        "1800",
+    )
+)
+
+CONVERSATION_SUMMARY_MAX_CHARS = int(
+    os.getenv(
+        "CONVERSATION_SUMMARY_MAX_CHARS",
+        "2000",
+    )
+)
+
+
+if CONVERSATION_HISTORY_MAX_TURNS < 1:
+    raise ValueError(
+        "CONVERSATION_HISTORY_MAX_TURNS must be at least 1"
+    )
+
+if CONVERSATION_HISTORY_TOKEN_BUDGET < 1:
+    raise ValueError(
+        "CONVERSATION_HISTORY_TOKEN_BUDGET must be at least 1"
+    )
+
+if CONVERSATION_SUMMARY_MAX_CHARS < 1:
+    raise ValueError(
+        "CONVERSATION_SUMMARY_MAX_CHARS must be at least 1"
+    )

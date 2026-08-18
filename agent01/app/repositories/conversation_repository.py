@@ -1,4 +1,6 @@
-from sqlalchemy import func, select
+from datetime import datetime, timezone
+
+from sqlalchemy import desc, func, select
 from sqlalchemy.orm import Session
 
 from app.models import (
@@ -191,3 +193,80 @@ class ConversationRepository:
                 statement
             ).all()
         )
+
+    def list_recent_messages(
+        self,
+        conversation_id: str,
+        limit: int,
+    ) -> list[Message]:
+        if limit < 1:
+            return []
+
+        statement = (
+            select(Message)
+            .where(
+                Message.conversation_id
+                == conversation_id
+            )
+            .order_by(
+                desc(
+                    Message.sequence_number
+                )
+            )
+            .limit(limit)
+        )
+
+        messages = list(
+            self.session.scalars(
+                statement
+            ).all()
+        )
+
+        messages.reverse()
+
+        return messages
+
+    def list_messages_for_summary(
+        self,
+        conversation_id: str,
+        after_sequence_number: int,
+        through_sequence_number: int,
+        limit: int,
+    ) -> list[Message]:
+        statement = (
+            select(Message)
+            .where(
+                Message.conversation_id
+                == conversation_id,
+                Message.sequence_number
+                > after_sequence_number,
+                Message.sequence_number
+                <= through_sequence_number,
+            )
+            .order_by(
+                Message.sequence_number
+            )
+            .limit(limit)
+        )
+
+        return list(
+            self.session.scalars(
+                statement
+            ).all()
+        )
+
+    def update_summary(
+        self,
+        conversation: Conversation,
+        summary: str,
+        through_sequence_number: int,
+    ) -> None:
+        conversation.summary = summary
+        conversation.summary_through_sequence_number = (
+            through_sequence_number
+        )
+        conversation.summary_updated_at = (
+            datetime.now(timezone.utc)
+        )
+
+        self.session.flush()
