@@ -71,6 +71,9 @@ def chat(
     )
 
     rag_result = answer_question(
+        knowledge_base_id=(
+            conversation.knowledge_base_id
+        ),
         original_question=(
             request.question
         ),

@@ -8,6 +8,9 @@ from app.services.conversations import (
 from app.services.documents import (
     DocumentService,
 )
+from app.services.knowledge_bases import (
+    KnowledgeBaseService,
+)
 
 def get_conversation_service(
     db: Session = Depends(get_db),
@@ -19,3 +22,9 @@ def get_document_service(
     db: Session = Depends(get_db),
 ) -> DocumentService:
     return DocumentService(db)
+
+
+def get_knowledge_base_service(
+    db: Session = Depends(get_db),
+) -> KnowledgeBaseService:
+    return KnowledgeBaseService(db)

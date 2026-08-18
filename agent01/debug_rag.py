@@ -1,4 +1,5 @@
 from app.services.rag.rag_service import answer_question
+import os
 
 
 def main():
@@ -8,6 +9,9 @@ def main():
     result = answer_question(
         question=question,
         top_k=3,
+        knowledge_base_id=os.environ[
+            "KNOWLEDGE_BASE_ID"
+        ],
     )
 
     print("答案:")

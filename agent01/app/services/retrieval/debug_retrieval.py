@@ -3,10 +3,14 @@ from app.services.retrieval.retriever import retrieve
 
 def debug_retrieve(
     query_text: str,
+    knowledge_base_id: str,
     top_k: int = 5,
 ) -> None:
     results = retrieve(
         query_text=query_text,
+        knowledge_base_id=(
+            knowledge_base_id
+        ),
         top_k=top_k,
     )
 

@@ -69,6 +69,28 @@ class ConversationRepository:
             knowledge_base_id,
         )
 
+    def list_knowledge_bases(
+        self,
+        owner_user_id: str,
+    ) -> list[KnowledgeBase]:
+        statement = (
+            select(KnowledgeBase)
+            .where(
+                KnowledgeBase.owner_user_id
+                == owner_user_id
+            )
+            .order_by(
+                KnowledgeBase.created_at,
+                KnowledgeBase.id,
+            )
+        )
+
+        return list(
+            self.session.scalars(
+                statement
+            ).all()
+        )
+
     def get_or_create_knowledge_base(
         self,
         owner_user_id: str,

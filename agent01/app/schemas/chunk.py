@@ -5,6 +5,7 @@ class ChunkRecord(BaseModel):
     chunk_id: str
 
     document_id: str
+    knowledge_base_id: str
 
     content: str
 

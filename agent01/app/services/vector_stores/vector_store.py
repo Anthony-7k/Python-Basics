@@ -4,13 +4,14 @@ from app.services.embeddings.embedding_service import embed_texts
 import chromadb
 
 from app.core.settings import (
+    CHROMA_PATH,
     EMBEDDING_MODEL,
     EMBEDDING_DIMENSIONS,
 )
 
 
 client = chromadb.PersistentClient(
-    path="data/chroma"
+    path=str(CHROMA_PATH)
 )
 
 collection = client.get_or_create_collection(
@@ -52,6 +53,8 @@ def upsert_chunks(chunks: list[ChunkRecord]) -> None:
                 old_metadata
                 and old_metadata.get("content_hash") == chunk.content_hash
                 and old_metadata.get("embedding_model") == EMBEDDING_MODEL
+                and old_metadata.get("knowledge_base_id")
+                == chunk.knowledge_base_id
         ):
             continue
 
@@ -76,6 +79,9 @@ def upsert_chunks(chunks: list[ChunkRecord]) -> None:
         {
             "chunk_id": chunk.chunk_id,
             "document_id": chunk.document_id,
+            "knowledge_base_id": (
+                chunk.knowledge_base_id
+            ),
             "source": chunk.source or "",
             "page": chunk.page if chunk.page is not None else -1,
             "content_hash": chunk.content_hash,
@@ -93,6 +99,7 @@ def upsert_chunks(chunks: list[ChunkRecord]) -> None:
 
 def query_chunks(
     query_text: str,
+    knowledge_base_id: str,
     n_results: int = 5,
 ):
     query_embedding = embed_texts(
@@ -101,6 +108,11 @@ def query_chunks(
 
     return collection.query(
         query_embeddings=[query_embedding],
+        where={
+            "knowledge_base_id": (
+                knowledge_base_id
+            )
+        },
         n_results=n_results,
         include=[
             "documents",
@@ -109,9 +121,21 @@ def query_chunks(
         ],
     )
 
-def delete_by_document(document_id: str) -> None:
+def delete_by_document(
+    knowledge_base_id: str,
+    document_id: str,
+) -> None:
     collection.delete(
         where={
-            "document_id": document_id
+            "$and": [
+                {
+                    "knowledge_base_id": (
+                        knowledge_base_id
+                    )
+                },
+                {
+                    "document_id": document_id
+                },
+            ]
         }
     )

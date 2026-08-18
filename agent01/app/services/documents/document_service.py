@@ -1,10 +1,11 @@
 from collections.abc import Callable
-
+from hashlib import sha256
 from pathlib import Path
 
 from sqlalchemy.orm import Session
 
 from app.core.exceptions import (
+    DocumentReindexConflictError,
     KnowledgeBaseNotFoundError,
 )
 from app.core.settings import (
@@ -23,26 +24,39 @@ from app.repositories import (
 )
 
 
+def build_document_id(
+    knowledge_base_id: str,
+    content_hash: str,
+) -> str:
+    scoped_value = (
+        f"{knowledge_base_id}:{content_hash}"
+    )
+    return sha256(
+        scoped_value.encode("utf-8")
+    ).hexdigest()
+
+
 class DocumentService:
     def __init__(
-            self,
-            session: Session,
-            vector_delete: Callable[[str], None] | None = None,
+        self,
+        session: Session,
+        vector_delete: (
+            Callable[[str, str], None]
+            | None
+        ) = None,
     ) -> None:
         self.session = session
         self.vector_delete = vector_delete
-
         self.document_repository = (
             DocumentRepository(session)
         )
-
         self.conversation_repository = (
             ConversationRepository(session)
         )
 
     def create_or_get_upload(
         self,
-        document_id: str,
+        content_hash: str,
         file_name: str,
         knowledge_base_id: str | None = None,
     ) -> tuple[
@@ -51,73 +65,96 @@ class DocumentService:
         bool,
     ]:
         try:
-            existing_document = (
-                self.document_repository
-                .get_document_by_content_hash(
-                    document_id
-                )
-            )
-
-            if existing_document is not None:
-                existing_job = (
-                    self.document_repository
-                    .get_latest_job_by_document_id(
-                        existing_document.id
-                    )
-                )
-
-                if existing_job is None:
-                    existing_job = (
-                        self.document_repository
-                        .create_ingestion_job(
-                            existing_document.id
-                        )
-                    )
-
-                    self.session.commit()
-
-                return (
-                    existing_document,
-                    existing_job,
-                    False,
-                )
-
             knowledge_base = (
                 self._resolve_knowledge_base(
                     knowledge_base_id
                 )
             )
-
             safe_file_name = Path(
                 file_name
             ).name
+            existing_document = (
+                self.document_repository
+                .get_document_by_content_hash(
+                    knowledge_base_id=(
+                        knowledge_base.id
+                    ),
+                    content_hash=content_hash,
+                )
+            )
+
+            if existing_document is not None:
+                if existing_document.status in {
+                    DocumentStatus.FAILED,
+                    DocumentStatus.DELETED,
+                }:
+                    existing_document.file_name = (
+                        safe_file_name
+                    )
+                return self._reuse_or_retry(
+                    existing_document
+                )
 
             document = (
                 self.document_repository
                 .create_document(
-                    document_id=document_id,
+                    document_id=(
+                        build_document_id(
+                            knowledge_base.id,
+                            content_hash,
+                        )
+                    ),
                     knowledge_base_id=(
                         knowledge_base.id
                     ),
                     file_name=safe_file_name,
-                    content_hash=document_id,
+                    content_hash=content_hash,
                 )
             )
-
             job = (
                 self.document_repository
                 .create_ingestion_job(
                     document.id
                 )
             )
-
             self.session.commit()
-
             return document, job, True
-
         except Exception:
             self.session.rollback()
             raise
+
+    def get_document(
+        self,
+        knowledge_base_id: str,
+        document_id: str,
+    ) -> Document | None:
+        return (
+            self.document_repository
+            .get_document_for_knowledge_base(
+                document_id=document_id,
+                knowledge_base_id=(
+                    knowledge_base_id
+                ),
+            )
+        )
+
+    def list_documents(
+        self,
+        knowledge_base_id: str,
+        include_deleted: bool = False,
+    ) -> list[Document]:
+        self._resolve_knowledge_base(
+            knowledge_base_id
+        )
+        return (
+            self.document_repository
+            .list_documents(
+                knowledge_base_id=(
+                    knowledge_base_id
+                ),
+                include_deleted=include_deleted,
+            )
+        )
 
     def get_ingestion_job(
         self,
@@ -151,52 +188,51 @@ class DocumentService:
                 status
                 == IngestionJobStatus.SUCCEEDED
             ):
-                self.document_repository\
-                    .update_document_status(
-                        document_id=(
-                            job.document_id
-                        ),
-                        status=(
-                            DocumentStatus.READY
-                        ),
-                    )
-
+                document_status = (
+                    DocumentStatus.READY
+                )
             elif (
                 status
                 == IngestionJobStatus.FAILED
             ):
-                self.document_repository\
-                    .update_document_status(
-                        document_id=(
-                            job.document_id
-                        ),
-                        status=(
-                            DocumentStatus.FAILED
-                        ),
-                    )
+                document_status = (
+                    DocumentStatus.FAILED
+                )
+            else:
+                document_status = (
+                    DocumentStatus.PENDING
+                )
 
+            self.document_repository\
+                .update_document_status(
+                    document_id=(
+                        job.document_id
+                    ),
+                    status=document_status,
+                )
             self.session.commit()
-
             return job
-
         except Exception:
             self.session.rollback()
             raise
 
-
     def delete_document(
         self,
+        knowledge_base_id: str,
         document_id: str,
     ) -> Document | None:
-        document = (
-            self.document_repository
-            .get_document(document_id)
+        document = self.get_document(
+            knowledge_base_id=knowledge_base_id,
+            document_id=document_id,
         )
 
         if document is None:
             return None
 
-        if document.status == DocumentStatus.DELETED:
+        if (
+            document.status
+            == DocumentStatus.DELETED
+        ):
             return document
 
         try:
@@ -209,26 +245,130 @@ class DocumentService:
 
                 vector_delete = delete_by_document
 
-            # 先删除 Chroma 向量
-            vector_delete(document_id)
-
-            # 再把 MySQL 文档标记为已删除
+            vector_delete(
+                knowledge_base_id,
+                document_id,
+            )
             document = (
                 self.document_repository
                 .update_document_status(
                     document_id=document_id,
-                    status=DocumentStatus.DELETED,
+                    status=(
+                        DocumentStatus.DELETED
+                    ),
                 )
             )
-
             self.session.commit()
-
             return document
-
         except Exception:
             self.session.rollback()
             raise
 
+    def request_reindex(
+        self,
+        knowledge_base_id: str,
+        document_id: str,
+    ) -> tuple[
+        Document,
+        IngestionJob,
+        bool,
+    ] | None:
+        document = self.get_document(
+            knowledge_base_id=knowledge_base_id,
+            document_id=document_id,
+        )
+
+        if document is None:
+            return None
+
+        if (
+            document.status
+            == DocumentStatus.DELETED
+        ):
+            raise DocumentReindexConflictError(
+                "Deleted document cannot be "
+                "reindexed"
+            )
+
+        try:
+            latest_job = (
+                self.document_repository
+                .get_latest_job_by_document_id(
+                    document.id
+                )
+            )
+
+            if (
+                latest_job is not None
+                and latest_job.status
+                in {
+                    IngestionJobStatus.PENDING,
+                    IngestionJobStatus.RUNNING,
+                }
+            ):
+                return (
+                    document,
+                    latest_job,
+                    False,
+                )
+
+            job = (
+                self.document_repository
+                .create_ingestion_job(
+                    document.id
+                )
+            )
+            self.document_repository\
+                .update_document_status(
+                    document_id=document.id,
+                    status=(
+                        DocumentStatus.PENDING
+                    ),
+                )
+            self.session.commit()
+            return document, job, True
+        except Exception:
+            self.session.rollback()
+            raise
+
+    def _reuse_or_retry(
+        self,
+        document: Document,
+    ) -> tuple[
+        Document,
+        IngestionJob,
+        bool,
+    ]:
+        latest_job = (
+            self.document_repository
+            .get_latest_job_by_document_id(
+                document.id
+            )
+        )
+
+        if (
+            latest_job is not None
+            and document.status
+            not in {
+                DocumentStatus.FAILED,
+                DocumentStatus.DELETED,
+            }
+        ):
+            return document, latest_job, False
+
+        job = (
+            self.document_repository
+            .create_ingestion_job(
+                document.id
+            )
+        )
+        self.document_repository\
+            .update_document_status(
+                document_id=document.id,
+                status=DocumentStatus.PENDING,
+            )
+        self.session.commit()
+        return document, job, True
 
     def _resolve_knowledge_base(
         self,
@@ -243,10 +383,8 @@ class DocumentService:
             )
 
             if knowledge_base is None:
-                raise (
-                    KnowledgeBaseNotFoundError(
-                        "Knowledge base not found"
-                    )
+                raise KnowledgeBaseNotFoundError(
+                    "Knowledge base not found"
                 )
 
             return knowledge_base
@@ -260,7 +398,6 @@ class DocumentService:
                 ),
             )
         )
-
         return (
             self.conversation_repository
             .get_or_create_knowledge_base(

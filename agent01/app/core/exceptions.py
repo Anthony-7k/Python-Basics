@@ -31,3 +31,15 @@ class ConversationKnowledgeBaseMismatchError(
     """会话与指定知识库不匹配。"""
 
     pass
+
+
+class DocumentReindexConflictError(Exception):
+    """文档当前状态不允许重新索引。"""
+
+    pass
+
+
+class DocumentFileMissingError(Exception):
+    """文档的本地源文件已经不存在。"""
+
+    pass

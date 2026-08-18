@@ -8,6 +8,7 @@ def test_split_text():
     chunks = split_text(
         text=text,
         document_id="doc001",
+        knowledge_base_id="kb-a",
         chunk_size=50,
         chunk_overlap=10,
     )
@@ -26,12 +27,14 @@ def test_split_text_chunk_id_with_page():
     page1_chunks = split_text(
         text="第一页内容",
         document_id="pdf001",
+        knowledge_base_id="kb-a",
         page=1,
     )
 
     page2_chunks = split_text(
         text="第二页内容",
         document_id="pdf001",
+        knowledge_base_id="kb-a",
         page=2,
     )
 

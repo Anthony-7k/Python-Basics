@@ -1,4 +1,5 @@
 import json
+import os
 from pathlib import Path
 from app.services.retrieval.retriever import retrieve
 
@@ -35,6 +36,9 @@ def preview_retrieval(
 
         results = retrieve(
             query_text=question,
+            knowledge_base_id=os.environ[
+                "KNOWLEDGE_BASE_ID"
+            ],
             top_k=top_k,
         )
 
@@ -75,6 +79,9 @@ def evaluate_retrieval(
 
         results = retrieve(
             query_text=item["question"],
+            knowledge_base_id=os.environ[
+                "KNOWLEDGE_BASE_ID"
+            ],
             top_k=top_k,
         )
 
@@ -120,6 +127,9 @@ def evaluate_unanswerable(
 
         results = retrieve(
             query_text=item["question"],
+            knowledge_base_id=os.environ[
+                "KNOWLEDGE_BASE_ID"
+            ],
             top_k=top_k,
             max_distance=max_distance,
         )

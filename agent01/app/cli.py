@@ -1,4 +1,5 @@
 import argparse
+from pathlib import Path
 
 from app.services.ingestion.ingestion_service import ingest_file
 from app.services.rag.rag_service import answer_question
@@ -7,13 +8,34 @@ from app.core.logging_config import (
     setup_logging,
     get_logger,
 )
+from app.services.documents import (
+    build_document_id,
+)
+from app.services.ingestion.uploader import (
+    calculate_sha256,
+)
 
 
 logger = get_logger(__name__)
 
 
-def run_ingest(file_path: str):
-    chunks = ingest_file(file_path)
+def run_ingest(
+    file_path: str,
+    knowledge_base_id: str,
+):
+    content_hash = calculate_sha256(
+        Path(file_path).read_bytes()
+    )
+    chunks = ingest_file(
+        file_path,
+        document_id=build_document_id(
+            knowledge_base_id,
+            content_hash,
+        ),
+        knowledge_base_id=(
+            knowledge_base_id
+        ),
+    )
 
     print()
     print("Ingestion completed")
@@ -21,10 +43,17 @@ def run_ingest(file_path: str):
     print(f"Chunks: {len(chunks)}")
 
 
-def run_chat(question: str, top_k: int):
+def run_chat(
+    question: str,
+    top_k: int,
+    knowledge_base_id: str,
+):
     response = answer_question(
         question=question,
         top_k=top_k,
+        knowledge_base_id=(
+            knowledge_base_id
+        ),
     )
 
     print()
@@ -70,6 +99,11 @@ def main():
         "file_path",
         help="Path to PDF, DOCX or TXT file",
     )
+    ingest_parser.add_argument(
+        "--knowledge-base-id",
+        required=True,
+        help="Knowledge base identifier",
+    )
 
     chat_parser = subparsers.add_parser(
         "chat",
@@ -79,6 +113,11 @@ def main():
     chat_parser.add_argument(
         "question",
         help="Question to ask",
+    )
+    chat_parser.add_argument(
+        "--knowledge-base-id",
+        required=True,
+        help="Knowledge base identifier",
     )
 
     chat_parser.add_argument(
@@ -100,12 +139,18 @@ def main():
     if args.command == "ingest":
         run_ingest(
             file_path=args.file_path,
+            knowledge_base_id=(
+                args.knowledge_base_id
+            ),
         )
 
     elif args.command == "chat":
         run_chat(
             question=args.question,
             top_k=args.top_k,
+            knowledge_base_id=(
+                args.knowledge_base_id
+            ),
         )
 
 

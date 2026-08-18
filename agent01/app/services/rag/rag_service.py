@@ -51,6 +51,7 @@ def build_context(results: list[dict]):
 
 def retrieve_context(
     question: str,
+    knowledge_base_id: str,
     top_k: int = 5
 ):
     """
@@ -59,6 +60,9 @@ def retrieve_context(
 
     results = retrieve(
         query_text=question,
+        knowledge_base_id=(
+            knowledge_base_id
+        ),
         top_k=top_k,
         max_distance=0.98,
     )
@@ -76,6 +80,7 @@ def answer_question(
     top_k: int = 5,
     request_id: str | None = None,
     *,
+    knowledge_base_id: str,
     original_question: str | None = None,
     standalone_question: str | None = None,
 ):
@@ -101,6 +106,9 @@ def answer_question(
 
     retrieval_result = retrieve_context(
         question=standalone_question,
+        knowledge_base_id=(
+            knowledge_base_id
+        ),
         top_k=top_k,
     )
 
@@ -112,10 +120,12 @@ def answer_question(
         "rag retrieval completed request_id=%s "
         "original_question=%r "
         "standalone_question=%r "
+        "knowledge_base_id=%s "
         "sources=%s retrieval_ms=%.2f",
         request_id,
         original_question,
         standalone_question,
+        knowledge_base_id,
         len(retrieval_result["sources"]),
         retrieval_ms,
     )

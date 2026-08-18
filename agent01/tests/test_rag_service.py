@@ -35,6 +35,7 @@ def test_rag_retrieves_with_standalone_and_answers_original(
         return_value="正式员工享有年假。[S1]",
     ) as mocked_generate:
         response = answer_question(
+            knowledge_base_id="kb-a",
             original_question="正式员工呢？",
             standalone_question=(
                 "正式员工的年假规定是什么？"
@@ -46,6 +47,7 @@ def test_rag_retrieves_with_standalone_and_answers_original(
         question=(
             "正式员工的年假规定是什么？"
         ),
+        knowledge_base_id="kb-a",
         top_k=5,
     )
     user_prompt = (

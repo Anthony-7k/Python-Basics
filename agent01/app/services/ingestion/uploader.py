@@ -60,16 +60,24 @@ def save_uploaded_file(
     content: bytes,
     suffix: str,
 ) -> tuple[str, Path]:
-    document_id = calculate_sha256(content)
+    content_hash = calculate_sha256(content)
 
     UPLOAD_DIR.mkdir(
         parents=True,
         exist_ok=True,
     )
 
-    file_path = UPLOAD_DIR / f"{document_id}{suffix}"
+    file_path = UPLOAD_DIR / f"{content_hash}{suffix}"
 
     if not file_path.exists():
         file_path.write_bytes(content)
 
-    return document_id, file_path
+    return content_hash, file_path
+
+
+def get_uploaded_file_path(
+    content_hash: str,
+    file_name: str,
+) -> Path:
+    suffix = Path(file_name).suffix.lower()
+    return UPLOAD_DIR / f"{content_hash}{suffix}"

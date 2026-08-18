@@ -2719,3 +2719,72 @@ COLLATE utf8mb4_unicode_ci
 ```
 
 这样消息、会话摘要、知识库名称、文档文件名和任务错误信息都可以安全保存中文及其他 Unicode 字符。
+
+---
+
+# Day13：多知识库与文档生命周期
+
+日期：2026-08-18
+
+## 1. 隔离边界
+
+`knowledge_base_id` 现在贯穿以下链路：
+
+```text
+Document -> IngestionJob -> ChunkRecord -> Chroma metadata
+         -> Retriever filter -> RAG Service -> Chat
+```
+
+`query_chunks()`、`retrieve()` 和 `answer_question()` 都要求显式传入知识库 ID；没有“遗漏过滤时查询全部向量”的降级路径。Chat 始终使用会话记录中的知识库 ID，不能仅信任当前请求参数。
+
+## 2. 文档幂等范围
+
+文档内容哈希由全局唯一改为知识库内唯一：
+
+```text
+UNIQUE (knowledge_base_id, content_hash)
+```
+
+文档 ID 使用 `sha256(knowledge_base_id + ':' + content_hash)` 稳定派生。同一文件在同一知识库重复上传会复用记录；同一文件在不同知识库会生成不同 Document 和 Chunk ID，不会发生 Chroma 覆盖。
+
+迁移：
+
+```text
+8a2d4e6f9c11  scope document hash to knowledge base
+```
+
+## 3. 知识库和文档管理接口
+
+新增：
+
+```text
+POST /api/v1/knowledge-bases
+GET  /api/v1/knowledge-bases
+GET  /api/v1/knowledge-bases/{knowledge_base_id}
+GET  /api/v1/knowledge-bases/{knowledge_base_id}/documents
+GET  /api/v1/knowledge-bases/{knowledge_base_id}/documents/{document_id}
+POST /api/v1/knowledge-bases/{knowledge_base_id}/documents/{document_id}/reindex
+```
+
+删除接口保留原路径，但现在必须显式提供 `knowledge_base_id` 查询参数；伪造知识库 ID 与不存在文档都返回 404，避免跨库删除。
+
+## 4. 重建与重试语义
+
+每个 IngestionJob 增加单文档内递增的 `attempt_number`，以稳定识别最新任务：
+
+- pending/running 任务重复请求重建时，返回原任务，不重复调度。
+- succeeded/failed 后重新请求，会创建新的任务并保留历史任务。
+- deleted 文档不能直接重建；重新上传同内容可恢复为 pending 并创建新任务。
+- 每次入库先删除指定知识库、指定文档的旧向量，再写入新 Chunk。
+
+## 5. 自动化验收
+
+新增测试覆盖：
+
+- 同内容可分别存在于两个知识库，Document ID 不同。
+- Chroma 查询结果全部匹配请求的 `knowledge_base_id`。
+- RAG 和 Chat 把知识库 ID 强制传递到检索层。
+- 文档列表按知识库隔离。
+- 删除缺少知识库 ID 时请求校验失败。
+- 重建任务幂等，失败后可以生成新任务重试。
+- 知识库创建、列表和详情接口。

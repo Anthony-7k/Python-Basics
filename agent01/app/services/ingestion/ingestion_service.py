@@ -27,6 +27,7 @@ from app.services.loaders.txt_loader import (
     load_txt,
 )
 from app.services.vector_stores.vector_store import (
+    delete_by_document,
     upsert_chunks,
 )
 
@@ -56,6 +57,8 @@ def load_documents(
 
 def build_chunks(
     file_path: str,
+    document_id: str,
+    knowledge_base_id: str,
 ) -> list[ChunkRecord]:
     documents = load_documents(
         file_path
@@ -70,7 +73,8 @@ def build_chunks(
 
         chunks = split_text(
             cleaned_text,
-            document.document_id,
+            document_id,
+            knowledge_base_id,
             source=document.source,
             page=document.page,
         )
@@ -82,11 +86,21 @@ def build_chunks(
 
 def ingest_file(
     file_path: str,
+    document_id: str,
+    knowledge_base_id: str,
 ) -> list[ChunkRecord]:
     chunks = build_chunks(
-        file_path
+        file_path,
+        document_id=document_id,
+        knowledge_base_id=(
+            knowledge_base_id
+        ),
     )
 
+    delete_by_document(
+        knowledge_base_id=knowledge_base_id,
+        document_id=document_id,
+    )
     upsert_chunks(chunks)
 
     return chunks
@@ -113,8 +127,24 @@ def run_ingestion_task(
         if running_job is None:
             return
 
+        document = (
+            service.document_repository
+            .get_document(
+                running_job.document_id
+            )
+        )
+
+        if document is None:
+            return
+
         try:
-            ingest_file(file_path)
+            ingest_file(
+                file_path,
+                document_id=document.id,
+                knowledge_base_id=(
+                    document.knowledge_base_id
+                ),
+            )
 
         except Exception as exc:
             service.update_ingestion_status(

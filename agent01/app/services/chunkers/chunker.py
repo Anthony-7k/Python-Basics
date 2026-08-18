@@ -5,6 +5,7 @@ import hashlib
 def split_text(
     text: str,
     document_id: str,
+    knowledge_base_id: str,
     chunk_size: int = 500,
     chunk_overlap: int = 50,
     source: str | None = None,
@@ -28,6 +29,9 @@ def split_text(
         chunk = ChunkRecord(
             chunk_id=chunk_id,
             document_id=document_id,
+            knowledge_base_id=(
+                knowledge_base_id
+            ),
             content=chunk_content,
             start_index=start,
             end_index=end,

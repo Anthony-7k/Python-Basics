@@ -7,6 +7,13 @@ from pathlib import Path
 load_dotenv()
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
+CHROMA_PATH = Path(
+    os.getenv(
+        "CHROMA_PATH",
+        str(PROJECT_ROOT / "data" / "chroma"),
+    )
+)
+
 UPLOAD_DIR = Path(
     os.getenv(
         "UPLOAD_DIR",

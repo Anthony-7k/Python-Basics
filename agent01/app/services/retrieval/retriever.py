@@ -3,11 +3,15 @@ from app.services.vector_stores.vector_store import query_chunks
 
 def retrieve(
     query_text: str,
+    knowledge_base_id: str,
     top_k: int = 5,
     max_distance: float | None = None,
 ) -> list[dict]:
     raw_results = query_chunks(
         query_text=query_text,
+        knowledge_base_id=(
+            knowledge_base_id
+        ),
         n_results=top_k,
     )
 

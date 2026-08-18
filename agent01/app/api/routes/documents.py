@@ -6,6 +6,7 @@ from fastapi import (
     Depends,
     File,
     HTTPException,
+    Query,
     UploadFile,
     status,
 )
@@ -15,6 +16,9 @@ from app.api.dependencies import (
 )
 from app.schemas.document import (
     DocumentDeleteResponse,
+    DocumentListResponse,
+    DocumentReindexResponse,
+    DocumentResponse,
     DocumentUploadResponse,
     IngestionTaskResponse,
 )
@@ -25,6 +29,7 @@ from app.services.ingestion.ingestion_service import (
     run_ingestion_task,
 )
 from app.services.ingestion.uploader import (
+    get_uploaded_file_path,
     read_validated_file,
     save_uploaded_file,
 )
@@ -54,7 +59,7 @@ async def upload_document(
             await read_validated_file(file)
         )
 
-        document_id, file_path = (
+        content_hash, file_path = (
             save_uploaded_file(
                 content,
                 suffix,
@@ -75,7 +80,7 @@ async def upload_document(
 
     document, job, created = (
         document_service.create_or_get_upload(
-            document_id=document_id,
+            content_hash=content_hash,
             file_name=original_file_name,
             knowledge_base_id=(
                 knowledge_base_id
@@ -136,13 +141,20 @@ def get_ingestion_status(
 )
 def delete_document(
     document_id: str,
+    knowledge_base_id: str = Query(
+        ...,
+        min_length=1,
+    ),
     document_service: DocumentService = Depends(
         get_document_service
     ),
 ):
     document = (
         document_service.delete_document(
-            document_id
+            knowledge_base_id=(
+                knowledge_base_id
+            ),
+            document_id=document_id,
         )
     )
 
@@ -157,4 +169,114 @@ def delete_document(
     return DocumentDeleteResponse(
         document_id=document.id,
         status=document.status,
+    )
+
+
+@router.get(
+    "/knowledge-bases/{knowledge_base_id}/documents",
+    response_model=DocumentListResponse,
+)
+def list_documents(
+    knowledge_base_id: str,
+    include_deleted: bool = False,
+    document_service: DocumentService = Depends(
+        get_document_service
+    ),
+):
+    return DocumentListResponse(
+        items=(
+            document_service.list_documents(
+                knowledge_base_id=(
+                    knowledge_base_id
+                ),
+                include_deleted=include_deleted,
+            )
+        )
+    )
+
+
+@router.get(
+    "/knowledge-bases/{knowledge_base_id}/documents/{document_id}",
+    response_model=DocumentResponse,
+)
+def get_document(
+    knowledge_base_id: str,
+    document_id: str,
+    document_service: DocumentService = Depends(
+        get_document_service
+    ),
+):
+    document = document_service.get_document(
+        knowledge_base_id=knowledge_base_id,
+        document_id=document_id,
+    )
+
+    if document is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Document not found",
+        )
+
+    return document
+
+
+@router.post(
+    "/knowledge-bases/{knowledge_base_id}/documents/{document_id}/reindex",
+    response_model=DocumentReindexResponse,
+    status_code=status.HTTP_202_ACCEPTED,
+)
+def reindex_document(
+    knowledge_base_id: str,
+    document_id: str,
+    background_tasks: BackgroundTasks,
+    document_service: DocumentService = Depends(
+        get_document_service
+    ),
+):
+    document = document_service.get_document(
+        knowledge_base_id=knowledge_base_id,
+        document_id=document_id,
+    )
+
+    if document is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Document not found",
+        )
+
+    file_path = get_uploaded_file_path(
+        content_hash=document.content_hash,
+        file_name=document.file_name,
+    )
+
+    if not file_path.exists():
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Document source file is missing",
+        )
+
+    result = document_service.request_reindex(
+        knowledge_base_id=knowledge_base_id,
+        document_id=document_id,
+    )
+
+    if result is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Document not found",
+        )
+
+    document, job, created = result
+
+    if created:
+        background_tasks.add_task(
+            run_ingestion_task,
+            job.id,
+            str(file_path),
+        )
+
+    return DocumentReindexResponse(
+        document_id=document.id,
+        task_id=job.id,
+        status=job.status,
     )

@@ -1,5 +1,6 @@
 import sys
 import json
+import os
 
 from pathlib import Path
 
@@ -39,7 +40,10 @@ def load_questions():
 def evaluate_question(item):
 
     response = answer_question(
-        item["question"]
+        item["question"],
+        knowledge_base_id=os.environ[
+            "KNOWLEDGE_BASE_ID"
+        ],
     )
 
     answer = response.answer
@@ -115,6 +119,9 @@ def main():
             )
             raw_results = retrieve(
                 query_text=result["question"],
+                knowledge_base_id=os.environ[
+                    "KNOWLEDGE_BASE_ID"
+                ],
                 top_k=3,
                 max_distance=None,
             )

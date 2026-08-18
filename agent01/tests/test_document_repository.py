@@ -164,7 +164,8 @@ def test_document_content_is_idempotent(
     existing_document = (
         repository
         .get_document_by_content_hash(
-            document_id
+            knowledge_base.id,
+            document_id,
         )
     )
 
@@ -259,7 +260,7 @@ def test_document_service_is_idempotent(
 
     first_document, first_job, first_created = (
         service.create_or_get_upload(
-            document_id=document_id,
+            content_hash=document_id,
             file_name="first.txt",
         )
     )
@@ -269,7 +270,7 @@ def test_document_service_is_idempotent(
         second_job,
         second_created,
     ) = service.create_or_get_upload(
-        document_id=document_id,
+        content_hash=document_id,
         file_name="second.txt",
     )
 
@@ -300,7 +301,7 @@ def test_document_service_updates_statuses(
 
     document, job, created = (
         service.create_or_get_upload(
-            document_id=document_id,
+            content_hash=document_id,
             file_name="status.txt",
         )
     )
@@ -349,12 +350,18 @@ def test_document_service_updates_statuses(
 def test_delete_document_marks_it_deleted(
     db_session: Session,
 ):
-    deleted_document_ids = []
+    deleted_documents = []
 
     service = DocumentService(
         db_session,
         vector_delete=(
-            deleted_document_ids.append
+            lambda knowledge_base_id,
+            document_id: deleted_documents.append(
+                (
+                    knowledge_base_id,
+                    document_id,
+                )
+            )
         ),
     )
 
@@ -362,7 +369,7 @@ def test_delete_document_marks_it_deleted(
 
     document, _, _ = (
         service.create_or_get_upload(
-            document_id=document_id,
+            content_hash=document_id,
             file_name="delete.txt",
         )
     )
@@ -376,7 +383,12 @@ def test_delete_document_marks_it_deleted(
     db_session.commit()
 
     deleted_document = (
-        service.delete_document(document.id)
+        service.delete_document(
+            knowledge_base_id=(
+                document.knowledge_base_id
+            ),
+            document_id=document.id,
+        )
     )
 
     assert deleted_document is not None
@@ -384,8 +396,11 @@ def test_delete_document_marks_it_deleted(
         deleted_document.status
         == DocumentStatus.DELETED
     )
-    assert deleted_document_ids == [
-        document.id
+    assert deleted_documents == [
+        (
+            document.knowledge_base_id,
+            document.id,
+        )
     ]
 
 
@@ -393,6 +408,7 @@ def test_delete_document_rolls_back_when_vector_delete_fails(
     db_session: Session,
 ):
     def failing_vector_delete(
+        knowledge_base_id: str,
         document_id: str,
     ):
         raise RuntimeError(
@@ -408,7 +424,7 @@ def test_delete_document_rolls_back_when_vector_delete_fails(
 
     document, _, _ = (
         service.create_or_get_upload(
-            document_id=document_id,
+            content_hash=document_id,
             file_name="rollback-delete.txt",
         )
     )
@@ -425,7 +441,12 @@ def test_delete_document_rolls_back_when_vector_delete_fails(
         RuntimeError,
         match="Chroma deletion failed",
     ):
-        service.delete_document(document.id)
+        service.delete_document(
+            knowledge_base_id=(
+                document.knowledge_base_id
+            ),
+            document_id=document.id,
+        )
 
     saved_document = (
         service.document_repository
@@ -436,3 +457,120 @@ def test_delete_document_rolls_back_when_vector_delete_fails(
         saved_document.status
         == DocumentStatus.READY
     )
+
+
+def test_same_content_is_scoped_to_knowledge_base(
+    db_session: Session,
+):
+    repository = ConversationRepository(
+        db_session
+    )
+    user = repository.create_user(
+        email="scope-test@example.com"
+    )
+    kb_a = repository.create_knowledge_base(
+        owner_user_id=user.id,
+        name="KB A",
+    )
+    kb_b = repository.create_knowledge_base(
+        owner_user_id=user.id,
+        name="KB B",
+    )
+    db_session.commit()
+
+    service = DocumentService(db_session)
+    content_hash = "2" * 64
+
+    doc_a, _, created_a = (
+        service.create_or_get_upload(
+            content_hash=content_hash,
+            file_name="same.txt",
+            knowledge_base_id=kb_a.id,
+        )
+    )
+    doc_b, _, created_b = (
+        service.create_or_get_upload(
+            content_hash=content_hash,
+            file_name="same.txt",
+            knowledge_base_id=kb_b.id,
+        )
+    )
+
+    assert created_a is True
+    assert created_b is True
+    assert doc_a.id != doc_b.id
+    assert doc_a.content_hash == content_hash
+    assert doc_b.content_hash == content_hash
+
+    deleted = []
+    service.vector_delete = (
+        lambda knowledge_base_id,
+        document_id: deleted.append(
+            (knowledge_base_id, document_id)
+        )
+    )
+    assert service.delete_document(
+        knowledge_base_id=kb_b.id,
+        document_id=doc_a.id,
+    ) is None
+    service.delete_document(
+        knowledge_base_id=kb_a.id,
+        document_id=doc_a.id,
+    )
+
+    assert deleted == [(kb_a.id, doc_a.id)]
+    assert service.get_document(
+        knowledge_base_id=kb_b.id,
+        document_id=doc_b.id,
+    ).status != DocumentStatus.DELETED
+
+
+def test_reindex_is_idempotent_and_failed_job_can_retry(
+    db_session: Session,
+):
+    service = DocumentService(db_session)
+    document, first_job, _ = (
+        service.create_or_get_upload(
+            content_hash="3" * 64,
+            file_name="reindex.txt",
+        )
+    )
+    service.update_ingestion_status(
+        task_id=first_job.id,
+        status=IngestionJobStatus.SUCCEEDED,
+    )
+
+    first_reindex = service.request_reindex(
+        knowledge_base_id=(
+            document.knowledge_base_id
+        ),
+        document_id=document.id,
+    )
+    assert first_reindex is not None
+    _, reindex_job, created = first_reindex
+    assert created is True
+
+    duplicate = service.request_reindex(
+        knowledge_base_id=(
+            document.knowledge_base_id
+        ),
+        document_id=document.id,
+    )
+    assert duplicate is not None
+    assert duplicate[1].id == reindex_job.id
+    assert duplicate[2] is False
+
+    service.update_ingestion_status(
+        task_id=reindex_job.id,
+        status=IngestionJobStatus.FAILED,
+        error="temporary failure",
+    )
+    retry = service.request_reindex(
+        knowledge_base_id=(
+            document.knowledge_base_id
+        ),
+        document_id=document.id,
+    )
+    assert retry is not None
+    assert retry[1].id != reindex_job.id
+    assert retry[2] is True

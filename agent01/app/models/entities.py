@@ -151,6 +151,17 @@ class KnowledgeBase(TimestampMixin, Base):
 class Document(TimestampMixin, Base):
     __tablename__ = "documents"
 
+    __table_args__ = (
+        UniqueConstraint(
+            "knowledge_base_id",
+            "content_hash",
+            name=(
+                "uq_documents_knowledge_base_"
+                "content_hash"
+            ),
+        ),
+    )
+
     id: Mapped[str] = mapped_column(
         String(64),
         primary_key=True,
@@ -173,7 +184,6 @@ class Document(TimestampMixin, Base):
     content_hash: Mapped[str] = mapped_column(
         String(64),
         nullable=False,
-        unique=True,
         index=True,
     )
 
@@ -350,6 +360,17 @@ class Message(Base):
 class IngestionJob(TimestampMixin, Base):
     __tablename__ = "ingestion_jobs"
 
+    __table_args__ = (
+        UniqueConstraint(
+            "document_id",
+            "attempt_number",
+            name=(
+                "uq_ingestion_jobs_document_"
+                "attempt"
+            ),
+        ),
+    )
+
     id: Mapped[str] = mapped_column(
         String(36),
         primary_key=True,
@@ -363,6 +384,13 @@ class IngestionJob(TimestampMixin, Base):
         ),
         nullable=False,
         index=True,
+    )
+
+    attempt_number: Mapped[int] = mapped_column(
+        Integer,
+        nullable=False,
+        default=1,
+        server_default="1",
     )
 
     status: Mapped[

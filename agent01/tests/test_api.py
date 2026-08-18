@@ -1,4 +1,5 @@
 from types import SimpleNamespace
+from datetime import datetime, timezone
 from unittest.mock import (
     MagicMock,
     call,
@@ -11,6 +12,7 @@ from fastapi.testclient import TestClient
 from app.api.dependencies import (
     get_conversation_service,
     get_document_service,
+    get_knowledge_base_service,
 )
 from app.core.exceptions import (
     ConversationNotFoundError,
@@ -43,7 +45,11 @@ class FakeConversationService:
             id=(
                 conversation_id
                 or "test-conversation-id"
-            )
+            ),
+            knowledge_base_id=(
+                knowledge_base_id
+                or "test-kb-id"
+            ),
         )
 
     def save_exchange(
@@ -78,12 +84,21 @@ class FakeDocumentService:
 
     def create_or_get_upload(
         self,
-        document_id,
+        content_hash,
         file_name,
         knowledge_base_id=None,
     ):
+        knowledge_base_id = (
+            knowledge_base_id
+            or "test-kb-id"
+        )
+        document_id = content_hash
+        key = (
+            knowledge_base_id,
+            content_hash,
+        )
         existing = self.documents.get(
-            document_id
+            key
         )
 
         if existing is not None:
@@ -99,8 +114,18 @@ class FakeDocumentService:
 
         document = SimpleNamespace(
             id=document_id,
+            knowledge_base_id=(
+                knowledge_base_id
+            ),
             file_name=file_name,
+            content_hash=content_hash,
             status=DocumentStatus.PENDING,
+            created_at=datetime.now(
+                timezone.utc
+            ),
+            updated_at=datetime.now(
+                timezone.utc
+            ),
         )
 
         job = SimpleNamespace(
@@ -118,7 +143,7 @@ class FakeDocumentService:
         )
 
         self.documents[
-            document_id
+            key
         ] = record
 
         self.jobs[job.id] = job
@@ -134,10 +159,19 @@ class FakeDocumentService:
 
     def delete_document(
         self,
+        knowledge_base_id,
         document_id,
     ):
-        record = self.documents.get(
-            document_id
+        record = next(
+            (
+                value
+                for key, value
+                in self.documents.items()
+                if key[0] == knowledge_base_id
+                and value.document.id
+                == document_id
+            ),
+            None,
         )
 
         if record is None:
@@ -148,6 +182,84 @@ class FakeDocumentService:
         )
 
         return record.document
+
+    def list_documents(
+        self,
+        knowledge_base_id,
+        include_deleted=False,
+    ):
+        return [
+            record.document
+            for key, record
+            in self.documents.items()
+            if key[0] == knowledge_base_id
+            and (
+                include_deleted
+                or record.document.status
+                != DocumentStatus.DELETED
+            )
+        ]
+
+    def get_document(
+        self,
+        knowledge_base_id,
+        document_id,
+    ):
+        for key, record in self.documents.items():
+            if (
+                key[0] == knowledge_base_id
+                and record.document.id
+                == document_id
+            ):
+                return record.document
+        return None
+
+    def request_reindex(
+        self,
+        knowledge_base_id,
+        document_id,
+    ):
+        document = self.get_document(
+            knowledge_base_id,
+            document_id,
+        )
+        if document is None:
+            return None
+        job = SimpleNamespace(
+            id=f"reindex-{document_id[:12]}",
+            document_id=document_id,
+            status=IngestionJobStatus.PENDING,
+        )
+        self.jobs[job.id] = job
+        return document, job, True
+
+
+class FakeKnowledgeBaseService:
+    def __init__(self):
+        self.items = {}
+
+    def create(self, name, description=None):
+        knowledge_base = SimpleNamespace(
+            id=f"kb-{len(self.items) + 1}",
+            name=name,
+            description=description,
+            created_at=datetime.now(
+                timezone.utc
+            ),
+            updated_at=datetime.now(
+                timezone.utc
+            ),
+        )
+        self.items[knowledge_base.id] = (
+            knowledge_base
+        )
+        return knowledge_base
+
+    def list(self):
+        return list(self.items.values())
+
+    def get(self, knowledge_base_id):
+        return self.items[knowledge_base_id]
 
 @pytest.fixture(autouse=True)
 def fake_document_service():
@@ -176,6 +288,19 @@ def fake_conversation_service():
 
     app.dependency_overrides.pop(
         get_conversation_service,
+        None,
+    )
+
+
+@pytest.fixture(autouse=True)
+def fake_knowledge_base_service():
+    service = FakeKnowledgeBaseService()
+    app.dependency_overrides[
+        get_knowledge_base_service
+    ] = lambda: service
+    yield service
+    app.dependency_overrides.pop(
+        get_knowledge_base_service,
         None,
     )
 
@@ -341,6 +466,9 @@ def test_chat_uses_rewritten_question_for_rag(
     assert answer_kwargs[
         "standalone_question"
     ] == "正式员工的年假规定是什么？"
+    assert answer_kwargs[
+        "knowledge_base_id"
+    ] == "test-kb-id"
     assert answer_kwargs["request_id"]
 
 def test_upload_rejects_unsupported_extension():
@@ -479,7 +607,15 @@ def test_ingestion_task_succeeds():
     fake_service\
         .update_ingestion_status\
         .return_value = SimpleNamespace(
-            id="task-success"
+            id="task-success",
+            document_id="document-success",
+        )
+    fake_service.document_repository\
+        .get_document.return_value = (
+            SimpleNamespace(
+                id="document-success",
+                knowledge_base_id="kb-a",
+            )
         )
 
     with patch(
@@ -520,7 +656,9 @@ def test_ingestion_task_succeeds():
     )
 
     mocked_ingest.assert_called_once_with(
-        "fake-file.txt"
+        "fake-file.txt",
+        document_id="document-success",
+        knowledge_base_id="kb-a",
     )
 
     mocked_session_local\
@@ -534,7 +672,15 @@ def test_ingestion_task_fails():
     fake_service\
         .update_ingestion_status\
         .return_value = SimpleNamespace(
-            id="task-failure"
+            id="task-failure",
+            document_id="document-failure",
+        )
+    fake_service.document_repository\
+        .get_document.return_value = (
+            SimpleNamespace(
+                id="document-failure",
+                knowledge_base_id="kb-a",
+            )
         )
 
     with patch(
@@ -732,12 +878,16 @@ def test_delete_document(
 
     fake_document_service\
         .create_or_get_upload(
-            document_id=document_id,
+            content_hash=document_id,
             file_name="delete-api.txt",
+            knowledge_base_id="test-kb-id",
         )
 
     response = client.delete(
-        f"/api/v1/documents/{document_id}"
+        f"/api/v1/documents/{document_id}",
+        params={
+            "knowledge_base_id": "test-kb-id"
+        },
     )
 
     assert response.status_code == 200
@@ -753,7 +903,10 @@ def test_delete_missing_document(
 ):
     response = client.delete(
         "/api/v1/documents/"
-        + ("8" * 64)
+        + ("8" * 64),
+        params={
+            "knowledge_base_id": "test-kb-id"
+        },
     )
 
     assert response.status_code == 404
@@ -761,3 +914,104 @@ def test_delete_missing_document(
         response.json()["detail"]
         == "Document not found"
     )
+
+
+def test_delete_requires_knowledge_base_id():
+    response = client.delete(
+        "/api/v1/documents/"
+        + ("7" * 64)
+    )
+    assert response.status_code == 422
+
+
+def test_knowledge_base_create_list_and_detail(
+    fake_knowledge_base_service,
+):
+    created = client.post(
+        "/api/v1/knowledge-bases",
+        json={
+            "name": "HR Policies",
+            "description": "Human resources",
+        },
+    )
+    assert created.status_code == 201
+    knowledge_base_id = created.json()["id"]
+
+    listed = client.get(
+        "/api/v1/knowledge-bases"
+    )
+    assert listed.status_code == 200
+    assert len(listed.json()["items"]) == 1
+
+    detail = client.get(
+        "/api/v1/knowledge-bases/"
+        + knowledge_base_id
+    )
+    assert detail.status_code == 200
+    assert detail.json()["name"] == (
+        "HR Policies"
+    )
+
+
+def test_document_list_is_scoped_to_knowledge_base(
+    fake_document_service,
+):
+    content_hash = "6" * 64
+    fake_document_service.create_or_get_upload(
+        content_hash=content_hash,
+        file_name="a.txt",
+        knowledge_base_id="kb-a",
+    )
+    fake_document_service.create_or_get_upload(
+        content_hash="5" * 64,
+        file_name="b.txt",
+        knowledge_base_id="kb-b",
+    )
+
+    response = client.get(
+        "/api/v1/knowledge-bases/kb-a/documents"
+    )
+    assert response.status_code == 200
+    assert [
+        item["id"]
+        for item in response.json()["items"]
+    ] == [content_hash]
+
+
+def test_reindex_creates_background_job(
+    fake_document_service,
+    tmp_path,
+):
+    content_hash = "4" * 64
+    document, _, _ = (
+        fake_document_service
+        .create_or_get_upload(
+            content_hash=content_hash,
+            file_name="reindex.txt",
+            knowledge_base_id="kb-a",
+        )
+    )
+    source_path = tmp_path / "source.txt"
+    source_path.write_text(
+        "reindex source",
+        encoding="utf-8",
+    )
+
+    with patch(
+        "app.api.routes.documents."
+        "get_uploaded_file_path",
+        return_value=source_path,
+    ), patch(
+        "app.api.routes.documents."
+        "run_ingestion_task"
+    ) as mocked_ingestion:
+        response = client.post(
+            "/api/v1/knowledge-bases/kb-a/"
+            f"documents/{document.id}/reindex"
+        )
+
+    assert response.status_code == 202
+    assert response.json()["task_id"].startswith(
+        "reindex-"
+    )
+    mocked_ingestion.assert_called_once()

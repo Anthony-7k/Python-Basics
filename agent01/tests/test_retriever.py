@@ -3,6 +3,7 @@ from app.services.retrieval import retriever
 
 def fake_query_chunks(
     query_text: str,
+    knowledge_base_id: str,
     n_results: int = 5,
 ):
     return {
@@ -50,6 +51,7 @@ def test_retrieve_returns_results(
 
     results = retriever.retrieve(
         query_text="员工离职需要提前多久？",
+        knowledge_base_id="kb-a",
         top_k=2,
     )
 
@@ -70,6 +72,7 @@ def test_retrieve_filters_by_distance(
 
     results = retriever.retrieve(
         query_text="员工离职需要提前多久？",
+        knowledge_base_id="kb-a",
         top_k=2,
         max_distance=1.0,
     )

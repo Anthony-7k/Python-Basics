@@ -28,6 +28,7 @@ if __name__ == "__main__":
     chunks = split_text(
         text=text,
         document_id="demo001",
+        knowledge_base_id="demo-kb",
         chunk_size=500,
         chunk_overlap=100,
     )

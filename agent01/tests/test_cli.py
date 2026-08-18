@@ -2,8 +2,16 @@ from app.cli import run_ingest, run_chat
 from app.schemas.rag import RAGResponse, RAGSource
 
 
-def test_run_ingest(monkeypatch, capsys):
-    def fake_ingest_file(file_path):
+def test_run_ingest(
+    monkeypatch,
+    capsys,
+    tmp_path,
+):
+    def fake_ingest_file(
+        file_path,
+        document_id,
+        knowledge_base_id,
+    ):
         return ["chunk1", "chunk2"]
 
     monkeypatch.setattr(
@@ -11,8 +19,14 @@ def test_run_ingest(monkeypatch, capsys):
         fake_ingest_file,
     )
 
+    file_path = tmp_path / "test.txt"
+    file_path.write_text(
+        "test content",
+        encoding="utf-8",
+    )
     run_ingest(
-        "data/sample/test.txt"
+        str(file_path),
+        knowledge_base_id="kb-a",
     )
 
     output = capsys.readouterr().out
@@ -25,6 +39,8 @@ def test_run_chat_with_source(monkeypatch, capsys):
     def fake_answer_question(
         question,
         top_k=5,
+        *,
+        knowledge_base_id,
     ):
         return RAGResponse(
             answer="员工享有10天带薪年假。[S1]",
@@ -49,6 +65,7 @@ def test_run_chat_with_source(monkeypatch, capsys):
     run_chat(
         question="员工有多少天年假？",
         top_k=5,
+        knowledge_base_id="kb-a",
     )
 
     output = capsys.readouterr().out
@@ -62,6 +79,8 @@ def test_run_chat_without_source(monkeypatch, capsys):
     def fake_answer_question(
         question,
         top_k=5,
+        *,
+        knowledge_base_id,
     ):
         return RAGResponse(
             answer="知识库中没有足够的信息回答这个问题。",
@@ -78,6 +97,7 @@ def test_run_chat_without_source(monkeypatch, capsys):
     run_chat(
         question="公司提供免费健身房吗？",
         top_k=5,
+        knowledge_base_id="kb-a",
     )
 
     output = capsys.readouterr().out
