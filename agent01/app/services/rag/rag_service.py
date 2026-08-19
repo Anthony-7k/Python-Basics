@@ -2,7 +2,9 @@ import uuid
 
 import time
 
-from app.services.retrieval.retriever import retrieve
+from app.services.retrieval.retriever import (
+    retrieve_with_cache,
+)
 
 from app.prompts.rag_prompt import (
     SYSTEM_PROMPT,
@@ -17,6 +19,9 @@ from app.schemas.rag import (
 )
 
 from app.core.logging_config import get_logger
+from app.core.settings import (
+    RAG_RETRIEVAL_MAX_DISTANCE,
+)
 
 logger = get_logger(__name__)
 
@@ -52,26 +57,39 @@ def build_context(results: list[dict]):
 def retrieve_context(
     question: str,
     knowledge_base_id: str,
+    knowledge_base_version: int,
     top_k: int = 5
 ):
     """
     用户问题 -> 检索 -> 构造上下文
     """
 
-    results = retrieve(
+    outcome = retrieve_with_cache(
         query_text=question,
         knowledge_base_id=(
             knowledge_base_id
         ),
+        knowledge_base_version=(
+            knowledge_base_version
+        ),
         top_k=top_k,
-        max_distance=0.98,
+        max_distance=(
+            RAG_RETRIEVAL_MAX_DISTANCE
+        ),
     )
 
-    context, sources = build_context(results)
+    context, sources = build_context(
+        outcome.items
+    )
 
     return {
         "context": context,
         "sources": sources,
+        "cache_hit": outcome.cache_hit,
+        "cache_lookup_ms": (
+            outcome.cache_lookup_ms
+        ),
+        "retrieval_ms": outcome.retrieval_ms,
     }
 
 
@@ -81,6 +99,7 @@ def answer_question(
     request_id: str | None = None,
     *,
     knowledge_base_id: str,
+    knowledge_base_version: int = 1,
     original_question: str | None = None,
     standalone_question: str | None = None,
 ):
@@ -109,23 +128,43 @@ def answer_question(
         knowledge_base_id=(
             knowledge_base_id
         ),
+        knowledge_base_version=(
+            knowledge_base_version
+        ),
         top_k=top_k,
     )
 
-    retrieval_ms = (
-                           time.perf_counter() - retrieval_start
-                   ) * 1000
+    retrieval_total_ms = (
+        time.perf_counter() - retrieval_start
+    ) * 1000
+    cache_hit = retrieval_result.get(
+        "cache_hit",
+        False,
+    )
+    cache_lookup_ms = retrieval_result.get(
+        "cache_lookup_ms",
+        0.0,
+    )
+    retrieval_ms = retrieval_result.get(
+        "retrieval_ms",
+        retrieval_total_ms,
+    )
 
     logger.info(
         "rag retrieval completed request_id=%s "
         "original_question=%r "
         "standalone_question=%r "
         "knowledge_base_id=%s "
+        "knowledge_base_version=%s "
+        "cache_hit=%s cache_lookup_ms=%.2f "
         "sources=%s retrieval_ms=%.2f",
         request_id,
         original_question,
         standalone_question,
         knowledge_base_id,
+        knowledge_base_version,
+        cache_hit,
+        cache_lookup_ms,
         len(retrieval_result["sources"]),
         retrieval_ms,
     )
@@ -149,6 +188,9 @@ def answer_question(
             sources=[],
             used_chunk_ids=[],
             request_id=request_id,
+            cache_hit=cache_hit,
+            cache_lookup_ms=cache_lookup_ms,
+            retrieval_ms=retrieval_ms,
         )
 
     user_prompt = build_user_prompt(
@@ -203,4 +245,7 @@ def answer_question(
             for item in retrieval_result["sources"]
         ],
         request_id=request_id,
+        cache_hit=cache_hit,
+        cache_lookup_ms=cache_lookup_ms,
+        retrieval_ms=retrieval_ms,
     )

@@ -91,6 +91,27 @@ class ConversationRepository:
             ).all()
         )
 
+    def increment_knowledge_base_version(
+        self,
+        knowledge_base_id: str,
+    ) -> KnowledgeBase | None:
+        knowledge_base = self.session.scalar(
+            select(KnowledgeBase)
+            .where(
+                KnowledgeBase.id
+                == knowledge_base_id
+            )
+            .with_for_update()
+        )
+
+        if knowledge_base is None:
+            return None
+
+        knowledge_base.version += 1
+        self.session.flush()
+
+        return knowledge_base
+
     def get_or_create_knowledge_base(
         self,
         owner_user_id: str,

@@ -70,9 +70,23 @@ def chat(
         ),
     )
 
+    knowledge_base = getattr(
+        conversation,
+        "knowledge_base",
+        None,
+    )
+    knowledge_base_version = getattr(
+        knowledge_base,
+        "version",
+        1,
+    )
+
     rag_result = answer_question(
         knowledge_base_id=(
             conversation.knowledge_base_id
+        ),
+        knowledge_base_version=(
+            knowledge_base_version
         ),
         original_question=(
             request.question

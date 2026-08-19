@@ -33,6 +33,15 @@ class RAGResponse(BaseModel):
     sources: list[RAGSource]
     used_chunk_ids: list[str]
     request_id: str
+    cache_hit: bool = False
+    cache_lookup_ms: float = Field(
+        default=0.0,
+        ge=0,
+    )
+    retrieval_ms: float = Field(
+        default=0.0,
+        ge=0,
+    )
     latency_ms: float = Field(
         default=0.0,
         ge=0,

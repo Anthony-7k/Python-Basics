@@ -49,6 +49,62 @@ EMBEDDING_DIMENSIONS = int(
 )
 
 
+def _read_bool(
+    name: str,
+    default: bool,
+) -> bool:
+    raw_value = os.getenv(name)
+
+    if raw_value is None:
+        return default
+
+    normalized = raw_value.strip().lower()
+
+    if normalized in {"1", "true", "yes", "on"}:
+        return True
+
+    if normalized in {"0", "false", "no", "off"}:
+        return False
+
+    raise ValueError(
+        f"{name} must be a boolean value"
+    )
+
+
+REDIS_URL = os.getenv(
+    "REDIS_URL",
+    "redis://localhost:6379/0",
+)
+RAG_CACHE_ENABLED = _read_bool(
+    "RAG_CACHE_ENABLED",
+    True,
+)
+RAG_CACHE_TTL_SECONDS = int(
+    os.getenv(
+        "RAG_CACHE_TTL_SECONDS",
+        "300",
+    )
+)
+RAG_RETRIEVAL_MAX_DISTANCE = float(
+    os.getenv(
+        "RAG_RETRIEVAL_MAX_DISTANCE",
+        "1.1",
+    )
+)
+REDIS_CONNECT_TIMEOUT_SECONDS = float(
+    os.getenv(
+        "REDIS_CONNECT_TIMEOUT_SECONDS",
+        "0.2",
+    )
+)
+REDIS_SOCKET_TIMEOUT_SECONDS = float(
+    os.getenv(
+        "REDIS_SOCKET_TIMEOUT_SECONDS",
+        "0.2",
+    )
+)
+
+
 def validate_settings():
     required_settings = {
         "LLM_API_KEY": LLM_API_KEY,
@@ -118,4 +174,24 @@ if CONVERSATION_HISTORY_TOKEN_BUDGET < 1:
 if CONVERSATION_SUMMARY_MAX_CHARS < 1:
     raise ValueError(
         "CONVERSATION_SUMMARY_MAX_CHARS must be at least 1"
+    )
+
+if RAG_CACHE_TTL_SECONDS < 1:
+    raise ValueError(
+        "RAG_CACHE_TTL_SECONDS must be at least 1"
+    )
+
+if RAG_RETRIEVAL_MAX_DISTANCE <= 0:
+    raise ValueError(
+        "RAG_RETRIEVAL_MAX_DISTANCE must be greater than 0"
+    )
+
+if REDIS_CONNECT_TIMEOUT_SECONDS <= 0:
+    raise ValueError(
+        "REDIS_CONNECT_TIMEOUT_SECONDS must be greater than 0"
+    )
+
+if REDIS_SOCKET_TIMEOUT_SECONDS <= 0:
+    raise ValueError(
+        "REDIS_SOCKET_TIMEOUT_SECONDS must be greater than 0"
     )

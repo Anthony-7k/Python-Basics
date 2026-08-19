@@ -26,6 +26,7 @@ class KnowledgeBaseResponse(BaseModel):
     id: str
     name: str
     description: str | None
+    version: int = Field(ge=1)
     created_at: datetime
     updated_at: datetime
 

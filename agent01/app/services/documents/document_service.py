@@ -172,6 +172,15 @@ class DocumentService:
         error: str | None = None,
     ) -> IngestionJob | None:
         try:
+            existing_job = (
+                self.document_repository
+                .get_ingestion_job(task_id)
+            )
+            previous_status = (
+                existing_job.status
+                if existing_job is not None
+                else None
+            )
             job = (
                 self.document_repository
                 .update_ingestion_job(
@@ -210,6 +219,22 @@ class DocumentService:
                     ),
                     status=document_status,
                 )
+
+            if (
+                status
+                == IngestionJobStatus.SUCCEEDED
+                and previous_status
+                != IngestionJobStatus.SUCCEEDED
+            ):
+                document = (
+                    self.document_repository
+                    .get_document(job.document_id)
+                )
+                if document is not None:
+                    self.conversation_repository\
+                        .increment_knowledge_base_version(
+                            document.knowledge_base_id
+                        )
             self.session.commit()
             return job
         except Exception:
@@ -258,6 +283,10 @@ class DocumentService:
                     ),
                 )
             )
+            self.conversation_repository\
+                .increment_knowledge_base_version(
+                    knowledge_base_id
+                )
             self.session.commit()
             return document
         except Exception:
@@ -324,6 +353,10 @@ class DocumentService:
                     status=(
                         DocumentStatus.PENDING
                     ),
+                )
+            self.conversation_repository\
+                .increment_knowledge_base_version(
+                    knowledge_base_id
                 )
             self.session.commit()
             return document, job, True

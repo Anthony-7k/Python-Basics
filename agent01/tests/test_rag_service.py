@@ -1,7 +1,9 @@
+from types import SimpleNamespace
 from unittest.mock import patch
 
 from app.services.rag.rag_service import (
     answer_question,
+    retrieve_context,
 )
 
 
@@ -48,6 +50,7 @@ def test_rag_retrieves_with_standalone_and_answers_original(
             "正式员工的年假规定是什么？"
         ),
         knowledge_base_id="kb-a",
+        knowledge_base_version=1,
         top_k=5,
     )
     user_prompt = (
@@ -76,3 +79,40 @@ def test_rag_retrieves_with_standalone_and_answers_original(
         "'正式员工的年假规定是什么？'"
         in caplog.text
     )
+
+
+def test_retrieve_context_uses_configured_distance():
+    outcome = SimpleNamespace(
+        items=[
+            {
+                "chunk_id": "chunk-1",
+                "content": "住宿上限为 880 元。",
+                "distance": 1.04592,
+                "metadata": {
+                    "source": "policy.txt",
+                },
+            }
+        ],
+        cache_hit=False,
+        cache_lookup_ms=1.0,
+        retrieval_ms=2.0,
+    )
+
+    with patch(
+        "app.services.rag.rag_service."
+        "retrieve_with_cache",
+        return_value=outcome,
+    ) as mocked_retrieve:
+        result = retrieve_context(
+            question="上海住宿上限是多少？",
+            knowledge_base_id="kb-a",
+            knowledge_base_version=2,
+        )
+
+    assert (
+        mocked_retrieve.call_args.kwargs[
+            "max_distance"
+        ]
+        == 1.1
+    )
+    assert "880 元" in result["context"]

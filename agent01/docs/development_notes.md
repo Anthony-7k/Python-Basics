@@ -2788,3 +2788,86 @@ POST /api/v1/knowledge-bases/{knowledge_base_id}/documents/{document_id}/reindex
 - 删除缺少知识库 ID 时请求校验失败。
 - 重建任务幂等，失败后可以生成新任务重试。
 - 知识库创建、列表和详情接口。
+
+---
+
+# Day14：Redis 检索缓存与里程碑二验收
+
+日期：2026-08-19
+
+## 1. Redis 检索缓存
+
+新增 `app/services/cache/cache_service.py`，缓存 Chroma 检索结果。缓存键由以下维度组成：
+
+```text
+knowledge_base_id
+knowledge_base_version
+embedding_model
+top_k
+max_distance
+normalized_question_hash
+```
+
+缓存使用 TTL，Redis GET/SET 异常统一降级为 cache miss，不阻断 RAG 主流程。Chat 响应新增 `cache_hit`、`cache_lookup_ms` 和 `retrieval_ms`，用于区分缓存查询、向量检索和接口总耗时。
+
+## 2. 知识库版本失效
+
+`knowledge_bases` 表新增 `version` 字段，迁移版本为：
+
+```text
+b7e1c4d9a2f0  add knowledge base version
+```
+
+首次索引成功、删除文档、请求重建和重建成功都会推进 version。version 是 Redis key 的一部分，因此不需要扫描或批量删除旧 key，数据变化后自然使用新命名空间。
+
+## 3. Day14 开发困难与排查记录
+
+### 3.1 Windows 本机缺少 Redis
+
+本机没有 Docker，也没有原生 Redis，无法取得真实冷、热性能数据。最终启用 WSL2 Ubuntu，在 Ubuntu 内安装并启动 `redis-server`，同时用 `redis-cli ping` 和 Windows Python 客户端验证 `redis://localhost:6379/0`。
+
+### 3.2 WSL 安装受到网络与代理影响
+
+`wsl --install --web-download -d Ubuntu` 曾返回 `WININET_E_CANNOT_CONNECT`，并提示 localhost 代理未镜像到 WSL NAT。重启完成 WSL 组件启用后，改用 `wsl --install -d Ubuntu` 成功安装。
+
+### 3.3 正确 chunk 被距离阈值过滤
+
+Chroma 已召回包含“每晚 880 元”的 chunk，但 distance 为 `1.0459201335906982`，超过硬编码阈值 `0.98`，导致 RAG 返回信息不足。将阈值改为可配置的 `RAG_RETRIEVAL_MAX_DISTANCE=1.1`，并把阈值纳入缓存键，避免继续命中旧阈值产生的空结果。
+
+### 3.4 cache hit 一度被误判为旧版本缓存
+
+重建后截图显示 `cache_hit=true`。检查实际 Redis key 后确认键中包含新 version，命中的是同版本下已经建立的新缓存。再次重建并只执行一次请求后得到 `cache_hit=false`，证明版本隔离正确。手工验收缓存时必须记录请求次数，并结合真实 key 判断。
+
+### 3.5 Swagger 前导空格导致删除接口 404
+
+删除请求的 `knowledge_base_id` 前多了空格，请求 URL 出现 `%20`，因此返回 `Document not found`。去掉前导空格后删除成功。排查 Swagger 404 时应检查最终 Request URL，而不只检查输入框显示内容。
+
+### 3.6 Redis 故障必须安全降级
+
+停止 Redis 后，缓存连接等待使 `cache_lookup_ms` 增至约 `409.06 ms`，但接口仍返回 HTTP `200` 并继续执行 Chroma 检索。缓存是性能优化层，不能成为问答正确性的硬依赖；连接和 socket timeout 应保持较短。
+
+## 4. 真实性能与手工验收
+
+| 场景 | cache_hit | cache_lookup_ms | retrieval_ms | latency_ms |
+| --- | --- | ---: | ---: | ---: |
+| 冷查询 | false | 13.63 | 1236.60 | 4997.84 |
+| 热查询 | true | 0.94 | 0.00 | 3333.98 |
+| 重建后首次查询 | false | 1.41 | 314.82 | 3719.63 |
+| Redis 停止 | false | 409.06 | 315.23 | 1148.17 |
+
+手工流程已验证：
+
+- 创建知识库并上传文档。
+- 入库任务从 pending 到 succeeded。
+- 冷、热请求与来源完整性。
+- 对话历史持久化。
+- 重建后 version 变化和缓存失效。
+- 删除后默认列表隐藏、`include_deleted=true` 可见。
+- 删除后不再引用旧向量和旧回答。
+- Redis 停止时问答仍返回 200，恢复后 PING 返回 PONG。
+
+## 5. 自动化结果
+
+- 全量测试：`81 passed, 1 warning`。
+- MySQL 当前迁移：`b7e1c4d9a2f0 (head)`。
+- `alembic check` 仍会报告历史 MEDIUMTEXT/Text 类型差异，该问题在 Day14 前已存在，不属于本次 Redis 缓存改动。

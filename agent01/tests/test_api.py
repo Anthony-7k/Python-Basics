@@ -243,6 +243,7 @@ class FakeKnowledgeBaseService:
             id=f"kb-{len(self.items) + 1}",
             name=name,
             description=description,
+            version=1,
             created_at=datetime.now(
                 timezone.utc
             ),
@@ -377,6 +378,9 @@ def test_chat_success(
     assert "latency_ms" in data
     assert isinstance(data["latency_ms"], float)
     assert data["latency_ms"] >= 0
+    assert data["cache_hit"] is False
+    assert data["cache_lookup_ms"] == 0.0
+    assert data["retrieval_ms"] == 0.0
     assert (
         data["conversation_id"]
         == "test-conversation-id"
@@ -936,6 +940,7 @@ def test_knowledge_base_create_list_and_detail(
     )
     assert created.status_code == 201
     knowledge_base_id = created.json()["id"]
+    assert created.json()["version"] == 1
 
     listed = client.get(
         "/api/v1/knowledge-bases"

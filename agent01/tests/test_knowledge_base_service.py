@@ -46,6 +46,7 @@ def test_create_list_and_get_knowledge_base(
     assert created.description == (
         "Employee rules"
     )
+    assert created.version == 1
     assert [
         item.id
         for item in service.list()

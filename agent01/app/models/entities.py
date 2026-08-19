@@ -131,6 +131,13 @@ class KnowledgeBase(TimestampMixin, Base):
         nullable=True,
     )
 
+    version: Mapped[int] = mapped_column(
+        Integer,
+        nullable=False,
+        default=1,
+        server_default="1",
+    )
+
     owner: Mapped[User] = relationship(
         back_populates="knowledge_bases",
     )

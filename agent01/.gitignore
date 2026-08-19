@@ -13,3 +13,6 @@ __pycache__/
 
 # Chroma vector database
 data/chroma/
+
+# Uploaded source files
+data/uploads/
