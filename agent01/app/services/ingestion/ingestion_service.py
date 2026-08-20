@@ -59,6 +59,7 @@ def build_chunks(
     file_path: str,
     document_id: str,
     knowledge_base_id: str,
+    display_file_name: str | None = None,
 ) -> list[ChunkRecord]:
     documents = load_documents(
         file_path
@@ -75,7 +76,10 @@ def build_chunks(
             cleaned_text,
             document_id,
             knowledge_base_id,
-            source=document.source,
+            source=(
+                display_file_name
+                or document.file_name
+            ),
             page=document.page,
         )
 
@@ -88,6 +92,7 @@ def ingest_file(
     file_path: str,
     document_id: str,
     knowledge_base_id: str,
+    display_file_name: str | None = None,
 ) -> list[ChunkRecord]:
     chunks = build_chunks(
         file_path,
@@ -95,6 +100,7 @@ def ingest_file(
         knowledge_base_id=(
             knowledge_base_id
         ),
+        display_file_name=display_file_name,
     )
 
     delete_by_document(
@@ -143,6 +149,9 @@ def run_ingestion_task(
                 document_id=document.id,
                 knowledge_base_id=(
                     document.knowledge_base_id
+                ),
+                display_file_name=(
+                    document.file_name
                 ),
             )
 

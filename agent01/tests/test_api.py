@@ -619,6 +619,7 @@ def test_ingestion_task_succeeds():
             SimpleNamespace(
                 id="document-success",
                 knowledge_base_id="kb-a",
+                file_name="employee_handbook.txt",
             )
         )
 
@@ -663,6 +664,9 @@ def test_ingestion_task_succeeds():
         "fake-file.txt",
         document_id="document-success",
         knowledge_base_id="kb-a",
+        display_file_name=(
+            "employee_handbook.txt"
+        ),
     )
 
     mocked_session_local\
@@ -684,6 +688,7 @@ def test_ingestion_task_fails():
             SimpleNamespace(
                 id="document-failure",
                 knowledge_base_id="kb-a",
+                file_name="broken-file.txt",
             )
         )
 

@@ -2871,3 +2871,31 @@ Chroma 已召回包含“每晚 880 元”的 chunk，但 distance 为 `1.045920
 - 全量测试：`81 passed, 1 warning`。
 - MySQL 当前迁移：`b7e1c4d9a2f0 (head)`。
 - `alembic check` 仍会报告历史 MEDIUMTEXT/Text 类型差异，该问题在 Day14 前已存在，不属于本次 Redis 缓存改动。
+
+---
+
+# Day15：Streamlit 前端与演示体验
+
+日期：2026-08-20
+
+## 1. 前后端边界
+
+新增 `frontend/app.py`、`frontend/api_client.py`、`frontend/components.py` 和 `frontend/state.py`。Streamlit 只调用 FastAPI HTTP 接口，不导入数据库、Chroma、Retriever 或 LLM 服务。
+
+`APIClient` 统一处理 API 地址、timeout、连接失败、非 2xx 错误和异常 JSON，并向用户提供下一步，而不是展示堆栈或原始异常对象。
+
+## 2. 文档与聊天体验
+
+- 左侧支持知识库创建/选择、文件上传和入库状态刷新。
+- 文档页每次重载都从 API 获取列表，并为重建、删除提供显式确认。
+- 聊天按知识库保存独立会话；切换知识库不会串用 `conversation_id`。
+- 引用使用可展开卡片展示文件名、页码、证据片段和 Chunk ID。
+- 请求状态展示缓存命中、检索耗时、总耗时和 Request ID。
+
+## 3. 真实验收发现与修复
+
+首次 UI 问答发现引用文件名是 `data/uploads` 下的完整哈希路径。原因是入库时把加载器的磁盘 `source` 写入 Chroma。现在后台入库任务把数据库中的原始 `document.file_name` 传给 Chunk 元数据；重新索引后引用显示 `employee_handbook.txt`。前端同时保留 basename 降级。
+
+详细启动命令、测试范围、人工流程和截图见 `docs/day15_streamlit.md`。
+
+最终全量回归结果：`108 passed, 1 warning`；MySQL 迁移仍为 `b7e1c4d9a2f0 (head)`。

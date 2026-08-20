@@ -27,3 +27,33 @@
 
 ```bash
 uv sync
+```
+
+### 2. 启动后端
+
+```bash
+uv run alembic upgrade head
+uv run uvicorn app.main:app --host 127.0.0.1 --port 8000
+```
+
+### 3. 启动 Day15 Streamlit 前端
+
+另开一个终端：
+
+```bash
+uv run streamlit run frontend/app.py
+```
+
+前端默认连接 `http://127.0.0.1:8000`。需要连接其他地址时，可在页面左侧修改，或设置：
+
+```bash
+API_BASE_URL=http://127.0.0.1:8000
+```
+
+Streamlit 只通过 FastAPI HTTP 接口访问知识库、文档、入库任务、聊天和会话历史，不直接连接 MySQL、Chroma、Redis 或模型服务。
+
+### 4. 测试
+
+```bash
+uv run pytest -p no:cacheprovider
+```

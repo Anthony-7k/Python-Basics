@@ -11,6 +11,8 @@ dependencies = [
     "alembic>=1.13",
     "chromadb>=1.5.9",
     "cryptography>=42",
+    "fastapi>=0.141.1",
+    "httpx>=0.28.1",
     "openai>=2.53.0",
     "pymysql>=1.1",
     "pytest>=9.1.1",
@@ -18,6 +20,8 @@ dependencies = [
     "python-multipart>=0.0.32",
     "redis>=8.1.0",
     "sqlalchemy>=2.0",
+    "streamlit>=1.62.0",
+    "uvicorn>=0.52.1",
 ]
 
 [project.scripts]
