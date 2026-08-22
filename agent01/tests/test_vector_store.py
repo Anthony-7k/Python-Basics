@@ -232,3 +232,38 @@ def test_query_chunks_prevents_cross_knowledge_base_results(
         kb_b,
         doc_b,
     )
+
+
+def test_list_chunks_prevents_cross_knowledge_base_results(
+    monkeypatch,
+):
+    kb_a = "pytest-list-kb-a"
+    kb_b = "pytest-list-kb-b"
+    doc_a = "pytest-list-doc-a"
+    doc_b = "pytest-list-doc-b"
+
+    monkeypatch.setattr(
+        vector_store,
+        "embed_texts",
+        lambda texts: [
+            [0.4] * 1024
+            for _ in texts
+        ],
+    )
+    vector_store.upsert_chunks(
+        split_text("A库精确术语A-17。", doc_a, kb_a)
+    )
+    vector_store.upsert_chunks(
+        split_text("B库精确术语B-29。", doc_b, kb_b)
+    )
+
+    results = vector_store.list_chunks(kb_a)
+
+    assert results
+    assert {
+        item["metadata"]["knowledge_base_id"]
+        for item in results
+    } == {kb_a}
+
+    vector_store.delete_by_document(kb_a, doc_a)
+    vector_store.delete_by_document(kb_b, doc_b)

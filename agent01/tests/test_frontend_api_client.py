@@ -3,7 +3,17 @@ import json
 import httpx
 import pytest
 
-from frontend.api_client import APIClient, APIClientError
+from frontend.api_client import (
+    APIClient,
+    APIClientError,
+    DEFAULT_API_TIMEOUT_SECONDS,
+)
+
+
+def test_default_timeout_allows_slow_llm_responses():
+    client = APIClient("http://testserver")
+
+    assert client.timeout_seconds == DEFAULT_API_TIMEOUT_SECONDS == 60.0
 
 
 def make_client(handler):

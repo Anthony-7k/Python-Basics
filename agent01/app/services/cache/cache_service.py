@@ -30,6 +30,13 @@ def build_retrieval_cache_key(
     top_k: int,
     max_distance: float | None,
     question: str,
+    retrieval_mode: str = "vector",
+    candidate_multiplier: int = 1,
+    keyword_top_k: int = 0,
+    keyword_min_score: float = 0.0,
+    rrf_k: int = 60,
+    reranker_model: str = "none",
+    rerank_lexical_weight: float = 0.0,
 ) -> str:
     normalized_question = normalize_question(
         question
@@ -46,12 +53,28 @@ def build_retrieval_cache_key(
         if max_distance is None
         else format(max_distance, ".12g")
     )
+    strategy = "|".join(
+        (
+            retrieval_mode,
+            str(candidate_multiplier),
+            str(keyword_top_k),
+            format(keyword_min_score, ".12g"),
+            str(rrf_k),
+            reranker_model,
+            format(rerank_lexical_weight, ".12g"),
+        )
+    )
+    strategy_hash = sha256(
+        strategy.encode("utf-8")
+    ).hexdigest()[:16]
 
     return (
-        "rag:retrieval:v1:"
+        "rag:retrieval:v2:"
         f"{knowledge_base_id}:"
         f"{knowledge_base_version}:"
         f"{model_token}:"
+        f"{retrieval_mode}:"
+        f"{strategy_hash}:"
         f"{top_k}:"
         f"{distance_token}:"
         f"{question_hash}"

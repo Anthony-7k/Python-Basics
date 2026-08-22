@@ -9,6 +9,7 @@ import httpx
 
 
 DEFAULT_API_BASE_URL = "http://127.0.0.1:8000"
+DEFAULT_API_TIMEOUT_SECONDS = 60.0
 
 
 class APIClientError(RuntimeError):
@@ -34,7 +35,7 @@ class APIClient:
         self,
         base_url: str = DEFAULT_API_BASE_URL,
         *,
-        timeout_seconds: float = 20.0,
+        timeout_seconds: float = DEFAULT_API_TIMEOUT_SECONDS,
         client: httpx.Client | None = None,
     ) -> None:
         normalized_url = base_url.strip().rstrip("/")

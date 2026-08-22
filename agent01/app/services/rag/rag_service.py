@@ -90,6 +90,21 @@ def retrieve_context(
             outcome.cache_lookup_ms
         ),
         "retrieval_ms": outcome.retrieval_ms,
+        "retrieval_mode": getattr(
+            outcome,
+            "mode",
+            "vector",
+        ),
+        "rerank_ms": getattr(
+            outcome,
+            "rerank_ms",
+            0.0,
+        ),
+        "rerank_candidate_count": getattr(
+            outcome,
+            "rerank_candidate_count",
+            0,
+        ),
     }
 
 
@@ -149,6 +164,18 @@ def answer_question(
         "retrieval_ms",
         retrieval_total_ms,
     )
+    retrieval_mode = retrieval_result.get(
+        "retrieval_mode",
+        "vector",
+    )
+    rerank_ms = retrieval_result.get(
+        "rerank_ms",
+        0.0,
+    )
+    rerank_candidate_count = retrieval_result.get(
+        "rerank_candidate_count",
+        0,
+    )
 
     logger.info(
         "rag retrieval completed request_id=%s "
@@ -157,6 +184,8 @@ def answer_question(
         "knowledge_base_id=%s "
         "knowledge_base_version=%s "
         "cache_hit=%s cache_lookup_ms=%.2f "
+        "retrieval_mode=%s rerank_ms=%.2f "
+        "rerank_candidates=%s "
         "sources=%s retrieval_ms=%.2f",
         request_id,
         original_question,
@@ -165,6 +194,9 @@ def answer_question(
         knowledge_base_version,
         cache_hit,
         cache_lookup_ms,
+        retrieval_mode,
+        rerank_ms,
+        rerank_candidate_count,
         len(retrieval_result["sources"]),
         retrieval_ms,
     )

@@ -48,7 +48,7 @@ def test_cache_key_normalizes_question_and_scopes_inputs():
 
     assert first == second
     assert first.startswith(
-        "rag:retrieval:v1:kb-a:7:"
+        "rag:retrieval:v2:kb-a:7:"
     )
     assert "上海" not in first
     assert build_retrieval_cache_key(
@@ -57,6 +57,12 @@ def test_cache_key_normalizes_question_and_scopes_inputs():
             **common,
             "knowledge_base_id": "kb-b",
         },
+    ) != first
+
+    assert build_retrieval_cache_key(
+        question="上海 住宿上限是多少？",
+        retrieval_mode="hybrid",
+        **common,
     ) != first
     assert build_retrieval_cache_key(
         question="上海 住宿上限是多少？",

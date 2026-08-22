@@ -91,6 +91,44 @@ RAG_RETRIEVAL_MAX_DISTANCE = float(
         "1.1",
     )
 )
+RAG_RETRIEVAL_MODE = os.getenv(
+    "RAG_RETRIEVAL_MODE",
+    "vector",
+).strip().lower()
+RAG_RETRIEVAL_CANDIDATE_MULTIPLIER = int(
+    os.getenv(
+        "RAG_RETRIEVAL_CANDIDATE_MULTIPLIER",
+        "3",
+    )
+)
+RAG_KEYWORD_TOP_K = int(
+    os.getenv(
+        "RAG_KEYWORD_TOP_K",
+        "20",
+    )
+)
+RAG_KEYWORD_MIN_SCORE = float(
+    os.getenv(
+        "RAG_KEYWORD_MIN_SCORE",
+        "0.3",
+    )
+)
+RAG_RRF_K = int(
+    os.getenv(
+        "RAG_RRF_K",
+        "60",
+    )
+)
+RAG_RERANKER_MODEL = os.getenv(
+    "RAG_RERANKER_MODEL",
+    "lexical-v1",
+).strip()
+RAG_RERANK_LEXICAL_WEIGHT = float(
+    os.getenv(
+        "RAG_RERANK_LEXICAL_WEIGHT",
+        "0.7",
+    )
+)
 REDIS_CONNECT_TIMEOUT_SECONDS = float(
     os.getenv(
         "REDIS_CONNECT_TIMEOUT_SECONDS",
@@ -184,6 +222,40 @@ if RAG_CACHE_TTL_SECONDS < 1:
 if RAG_RETRIEVAL_MAX_DISTANCE <= 0:
     raise ValueError(
         "RAG_RETRIEVAL_MAX_DISTANCE must be greater than 0"
+    )
+
+if RAG_RETRIEVAL_MODE not in {
+    "vector",
+    "hybrid",
+    "rerank",
+}:
+    raise ValueError(
+        "RAG_RETRIEVAL_MODE must be vector, hybrid, or rerank"
+    )
+
+if RAG_RETRIEVAL_CANDIDATE_MULTIPLIER < 1:
+    raise ValueError(
+        "RAG_RETRIEVAL_CANDIDATE_MULTIPLIER must be at least 1"
+    )
+
+if RAG_KEYWORD_TOP_K < 1:
+    raise ValueError(
+        "RAG_KEYWORD_TOP_K must be at least 1"
+    )
+
+if RAG_KEYWORD_MIN_SCORE < 0:
+    raise ValueError(
+        "RAG_KEYWORD_MIN_SCORE must be non-negative"
+    )
+
+if RAG_RRF_K < 1:
+    raise ValueError(
+        "RAG_RRF_K must be at least 1"
+    )
+
+if not 0 <= RAG_RERANK_LEXICAL_WEIGHT <= 1:
+    raise ValueError(
+        "RAG_RERANK_LEXICAL_WEIGHT must be between 0 and 1"
     )
 
 if REDIS_CONNECT_TIMEOUT_SECONDS <= 0:
