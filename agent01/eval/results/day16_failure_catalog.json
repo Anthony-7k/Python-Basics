@@ -1,0 +1,1179 @@
+{
+  "generated_at": "2026-08-22T01:03:20.851196+00:00",
+  "evaluation_backend": "configured-live-embedding",
+  "dataset": "eval\\datasets\\day16_failure_cases.json",
+  "corpus": "data\\sample\\employee_handbook.txt",
+  "case_count": 25,
+  "answerable_case_count": 5,
+  "no_answer_case_count": 20,
+  "top_k": 1,
+  "max_distance": 1.1,
+  "modes": [
+    {
+      "mode": "vector",
+      "recall_at_k": 0.6,
+      "no_answer_accuracy": 0.4,
+      "average_retrieval_ms": 189.44,
+      "p95_retrieval_ms": 287.43,
+      "average_rerank_candidate_count": 0,
+      "cases": [
+        {
+          "id": "filter-free-gym",
+          "query": "公司给员工提供免费健身房吗？",
+          "expected_substring": null,
+          "failure_category": "过滤",
+          "failure_hypothesis": "知识库没有健身福利，向量分支可能误召员工福利相关内容。",
+          "hit": false,
+          "latency_ms": 142.15,
+          "retrieved_chunk_ids": [
+            "day16-eval-employee-handbook_4"
+          ],
+          "top_contents": [
+            "网站或其他未经批准的平台。\n\n十二、离职管理\n\n正式员工主动提出离职，原则上应至少提前30天提交书面离职申请。\n\n试用期员工提出离职，原则上应至少提前3天通知公司。\n\n员工离职前应完成工作交接，包括项目资料、账号权限、文件以及其他工作事项。\n\n员工还应归还电脑、门禁卡及其他公司资产。\n\n完成工作交接和离职手续后，由公司"
+          ],
+          "rerank_candidate_count": 0
+        },
+        {
+          "id": "filter-housing-subsidy",
+          "query": "员工可以领取住房补贴吗？",
+          "expected_substring": null,
+          "failure_category": "过滤",
+          "failure_hypothesis": "住房补贴不在手册中，可能误召薪资或报销规则。",
+          "hit": true,
+          "latency_ms": 143.86,
+          "retrieved_chunk_ids": [],
+          "top_contents": [],
+          "rerank_candidate_count": 0
+        },
+        {
+          "id": "filter-free-lunch",
+          "query": "公司每天提供免费午餐吗？",
+          "expected_substring": null,
+          "failure_category": "过滤",
+          "failure_hypothesis": "免费午餐不在知识库中，常见词可能造成弱相关召回。",
+          "hit": true,
+          "latency_ms": 214.84,
+          "retrieved_chunk_ids": [],
+          "top_contents": [],
+          "rerank_candidate_count": 0
+        },
+        {
+          "id": "filter-stock-options",
+          "query": "员工股票期权如何行权？",
+          "expected_substring": null,
+          "failure_category": "过滤",
+          "failure_hypothesis": "股票期权不在手册中，模型应返回信息不足。",
+          "hit": true,
+          "latency_ms": 157.64,
+          "retrieved_chunk_ids": [],
+          "top_contents": [],
+          "rerank_candidate_count": 0
+        },
+        {
+          "id": "filter-remote-work",
+          "query": "员工每周可以居家办公几天？",
+          "expected_substring": null,
+          "failure_category": "过滤",
+          "failure_hypothesis": "远程办公政策缺失，工作时间章节可能产生误召。",
+          "hit": false,
+          "latency_ms": 287.43,
+          "retrieved_chunk_ids": [
+            "day16-eval-employee-handbook_1"
+          ],
+          "top_contents": [
+            "作满10年但不满20年的员工，每年享有10天带薪年假。\n\n工作满20年及以上的员工，每年享有15天带薪年假。\n\n员工申请年假原则上应至少提前3个工作日提交申请，经直属主管审批后方可休假。\n\n年假原则上应在当年度使用。因业务原因确实无法休完的，应与直属主管和人力资源部门沟通处理。\n\n四、病假与事假\n\n员工因身体不适需要休"
+          ],
+          "rerank_candidate_count": 0
+        },
+        {
+          "id": "filter-annual-bonus",
+          "query": "年终奖按照几个月工资计算？",
+          "expected_substring": null,
+          "failure_category": "过滤",
+          "failure_hypothesis": "奖金制度缺失，薪资发放章节可能产生误召。",
+          "hit": false,
+          "latency_ms": 126.19,
+          "retrieved_chunk_ids": [
+            "day16-eval-employee-handbook_0"
+          ],
+          "top_contents": [
+            "XX科技有限公司员工手册\n\n一、工作时间与考勤\n\n公司实行标准工时制度。员工正常工作时间为周一至周五，每天工作8小时，上午9:00至12:00，下午13:30至18:30。周六、周日原则上为休息日。\n\n员工应按规定时间上下班。每月迟到或早退累计不超过2次且每次不超过10分钟的，由直属主管进行提醒。单月迟到或早退达到3次"
+          ],
+          "rerank_candidate_count": 0
+        },
+        {
+          "id": "filter-promotion",
+          "query": "员工晋升每年评审几次？",
+          "expected_substring": null,
+          "failure_category": "过滤",
+          "failure_hypothesis": "晋升制度缺失，培训或转正规则可能干扰。",
+          "hit": false,
+          "latency_ms": 132.95,
+          "retrieved_chunk_ids": [
+            "day16-eval-employee-handbook_4"
+          ],
+          "top_contents": [
+            "网站或其他未经批准的平台。\n\n十二、离职管理\n\n正式员工主动提出离职，原则上应至少提前30天提交书面离职申请。\n\n试用期员工提出离职，原则上应至少提前3天通知公司。\n\n员工离职前应完成工作交接，包括项目资料、账号权限、文件以及其他工作事项。\n\n员工还应归还电脑、门禁卡及其他公司资产。\n\n完成工作交接和离职手续后，由公司"
+          ],
+          "rerank_candidate_count": 0
+        },
+        {
+          "id": "filter-shuttle-bus",
+          "query": "公司班车早上几点发车？",
+          "expected_substring": null,
+          "failure_category": "过滤",
+          "failure_hypothesis": "班车制度缺失，工作时间中的时间表达可能误召。",
+          "hit": true,
+          "latency_ms": 111.46,
+          "retrieved_chunk_ids": [],
+          "top_contents": [],
+          "rerank_candidate_count": 0
+        },
+        {
+          "id": "filter-birthday-leave",
+          "query": "员工生日当天可以休假吗？",
+          "expected_substring": null,
+          "failure_category": "过滤",
+          "failure_hypothesis": "生日假缺失，年假或请假章节可能误召。",
+          "hit": false,
+          "latency_ms": 120.65,
+          "retrieved_chunk_ids": [
+            "day16-eval-employee-handbook_1"
+          ],
+          "top_contents": [
+            "作满10年但不满20年的员工，每年享有10天带薪年假。\n\n工作满20年及以上的员工，每年享有15天带薪年假。\n\n员工申请年假原则上应至少提前3个工作日提交申请，经直属主管审批后方可休假。\n\n年假原则上应在当年度使用。因业务原因确实无法休完的，应与直属主管和人力资源部门沟通处理。\n\n四、病假与事假\n\n员工因身体不适需要休"
+          ],
+          "rerank_candidate_count": 0
+        },
+        {
+          "id": "filter-marriage-leave",
+          "query": "结婚可以申请多少天婚假？",
+          "expected_substring": null,
+          "failure_category": "过滤",
+          "failure_hypothesis": "婚假制度缺失，相近请假规则可能误召。",
+          "hit": true,
+          "latency_ms": 112.88,
+          "retrieved_chunk_ids": [],
+          "top_contents": [],
+          "rerank_candidate_count": 0
+        },
+        {
+          "id": "filter-maternity-leave",
+          "query": "产假可以休多少天？",
+          "expected_substring": null,
+          "failure_category": "过滤",
+          "failure_hypothesis": "产假制度缺失，病假或年假规则可能误召。",
+          "hit": false,
+          "latency_ms": 120.59,
+          "retrieved_chunk_ids": [
+            "day16-eval-employee-handbook_1"
+          ],
+          "top_contents": [
+            "作满10年但不满20年的员工，每年享有10天带薪年假。\n\n工作满20年及以上的员工，每年享有15天带薪年假。\n\n员工申请年假原则上应至少提前3个工作日提交申请，经直属主管审批后方可休假。\n\n年假原则上应在当年度使用。因业务原因确实无法休完的，应与直属主管和人力资源部门沟通处理。\n\n四、病假与事假\n\n员工因身体不适需要休"
+          ],
+          "rerank_candidate_count": 0
+        },
+        {
+          "id": "filter-medical-insurance",
+          "query": "公司商业医疗保险报销比例是多少？",
+          "expected_substring": null,
+          "failure_category": "过滤",
+          "failure_hypothesis": "商业保险缺失，费用报销章节可能误召。",
+          "hit": true,
+          "latency_ms": 126.02,
+          "retrieved_chunk_ids": [],
+          "top_contents": [],
+          "rerank_candidate_count": 0
+        },
+        {
+          "id": "filter-parking",
+          "query": "员工停车位每月收费多少？",
+          "expected_substring": null,
+          "failure_category": "过滤",
+          "failure_hypothesis": "停车政策缺失，费用或薪资数字可能误召。",
+          "hit": false,
+          "latency_ms": 120.29,
+          "retrieved_chunk_ids": [
+            "day16-eval-employee-handbook_4"
+          ],
+          "top_contents": [
+            "网站或其他未经批准的平台。\n\n十二、离职管理\n\n正式员工主动提出离职，原则上应至少提前30天提交书面离职申请。\n\n试用期员工提出离职，原则上应至少提前3天通知公司。\n\n员工离职前应完成工作交接，包括项目资料、账号权限、文件以及其他工作事项。\n\n员工还应归还电脑、门禁卡及其他公司资产。\n\n完成工作交接和离职手续后，由公司"
+          ],
+          "rerank_candidate_count": 0
+        },
+        {
+          "id": "filter-cafeteria-hours",
+          "query": "公司食堂晚餐供应到几点？",
+          "expected_substring": null,
+          "failure_category": "过滤",
+          "failure_hypothesis": "食堂制度缺失，工作时间表达可能误召。",
+          "hit": true,
+          "latency_ms": 120.17,
+          "retrieved_chunk_ids": [],
+          "top_contents": [],
+          "rerank_candidate_count": 0
+        },
+        {
+          "id": "filter-equity-vesting",
+          "query": "限制性股票分几年归属？",
+          "expected_substring": null,
+          "failure_category": "过滤",
+          "failure_hypothesis": "股权激励缺失，年限数字可能误召年假规则。",
+          "hit": true,
+          "latency_ms": 226.1,
+          "retrieved_chunk_ids": [],
+          "top_contents": [],
+          "rerank_candidate_count": 0
+        },
+        {
+          "id": "ranking-login-alert",
+          "query": "发现公司账号异常登录应该找谁处理？",
+          "expected_substring": "联系信息技术人员",
+          "failure_category": "排序",
+          "failure_hypothesis": "账号、设备和信息安全内容位于相近 Chunk，Top-1 可能选错。",
+          "hit": false,
+          "latency_ms": 131.04,
+          "retrieved_chunk_ids": [
+            "day16-eval-employee-handbook_4"
+          ],
+          "top_contents": [
+            "网站或其他未经批准的平台。\n\n十二、离职管理\n\n正式员工主动提出离职，原则上应至少提前30天提交书面离职申请。\n\n试用期员工提出离职，原则上应至少提前3天通知公司。\n\n员工离职前应完成工作交接，包括项目资料、账号权限、文件以及其他工作事项。\n\n员工还应归还电脑、门禁卡及其他公司资产。\n\n完成工作交接和离职手续后，由公司"
+          ],
+          "rerank_candidate_count": 0
+        },
+        {
+          "id": "ranking-attendance-three",
+          "query": "一个月迟到早退累计达到三次会如何处理？",
+          "expected_substring": "记录为一次考勤异常",
+          "failure_category": "排序",
+          "failure_hypothesis": "两次提醒与三次异常规则相邻，容易排序错误。",
+          "hit": false,
+          "latency_ms": 134.53,
+          "retrieved_chunk_ids": [
+            "day16-eval-employee-handbook_4"
+          ],
+          "top_contents": [
+            "网站或其他未经批准的平台。\n\n十二、离职管理\n\n正式员工主动提出离职，原则上应至少提前30天提交书面离职申请。\n\n试用期员工提出离职，原则上应至少提前3天通知公司。\n\n员工离职前应完成工作交接，包括项目资料、账号权限、文件以及其他工作事项。\n\n员工还应归还电脑、门禁卡及其他公司资产。\n\n完成工作交接和离职手续后，由公司"
+          ],
+          "rerank_candidate_count": 0
+        },
+        {
+          "id": "ranking-probation-resign",
+          "query": "试用期员工辞职需要提前三十天吗？",
+          "expected_substring": "至少提前3天通知公司",
+          "failure_category": "排序",
+          "failure_hypothesis": "正式员工30天与试用期3天规则高度相似。",
+          "hit": true,
+          "latency_ms": 216.12,
+          "retrieved_chunk_ids": [
+            "day16-eval-employee-handbook_4"
+          ],
+          "top_contents": [
+            "网站或其他未经批准的平台。\n\n十二、离职管理\n\n正式员工主动提出离职，原则上应至少提前30天提交书面离职申请。\n\n试用期员工提出离职，原则上应至少提前3天通知公司。\n\n员工离职前应完成工作交接，包括项目资料、账号权限、文件以及其他工作事项。\n\n员工还应归还电脑、门禁卡及其他公司资产。\n\n完成工作交接和离职手续后，由公司"
+          ],
+          "rerank_candidate_count": 0
+        },
+        {
+          "id": "ranking-leave-twenty",
+          "query": "工作刚满20年应当按10天还是15天年假执行？",
+          "expected_substring": "每年享有15天带薪年假",
+          "failure_category": "排序",
+          "failure_hypothesis": "问题同时包含两个候选数值，考验边界排序。",
+          "hit": true,
+          "latency_ms": 126.32,
+          "retrieved_chunk_ids": [
+            "day16-eval-employee-handbook_1"
+          ],
+          "top_contents": [
+            "作满10年但不满20年的员工，每年享有10天带薪年假。\n\n工作满20年及以上的员工，每年享有15天带薪年假。\n\n员工申请年假原则上应至少提前3个工作日提交申请，经直属主管审批后方可休假。\n\n年假原则上应在当年度使用。因业务原因确实无法休完的，应与直属主管和人力资源部门沟通处理。\n\n四、病假与事假\n\n员工因身体不适需要休"
+          ],
+          "rerank_candidate_count": 0
+        },
+        {
+          "id": "expression-overtime",
+          "query": "我没走流程但主动留下干活算加班吗？",
+          "expected_substring": "不认定为有效加班",
+          "failure_category": "表达",
+          "failure_hypothesis": "口语表达与制度中的审批、延长工作时间不同。",
+          "hit": true,
+          "latency_ms": 1071.92,
+          "retrieved_chunk_ids": [
+            "day16-eval-employee-handbook_1"
+          ],
+          "top_contents": [
+            "作满10年但不满20年的员工，每年享有10天带薪年假。\n\n工作满20年及以上的员工，每年享有15天带薪年假。\n\n员工申请年假原则上应至少提前3个工作日提交申请，经直属主管审批后方可休假。\n\n年假原则上应在当年度使用。因业务原因确实无法休完的，应与直属主管和人力资源部门沟通处理。\n\n四、病假与事假\n\n员工因身体不适需要休"
+          ],
+          "rerank_candidate_count": 0
+        },
+        {
+          "id": "filter-phone-subsidy",
+          "query": "公司每月发多少通讯补贴？",
+          "expected_substring": null,
+          "failure_category": "过滤",
+          "failure_hypothesis": "通讯补贴缺失，费用和薪资章节可能造成误召。",
+          "hit": false,
+          "latency_ms": 155.56,
+          "retrieved_chunk_ids": [
+            "day16-eval-employee-handbook_2"
+          ],
+          "top_contents": [
+            "排调休或按照公司相关制度处理。\n\n员工申请调休时，应提前与直属主管确认时间，避免影响正常业务工作。\n\n六、薪资发放\n\n公司原则上于每月10日发放上一个自然月的工资。\n\n如工资发放日遇法定节假日或休息日，公司可根据实际情况提前或顺延发放。\n\n员工如发现工资金额存在疑问，应及时联系直属主管或人力资源部门进行核对。\n\n员工的"
+          ],
+          "rerank_candidate_count": 0
+        },
+        {
+          "id": "filter-meal-overtime",
+          "query": "加班到几点可以领取餐补？",
+          "expected_substring": null,
+          "failure_category": "过滤",
+          "failure_hypothesis": "加班餐补缺失，加班和工作时间内容可能误召。",
+          "hit": false,
+          "latency_ms": 128.28,
+          "retrieved_chunk_ids": [
+            "day16-eval-employee-handbook_1"
+          ],
+          "top_contents": [
+            "作满10年但不满20年的员工，每年享有10天带薪年假。\n\n工作满20年及以上的员工，每年享有15天带薪年假。\n\n员工申请年假原则上应至少提前3个工作日提交申请，经直属主管审批后方可休假。\n\n年假原则上应在当年度使用。因业务原因确实无法休完的，应与直属主管和人力资源部门沟通处理。\n\n四、病假与事假\n\n员工因身体不适需要休"
+          ],
+          "rerank_candidate_count": 0
+        },
+        {
+          "id": "filter-seniority-award",
+          "query": "入职满五年有多少工龄奖金？",
+          "expected_substring": null,
+          "failure_category": "过滤",
+          "failure_hypothesis": "工龄奖缺失，工龄年假规则可能误召。",
+          "hit": false,
+          "latency_ms": 159.13,
+          "retrieved_chunk_ids": [
+            "day16-eval-employee-handbook_0"
+          ],
+          "top_contents": [
+            "XX科技有限公司员工手册\n\n一、工作时间与考勤\n\n公司实行标准工时制度。员工正常工作时间为周一至周五，每天工作8小时，上午9:00至12:00，下午13:30至18:30。周六、周日原则上为休息日。\n\n员工应按规定时间上下班。每月迟到或早退累计不超过2次且每次不超过10分钟的，由直属主管进行提醒。单月迟到或早退达到3次"
+          ],
+          "rerank_candidate_count": 0
+        },
+        {
+          "id": "filter-quarterly-bonus",
+          "query": "季度绩效奖金什么时候发放？",
+          "expected_substring": null,
+          "failure_category": "过滤",
+          "failure_hypothesis": "绩效奖金缺失，工资发放内容可能误召。",
+          "hit": false,
+          "latency_ms": 129.58,
+          "retrieved_chunk_ids": [
+            "day16-eval-employee-handbook_2"
+          ],
+          "top_contents": [
+            "排调休或按照公司相关制度处理。\n\n员工申请调休时，应提前与直属主管确认时间，避免影响正常业务工作。\n\n六、薪资发放\n\n公司原则上于每月10日发放上一个自然月的工资。\n\n如工资发放日遇法定节假日或休息日，公司可根据实际情况提前或顺延发放。\n\n员工如发现工资金额存在疑问，应及时联系直属主管或人力资源部门进行核对。\n\n员工的"
+          ],
+          "rerank_candidate_count": 0
+        },
+        {
+          "id": "filter-transport-subsidy",
+          "query": "员工上下班交通补贴标准是多少？",
+          "expected_substring": null,
+          "failure_category": "过滤",
+          "failure_hypothesis": "交通补贴缺失，出差交通费用可能造成误召。",
+          "hit": false,
+          "latency_ms": 220.21,
+          "retrieved_chunk_ids": [
+            "day16-eval-employee-handbook_2"
+          ],
+          "top_contents": [
+            "排调休或按照公司相关制度处理。\n\n员工申请调休时，应提前与直属主管确认时间，避免影响正常业务工作。\n\n六、薪资发放\n\n公司原则上于每月10日发放上一个自然月的工资。\n\n如工资发放日遇法定节假日或休息日，公司可根据实际情况提前或顺延发放。\n\n员工如发现工资金额存在疑问，应及时联系直属主管或人力资源部门进行核对。\n\n员工的"
+          ],
+          "rerank_candidate_count": 0
+        }
+      ]
+    },
+    {
+      "mode": "hybrid",
+      "recall_at_k": 0.8,
+      "no_answer_accuracy": 0.2,
+      "average_retrieval_ms": 169.9,
+      "p95_retrieval_ms": 248.77,
+      "average_rerank_candidate_count": 0,
+      "cases": [
+        {
+          "id": "filter-free-gym",
+          "query": "公司给员工提供免费健身房吗？",
+          "expected_substring": null,
+          "failure_category": "过滤",
+          "failure_hypothesis": "知识库没有健身福利，向量分支可能误召员工福利相关内容。",
+          "hit": false,
+          "latency_ms": 132.15,
+          "retrieved_chunk_ids": [
+            "day16-eval-employee-handbook_4"
+          ],
+          "top_contents": [
+            "网站或其他未经批准的平台。\n\n十二、离职管理\n\n正式员工主动提出离职，原则上应至少提前30天提交书面离职申请。\n\n试用期员工提出离职，原则上应至少提前3天通知公司。\n\n员工离职前应完成工作交接，包括项目资料、账号权限、文件以及其他工作事项。\n\n员工还应归还电脑、门禁卡及其他公司资产。\n\n完成工作交接和离职手续后，由公司"
+          ],
+          "rerank_candidate_count": 0
+        },
+        {
+          "id": "filter-housing-subsidy",
+          "query": "员工可以领取住房补贴吗？",
+          "expected_substring": null,
+          "failure_category": "过滤",
+          "failure_hypothesis": "住房补贴不在手册中，可能误召薪资或报销规则。",
+          "hit": false,
+          "latency_ms": 131.08,
+          "retrieved_chunk_ids": [
+            "day16-eval-employee-handbook_2"
+          ],
+          "top_contents": [
+            "排调休或按照公司相关制度处理。\n\n员工申请调休时，应提前与直属主管确认时间，避免影响正常业务工作。\n\n六、薪资发放\n\n公司原则上于每月10日发放上一个自然月的工资。\n\n如工资发放日遇法定节假日或休息日，公司可根据实际情况提前或顺延发放。\n\n员工如发现工资金额存在疑问，应及时联系直属主管或人力资源部门进行核对。\n\n员工的"
+          ],
+          "rerank_candidate_count": 0
+        },
+        {
+          "id": "filter-free-lunch",
+          "query": "公司每天提供免费午餐吗？",
+          "expected_substring": null,
+          "failure_category": "过滤",
+          "failure_hypothesis": "免费午餐不在知识库中，常见词可能造成弱相关召回。",
+          "hit": false,
+          "latency_ms": 145.9,
+          "retrieved_chunk_ids": [
+            "day16-eval-employee-handbook_3"
+          ],
+          "top_contents": [
+            "时整理相关票据，并按照公司规定提交报销申请。\n\n九、培训与学习\n\n公司鼓励员工持续学习与岗位相关的知识和技能。\n\n因工作需要参加由公司安排的内部培训，员工应按要求参加。\n\n员工申请参加外部培训课程并希望由公司承担费用时，应提前提交申请，并由直属主管及相关负责人审批。\n\n未经审批自行参加的外部课程，公司原则上不承担相关培"
+          ],
+          "rerank_candidate_count": 0
+        },
+        {
+          "id": "filter-stock-options",
+          "query": "员工股票期权如何行权？",
+          "expected_substring": null,
+          "failure_category": "过滤",
+          "failure_hypothesis": "股票期权不在手册中，模型应返回信息不足。",
+          "hit": true,
+          "latency_ms": 125.85,
+          "retrieved_chunk_ids": [],
+          "top_contents": [],
+          "rerank_candidate_count": 0
+        },
+        {
+          "id": "filter-remote-work",
+          "query": "员工每周可以居家办公几天？",
+          "expected_substring": null,
+          "failure_category": "过滤",
+          "failure_hypothesis": "远程办公政策缺失，工作时间章节可能产生误召。",
+          "hit": false,
+          "latency_ms": 248.77,
+          "retrieved_chunk_ids": [
+            "day16-eval-employee-handbook_2"
+          ],
+          "top_contents": [
+            "排调休或按照公司相关制度处理。\n\n员工申请调休时，应提前与直属主管确认时间，避免影响正常业务工作。\n\n六、薪资发放\n\n公司原则上于每月10日发放上一个自然月的工资。\n\n如工资发放日遇法定节假日或休息日，公司可根据实际情况提前或顺延发放。\n\n员工如发现工资金额存在疑问，应及时联系直属主管或人力资源部门进行核对。\n\n员工的"
+          ],
+          "rerank_candidate_count": 0
+        },
+        {
+          "id": "filter-annual-bonus",
+          "query": "年终奖按照几个月工资计算？",
+          "expected_substring": null,
+          "failure_category": "过滤",
+          "failure_hypothesis": "奖金制度缺失，薪资发放章节可能产生误召。",
+          "hit": false,
+          "latency_ms": 202.24,
+          "retrieved_chunk_ids": [
+            "day16-eval-employee-handbook_0"
+          ],
+          "top_contents": [
+            "XX科技有限公司员工手册\n\n一、工作时间与考勤\n\n公司实行标准工时制度。员工正常工作时间为周一至周五，每天工作8小时，上午9:00至12:00，下午13:30至18:30。周六、周日原则上为休息日。\n\n员工应按规定时间上下班。每月迟到或早退累计不超过2次且每次不超过10分钟的，由直属主管进行提醒。单月迟到或早退达到3次"
+          ],
+          "rerank_candidate_count": 0
+        },
+        {
+          "id": "filter-promotion",
+          "query": "员工晋升每年评审几次？",
+          "expected_substring": null,
+          "failure_category": "过滤",
+          "failure_hypothesis": "晋升制度缺失，培训或转正规则可能干扰。",
+          "hit": false,
+          "latency_ms": 136.13,
+          "retrieved_chunk_ids": [
+            "day16-eval-employee-handbook_0"
+          ],
+          "top_contents": [
+            "XX科技有限公司员工手册\n\n一、工作时间与考勤\n\n公司实行标准工时制度。员工正常工作时间为周一至周五，每天工作8小时，上午9:00至12:00，下午13:30至18:30。周六、周日原则上为休息日。\n\n员工应按规定时间上下班。每月迟到或早退累计不超过2次且每次不超过10分钟的，由直属主管进行提醒。单月迟到或早退达到3次"
+          ],
+          "rerank_candidate_count": 0
+        },
+        {
+          "id": "filter-shuttle-bus",
+          "query": "公司班车早上几点发车？",
+          "expected_substring": null,
+          "failure_category": "过滤",
+          "failure_hypothesis": "班车制度缺失，工作时间中的时间表达可能误召。",
+          "hit": true,
+          "latency_ms": 290.9,
+          "retrieved_chunk_ids": [],
+          "top_contents": [],
+          "rerank_candidate_count": 0
+        },
+        {
+          "id": "filter-birthday-leave",
+          "query": "员工生日当天可以休假吗？",
+          "expected_substring": null,
+          "failure_category": "过滤",
+          "failure_hypothesis": "生日假缺失，年假或请假章节可能误召。",
+          "hit": false,
+          "latency_ms": 137.88,
+          "retrieved_chunk_ids": [
+            "day16-eval-employee-handbook_1"
+          ],
+          "top_contents": [
+            "作满10年但不满20年的员工，每年享有10天带薪年假。\n\n工作满20年及以上的员工，每年享有15天带薪年假。\n\n员工申请年假原则上应至少提前3个工作日提交申请，经直属主管审批后方可休假。\n\n年假原则上应在当年度使用。因业务原因确实无法休完的，应与直属主管和人力资源部门沟通处理。\n\n四、病假与事假\n\n员工因身体不适需要休"
+          ],
+          "rerank_candidate_count": 0
+        },
+        {
+          "id": "filter-marriage-leave",
+          "query": "结婚可以申请多少天婚假？",
+          "expected_substring": null,
+          "failure_category": "过滤",
+          "failure_hypothesis": "婚假制度缺失，相近请假规则可能误召。",
+          "hit": false,
+          "latency_ms": 121.73,
+          "retrieved_chunk_ids": [
+            "day16-eval-employee-handbook_2"
+          ],
+          "top_contents": [
+            "排调休或按照公司相关制度处理。\n\n员工申请调休时，应提前与直属主管确认时间，避免影响正常业务工作。\n\n六、薪资发放\n\n公司原则上于每月10日发放上一个自然月的工资。\n\n如工资发放日遇法定节假日或休息日，公司可根据实际情况提前或顺延发放。\n\n员工如发现工资金额存在疑问，应及时联系直属主管或人力资源部门进行核对。\n\n员工的"
+          ],
+          "rerank_candidate_count": 0
+        },
+        {
+          "id": "filter-maternity-leave",
+          "query": "产假可以休多少天？",
+          "expected_substring": null,
+          "failure_category": "过滤",
+          "failure_hypothesis": "产假制度缺失，病假或年假规则可能误召。",
+          "hit": false,
+          "latency_ms": 134.62,
+          "retrieved_chunk_ids": [
+            "day16-eval-employee-handbook_1"
+          ],
+          "top_contents": [
+            "作满10年但不满20年的员工，每年享有10天带薪年假。\n\n工作满20年及以上的员工，每年享有15天带薪年假。\n\n员工申请年假原则上应至少提前3个工作日提交申请，经直属主管审批后方可休假。\n\n年假原则上应在当年度使用。因业务原因确实无法休完的，应与直属主管和人力资源部门沟通处理。\n\n四、病假与事假\n\n员工因身体不适需要休"
+          ],
+          "rerank_candidate_count": 0
+        },
+        {
+          "id": "filter-medical-insurance",
+          "query": "公司商业医疗保险报销比例是多少？",
+          "expected_substring": null,
+          "failure_category": "过滤",
+          "failure_hypothesis": "商业保险缺失，费用报销章节可能误召。",
+          "hit": false,
+          "latency_ms": 228.28,
+          "retrieved_chunk_ids": [
+            "day16-eval-employee-handbook_2"
+          ],
+          "top_contents": [
+            "排调休或按照公司相关制度处理。\n\n员工申请调休时，应提前与直属主管确认时间，避免影响正常业务工作。\n\n六、薪资发放\n\n公司原则上于每月10日发放上一个自然月的工资。\n\n如工资发放日遇法定节假日或休息日，公司可根据实际情况提前或顺延发放。\n\n员工如发现工资金额存在疑问，应及时联系直属主管或人力资源部门进行核对。\n\n员工的"
+          ],
+          "rerank_candidate_count": 0
+        },
+        {
+          "id": "filter-parking",
+          "query": "员工停车位每月收费多少？",
+          "expected_substring": null,
+          "failure_category": "过滤",
+          "failure_hypothesis": "停车政策缺失，费用或薪资数字可能误召。",
+          "hit": false,
+          "latency_ms": 181.38,
+          "retrieved_chunk_ids": [
+            "day16-eval-employee-handbook_4"
+          ],
+          "top_contents": [
+            "网站或其他未经批准的平台。\n\n十二、离职管理\n\n正式员工主动提出离职，原则上应至少提前30天提交书面离职申请。\n\n试用期员工提出离职，原则上应至少提前3天通知公司。\n\n员工离职前应完成工作交接，包括项目资料、账号权限、文件以及其他工作事项。\n\n员工还应归还电脑、门禁卡及其他公司资产。\n\n完成工作交接和离职手续后，由公司"
+          ],
+          "rerank_candidate_count": 0
+        },
+        {
+          "id": "filter-cafeteria-hours",
+          "query": "公司食堂晚餐供应到几点？",
+          "expected_substring": null,
+          "failure_category": "过滤",
+          "failure_hypothesis": "食堂制度缺失，工作时间表达可能误召。",
+          "hit": true,
+          "latency_ms": 137.44,
+          "retrieved_chunk_ids": [],
+          "top_contents": [],
+          "rerank_candidate_count": 0
+        },
+        {
+          "id": "filter-equity-vesting",
+          "query": "限制性股票分几年归属？",
+          "expected_substring": null,
+          "failure_category": "过滤",
+          "failure_hypothesis": "股权激励缺失，年限数字可能误召年假规则。",
+          "hit": true,
+          "latency_ms": 141.73,
+          "retrieved_chunk_ids": [],
+          "top_contents": [],
+          "rerank_candidate_count": 0
+        },
+        {
+          "id": "ranking-login-alert",
+          "query": "发现公司账号异常登录应该找谁处理？",
+          "expected_substring": "联系信息技术人员",
+          "failure_category": "排序",
+          "failure_hypothesis": "账号、设备和信息安全内容位于相近 Chunk，Top-1 可能选错。",
+          "hit": false,
+          "latency_ms": 229.67,
+          "retrieved_chunk_ids": [
+            "day16-eval-employee-handbook_4"
+          ],
+          "top_contents": [
+            "网站或其他未经批准的平台。\n\n十二、离职管理\n\n正式员工主动提出离职，原则上应至少提前30天提交书面离职申请。\n\n试用期员工提出离职，原则上应至少提前3天通知公司。\n\n员工离职前应完成工作交接，包括项目资料、账号权限、文件以及其他工作事项。\n\n员工还应归还电脑、门禁卡及其他公司资产。\n\n完成工作交接和离职手续后，由公司"
+          ],
+          "rerank_candidate_count": 0
+        },
+        {
+          "id": "ranking-attendance-three",
+          "query": "一个月迟到早退累计达到三次会如何处理？",
+          "expected_substring": "记录为一次考勤异常",
+          "failure_category": "排序",
+          "failure_hypothesis": "两次提醒与三次异常规则相邻，容易排序错误。",
+          "hit": true,
+          "latency_ms": 160.64,
+          "retrieved_chunk_ids": [
+            "day16-eval-employee-handbook_0"
+          ],
+          "top_contents": [
+            "XX科技有限公司员工手册\n\n一、工作时间与考勤\n\n公司实行标准工时制度。员工正常工作时间为周一至周五，每天工作8小时，上午9:00至12:00，下午13:30至18:30。周六、周日原则上为休息日。\n\n员工应按规定时间上下班。每月迟到或早退累计不超过2次且每次不超过10分钟的，由直属主管进行提醒。单月迟到或早退达到3次"
+          ],
+          "rerank_candidate_count": 0
+        },
+        {
+          "id": "ranking-probation-resign",
+          "query": "试用期员工辞职需要提前三十天吗？",
+          "expected_substring": "至少提前3天通知公司",
+          "failure_category": "排序",
+          "failure_hypothesis": "正式员工30天与试用期3天规则高度相似。",
+          "hit": true,
+          "latency_ms": 239.65,
+          "retrieved_chunk_ids": [
+            "day16-eval-employee-handbook_4"
+          ],
+          "top_contents": [
+            "网站或其他未经批准的平台。\n\n十二、离职管理\n\n正式员工主动提出离职，原则上应至少提前30天提交书面离职申请。\n\n试用期员工提出离职，原则上应至少提前3天通知公司。\n\n员工离职前应完成工作交接，包括项目资料、账号权限、文件以及其他工作事项。\n\n员工还应归还电脑、门禁卡及其他公司资产。\n\n完成工作交接和离职手续后，由公司"
+          ],
+          "rerank_candidate_count": 0
+        },
+        {
+          "id": "ranking-leave-twenty",
+          "query": "工作刚满20年应当按10天还是15天年假执行？",
+          "expected_substring": "每年享有15天带薪年假",
+          "failure_category": "排序",
+          "failure_hypothesis": "问题同时包含两个候选数值，考验边界排序。",
+          "hit": true,
+          "latency_ms": 136.22,
+          "retrieved_chunk_ids": [
+            "day16-eval-employee-handbook_1"
+          ],
+          "top_contents": [
+            "作满10年但不满20年的员工，每年享有10天带薪年假。\n\n工作满20年及以上的员工，每年享有15天带薪年假。\n\n员工申请年假原则上应至少提前3个工作日提交申请，经直属主管审批后方可休假。\n\n年假原则上应在当年度使用。因业务原因确实无法休完的，应与直属主管和人力资源部门沟通处理。\n\n四、病假与事假\n\n员工因身体不适需要休"
+          ],
+          "rerank_candidate_count": 0
+        },
+        {
+          "id": "expression-overtime",
+          "query": "我没走流程但主动留下干活算加班吗？",
+          "expected_substring": "不认定为有效加班",
+          "failure_category": "表达",
+          "failure_hypothesis": "口语表达与制度中的审批、延长工作时间不同。",
+          "hit": true,
+          "latency_ms": 162.72,
+          "retrieved_chunk_ids": [
+            "day16-eval-employee-handbook_1"
+          ],
+          "top_contents": [
+            "作满10年但不满20年的员工，每年享有10天带薪年假。\n\n工作满20年及以上的员工，每年享有15天带薪年假。\n\n员工申请年假原则上应至少提前3个工作日提交申请，经直属主管审批后方可休假。\n\n年假原则上应在当年度使用。因业务原因确实无法休完的，应与直属主管和人力资源部门沟通处理。\n\n四、病假与事假\n\n员工因身体不适需要休"
+          ],
+          "rerank_candidate_count": 0
+        },
+        {
+          "id": "filter-phone-subsidy",
+          "query": "公司每月发多少通讯补贴？",
+          "expected_substring": null,
+          "failure_category": "过滤",
+          "failure_hypothesis": "通讯补贴缺失，费用和薪资章节可能造成误召。",
+          "hit": false,
+          "latency_ms": 201.04,
+          "retrieved_chunk_ids": [
+            "day16-eval-employee-handbook_2"
+          ],
+          "top_contents": [
+            "排调休或按照公司相关制度处理。\n\n员工申请调休时，应提前与直属主管确认时间，避免影响正常业务工作。\n\n六、薪资发放\n\n公司原则上于每月10日发放上一个自然月的工资。\n\n如工资发放日遇法定节假日或休息日，公司可根据实际情况提前或顺延发放。\n\n员工如发现工资金额存在疑问，应及时联系直属主管或人力资源部门进行核对。\n\n员工的"
+          ],
+          "rerank_candidate_count": 0
+        },
+        {
+          "id": "filter-meal-overtime",
+          "query": "加班到几点可以领取餐补？",
+          "expected_substring": null,
+          "failure_category": "过滤",
+          "failure_hypothesis": "加班餐补缺失，加班和工作时间内容可能误召。",
+          "hit": false,
+          "latency_ms": 157.05,
+          "retrieved_chunk_ids": [
+            "day16-eval-employee-handbook_1"
+          ],
+          "top_contents": [
+            "作满10年但不满20年的员工，每年享有10天带薪年假。\n\n工作满20年及以上的员工，每年享有15天带薪年假。\n\n员工申请年假原则上应至少提前3个工作日提交申请，经直属主管审批后方可休假。\n\n年假原则上应在当年度使用。因业务原因确实无法休完的，应与直属主管和人力资源部门沟通处理。\n\n四、病假与事假\n\n员工因身体不适需要休"
+          ],
+          "rerank_candidate_count": 0
+        },
+        {
+          "id": "filter-seniority-award",
+          "query": "入职满五年有多少工龄奖金？",
+          "expected_substring": null,
+          "failure_category": "过滤",
+          "failure_hypothesis": "工龄奖缺失，工龄年假规则可能误召。",
+          "hit": false,
+          "latency_ms": 129.47,
+          "retrieved_chunk_ids": [
+            "day16-eval-employee-handbook_0"
+          ],
+          "top_contents": [
+            "XX科技有限公司员工手册\n\n一、工作时间与考勤\n\n公司实行标准工时制度。员工正常工作时间为周一至周五，每天工作8小时，上午9:00至12:00，下午13:30至18:30。周六、周日原则上为休息日。\n\n员工应按规定时间上下班。每月迟到或早退累计不超过2次且每次不超过10分钟的，由直属主管进行提醒。单月迟到或早退达到3次"
+          ],
+          "rerank_candidate_count": 0
+        },
+        {
+          "id": "filter-quarterly-bonus",
+          "query": "季度绩效奖金什么时候发放？",
+          "expected_substring": null,
+          "failure_category": "过滤",
+          "failure_hypothesis": "绩效奖金缺失，工资发放内容可能误召。",
+          "hit": false,
+          "latency_ms": 197.77,
+          "retrieved_chunk_ids": [
+            "day16-eval-employee-handbook_2"
+          ],
+          "top_contents": [
+            "排调休或按照公司相关制度处理。\n\n员工申请调休时，应提前与直属主管确认时间，避免影响正常业务工作。\n\n六、薪资发放\n\n公司原则上于每月10日发放上一个自然月的工资。\n\n如工资发放日遇法定节假日或休息日，公司可根据实际情况提前或顺延发放。\n\n员工如发现工资金额存在疑问，应及时联系直属主管或人力资源部门进行核对。\n\n员工的"
+          ],
+          "rerank_candidate_count": 0
+        },
+        {
+          "id": "filter-transport-subsidy",
+          "query": "员工上下班交通补贴标准是多少？",
+          "expected_substring": null,
+          "failure_category": "过滤",
+          "failure_hypothesis": "交通补贴缺失，出差交通费用可能造成误召。",
+          "hit": false,
+          "latency_ms": 137.2,
+          "retrieved_chunk_ids": [
+            "day16-eval-employee-handbook_2"
+          ],
+          "top_contents": [
+            "排调休或按照公司相关制度处理。\n\n员工申请调休时，应提前与直属主管确认时间，避免影响正常业务工作。\n\n六、薪资发放\n\n公司原则上于每月10日发放上一个自然月的工资。\n\n如工资发放日遇法定节假日或休息日，公司可根据实际情况提前或顺延发放。\n\n员工如发现工资金额存在疑问，应及时联系直属主管或人力资源部门进行核对。\n\n员工的"
+          ],
+          "rerank_candidate_count": 0
+        }
+      ]
+    },
+    {
+      "mode": "rerank",
+      "recall_at_k": 0.8,
+      "no_answer_accuracy": 0.2,
+      "average_retrieval_ms": 174.65,
+      "p95_retrieval_ms": 289.31,
+      "average_rerank_candidate_count": 2.76,
+      "cases": [
+        {
+          "id": "filter-free-gym",
+          "query": "公司给员工提供免费健身房吗？",
+          "expected_substring": null,
+          "failure_category": "过滤",
+          "failure_hypothesis": "知识库没有健身福利，向量分支可能误召员工福利相关内容。",
+          "hit": false,
+          "latency_ms": 133.64,
+          "retrieved_chunk_ids": [
+            "day16-eval-employee-handbook_4"
+          ],
+          "top_contents": [
+            "网站或其他未经批准的平台。\n\n十二、离职管理\n\n正式员工主动提出离职，原则上应至少提前30天提交书面离职申请。\n\n试用期员工提出离职，原则上应至少提前3天通知公司。\n\n员工离职前应完成工作交接，包括项目资料、账号权限、文件以及其他工作事项。\n\n员工还应归还电脑、门禁卡及其他公司资产。\n\n完成工作交接和离职手续后，由公司"
+          ],
+          "rerank_candidate_count": 5
+        },
+        {
+          "id": "filter-housing-subsidy",
+          "query": "员工可以领取住房补贴吗？",
+          "expected_substring": null,
+          "failure_category": "过滤",
+          "failure_hypothesis": "住房补贴不在手册中，可能误召薪资或报销规则。",
+          "hit": false,
+          "latency_ms": 123.74,
+          "retrieved_chunk_ids": [
+            "day16-eval-employee-handbook_2"
+          ],
+          "top_contents": [
+            "排调休或按照公司相关制度处理。\n\n员工申请调休时，应提前与直属主管确认时间，避免影响正常业务工作。\n\n六、薪资发放\n\n公司原则上于每月10日发放上一个自然月的工资。\n\n如工资发放日遇法定节假日或休息日，公司可根据实际情况提前或顺延发放。\n\n员工如发现工资金额存在疑问，应及时联系直属主管或人力资源部门进行核对。\n\n员工的"
+          ],
+          "rerank_candidate_count": 1
+        },
+        {
+          "id": "filter-free-lunch",
+          "query": "公司每天提供免费午餐吗？",
+          "expected_substring": null,
+          "failure_category": "过滤",
+          "failure_hypothesis": "免费午餐不在知识库中，常见词可能造成弱相关召回。",
+          "hit": false,
+          "latency_ms": 220.91,
+          "retrieved_chunk_ids": [
+            "day16-eval-employee-handbook_3"
+          ],
+          "top_contents": [
+            "时整理相关票据，并按照公司规定提交报销申请。\n\n九、培训与学习\n\n公司鼓励员工持续学习与岗位相关的知识和技能。\n\n因工作需要参加由公司安排的内部培训，员工应按要求参加。\n\n员工申请参加外部培训课程并希望由公司承担费用时，应提前提交申请，并由直属主管及相关负责人审批。\n\n未经审批自行参加的外部课程，公司原则上不承担相关培"
+          ],
+          "rerank_candidate_count": 5
+        },
+        {
+          "id": "filter-stock-options",
+          "query": "员工股票期权如何行权？",
+          "expected_substring": null,
+          "failure_category": "过滤",
+          "failure_hypothesis": "股票期权不在手册中，模型应返回信息不足。",
+          "hit": true,
+          "latency_ms": 243.86,
+          "retrieved_chunk_ids": [],
+          "top_contents": [],
+          "rerank_candidate_count": 0
+        },
+        {
+          "id": "filter-remote-work",
+          "query": "员工每周可以居家办公几天？",
+          "expected_substring": null,
+          "failure_category": "过滤",
+          "failure_hypothesis": "远程办公政策缺失，工作时间章节可能产生误召。",
+          "hit": false,
+          "latency_ms": 232.07,
+          "retrieved_chunk_ids": [
+            "day16-eval-employee-handbook_3"
+          ],
+          "top_contents": [
+            "时整理相关票据，并按照公司规定提交报销申请。\n\n九、培训与学习\n\n公司鼓励员工持续学习与岗位相关的知识和技能。\n\n因工作需要参加由公司安排的内部培训，员工应按要求参加。\n\n员工申请参加外部培训课程并希望由公司承担费用时，应提前提交申请，并由直属主管及相关负责人审批。\n\n未经审批自行参加的外部课程，公司原则上不承担相关培"
+          ],
+          "rerank_candidate_count": 4
+        },
+        {
+          "id": "filter-annual-bonus",
+          "query": "年终奖按照几个月工资计算？",
+          "expected_substring": null,
+          "failure_category": "过滤",
+          "failure_hypothesis": "奖金制度缺失，薪资发放章节可能产生误召。",
+          "hit": false,
+          "latency_ms": 129.82,
+          "retrieved_chunk_ids": [
+            "day16-eval-employee-handbook_2"
+          ],
+          "top_contents": [
+            "排调休或按照公司相关制度处理。\n\n员工申请调休时，应提前与直属主管确认时间，避免影响正常业务工作。\n\n六、薪资发放\n\n公司原则上于每月10日发放上一个自然月的工资。\n\n如工资发放日遇法定节假日或休息日，公司可根据实际情况提前或顺延发放。\n\n员工如发现工资金额存在疑问，应及时联系直属主管或人力资源部门进行核对。\n\n员工的"
+          ],
+          "rerank_candidate_count": 2
+        },
+        {
+          "id": "filter-promotion",
+          "query": "员工晋升每年评审几次？",
+          "expected_substring": null,
+          "failure_category": "过滤",
+          "failure_hypothesis": "晋升制度缺失，培训或转正规则可能干扰。",
+          "hit": false,
+          "latency_ms": 129.38,
+          "retrieved_chunk_ids": [
+            "day16-eval-employee-handbook_0"
+          ],
+          "top_contents": [
+            "XX科技有限公司员工手册\n\n一、工作时间与考勤\n\n公司实行标准工时制度。员工正常工作时间为周一至周五，每天工作8小时，上午9:00至12:00，下午13:30至18:30。周六、周日原则上为休息日。\n\n员工应按规定时间上下班。每月迟到或早退累计不超过2次且每次不超过10分钟的，由直属主管进行提醒。单月迟到或早退达到3次"
+          ],
+          "rerank_candidate_count": 3
+        },
+        {
+          "id": "filter-shuttle-bus",
+          "query": "公司班车早上几点发车？",
+          "expected_substring": null,
+          "failure_category": "过滤",
+          "failure_hypothesis": "班车制度缺失，工作时间中的时间表达可能误召。",
+          "hit": true,
+          "latency_ms": 118.97,
+          "retrieved_chunk_ids": [],
+          "top_contents": [],
+          "rerank_candidate_count": 0
+        },
+        {
+          "id": "filter-birthday-leave",
+          "query": "员工生日当天可以休假吗？",
+          "expected_substring": null,
+          "failure_category": "过滤",
+          "failure_hypothesis": "生日假缺失，年假或请假章节可能误召。",
+          "hit": false,
+          "latency_ms": 129.37,
+          "retrieved_chunk_ids": [
+            "day16-eval-employee-handbook_1"
+          ],
+          "top_contents": [
+            "作满10年但不满20年的员工，每年享有10天带薪年假。\n\n工作满20年及以上的员工，每年享有15天带薪年假。\n\n员工申请年假原则上应至少提前3个工作日提交申请，经直属主管审批后方可休假。\n\n年假原则上应在当年度使用。因业务原因确实无法休完的，应与直属主管和人力资源部门沟通处理。\n\n四、病假与事假\n\n员工因身体不适需要休"
+          ],
+          "rerank_candidate_count": 4
+        },
+        {
+          "id": "filter-marriage-leave",
+          "query": "结婚可以申请多少天婚假？",
+          "expected_substring": null,
+          "failure_category": "过滤",
+          "failure_hypothesis": "婚假制度缺失，相近请假规则可能误召。",
+          "hit": false,
+          "latency_ms": 132.5,
+          "retrieved_chunk_ids": [
+            "day16-eval-employee-handbook_2"
+          ],
+          "top_contents": [
+            "排调休或按照公司相关制度处理。\n\n员工申请调休时，应提前与直属主管确认时间，避免影响正常业务工作。\n\n六、薪资发放\n\n公司原则上于每月10日发放上一个自然月的工资。\n\n如工资发放日遇法定节假日或休息日，公司可根据实际情况提前或顺延发放。\n\n员工如发现工资金额存在疑问，应及时联系直属主管或人力资源部门进行核对。\n\n员工的"
+          ],
+          "rerank_candidate_count": 4
+        },
+        {
+          "id": "filter-maternity-leave",
+          "query": "产假可以休多少天？",
+          "expected_substring": null,
+          "failure_category": "过滤",
+          "failure_hypothesis": "产假制度缺失，病假或年假规则可能误召。",
+          "hit": false,
+          "latency_ms": 132.27,
+          "retrieved_chunk_ids": [
+            "day16-eval-employee-handbook_2"
+          ],
+          "top_contents": [
+            "排调休或按照公司相关制度处理。\n\n员工申请调休时，应提前与直属主管确认时间，避免影响正常业务工作。\n\n六、薪资发放\n\n公司原则上于每月10日发放上一个自然月的工资。\n\n如工资发放日遇法定节假日或休息日，公司可根据实际情况提前或顺延发放。\n\n员工如发现工资金额存在疑问，应及时联系直属主管或人力资源部门进行核对。\n\n员工的"
+          ],
+          "rerank_candidate_count": 2
+        },
+        {
+          "id": "filter-medical-insurance",
+          "query": "公司商业医疗保险报销比例是多少？",
+          "expected_substring": null,
+          "failure_category": "过滤",
+          "failure_hypothesis": "商业保险缺失，费用报销章节可能误召。",
+          "hit": false,
+          "latency_ms": 133.41,
+          "retrieved_chunk_ids": [
+            "day16-eval-employee-handbook_2"
+          ],
+          "top_contents": [
+            "排调休或按照公司相关制度处理。\n\n员工申请调休时，应提前与直属主管确认时间，避免影响正常业务工作。\n\n六、薪资发放\n\n公司原则上于每月10日发放上一个自然月的工资。\n\n如工资发放日遇法定节假日或休息日，公司可根据实际情况提前或顺延发放。\n\n员工如发现工资金额存在疑问，应及时联系直属主管或人力资源部门进行核对。\n\n员工的"
+          ],
+          "rerank_candidate_count": 3
+        },
+        {
+          "id": "filter-parking",
+          "query": "员工停车位每月收费多少？",
+          "expected_substring": null,
+          "failure_category": "过滤",
+          "failure_hypothesis": "停车政策缺失，费用或薪资数字可能误召。",
+          "hit": false,
+          "latency_ms": 235.66,
+          "retrieved_chunk_ids": [
+            "day16-eval-employee-handbook_0"
+          ],
+          "top_contents": [
+            "XX科技有限公司员工手册\n\n一、工作时间与考勤\n\n公司实行标准工时制度。员工正常工作时间为周一至周五，每天工作8小时，上午9:00至12:00，下午13:30至18:30。周六、周日原则上为休息日。\n\n员工应按规定时间上下班。每月迟到或早退累计不超过2次且每次不超过10分钟的，由直属主管进行提醒。单月迟到或早退达到3次"
+          ],
+          "rerank_candidate_count": 3
+        },
+        {
+          "id": "filter-cafeteria-hours",
+          "query": "公司食堂晚餐供应到几点？",
+          "expected_substring": null,
+          "failure_category": "过滤",
+          "failure_hypothesis": "食堂制度缺失，工作时间表达可能误召。",
+          "hit": true,
+          "latency_ms": 219.58,
+          "retrieved_chunk_ids": [],
+          "top_contents": [],
+          "rerank_candidate_count": 0
+        },
+        {
+          "id": "filter-equity-vesting",
+          "query": "限制性股票分几年归属？",
+          "expected_substring": null,
+          "failure_category": "过滤",
+          "failure_hypothesis": "股权激励缺失，年限数字可能误召年假规则。",
+          "hit": true,
+          "latency_ms": 120.27,
+          "retrieved_chunk_ids": [],
+          "top_contents": [],
+          "rerank_candidate_count": 0
+        },
+        {
+          "id": "ranking-login-alert",
+          "query": "发现公司账号异常登录应该找谁处理？",
+          "expected_substring": "联系信息技术人员",
+          "failure_category": "排序",
+          "failure_hypothesis": "账号、设备和信息安全内容位于相近 Chunk，Top-1 可能选错。",
+          "hit": true,
+          "latency_ms": 123.28,
+          "retrieved_chunk_ids": [
+            "day16-eval-employee-handbook_3"
+          ],
+          "top_contents": [
+            "时整理相关票据，并按照公司规定提交报销申请。\n\n九、培训与学习\n\n公司鼓励员工持续学习与岗位相关的知识和技能。\n\n因工作需要参加由公司安排的内部培训，员工应按要求参加。\n\n员工申请参加外部培训课程并希望由公司承担费用时，应提前提交申请，并由直属主管及相关负责人审批。\n\n未经审批自行参加的外部课程，公司原则上不承担相关培"
+          ],
+          "rerank_candidate_count": 5
+        },
+        {
+          "id": "ranking-attendance-three",
+          "query": "一个月迟到早退累计达到三次会如何处理？",
+          "expected_substring": "记录为一次考勤异常",
+          "failure_category": "排序",
+          "failure_hypothesis": "两次提醒与三次异常规则相邻，容易排序错误。",
+          "hit": true,
+          "latency_ms": 243.58,
+          "retrieved_chunk_ids": [
+            "day16-eval-employee-handbook_0"
+          ],
+          "top_contents": [
+            "XX科技有限公司员工手册\n\n一、工作时间与考勤\n\n公司实行标准工时制度。员工正常工作时间为周一至周五，每天工作8小时，上午9:00至12:00，下午13:30至18:30。周六、周日原则上为休息日。\n\n员工应按规定时间上下班。每月迟到或早退累计不超过2次且每次不超过10分钟的，由直属主管进行提醒。单月迟到或早退达到3次"
+          ],
+          "rerank_candidate_count": 4
+        },
+        {
+          "id": "ranking-probation-resign",
+          "query": "试用期员工辞职需要提前三十天吗？",
+          "expected_substring": "至少提前3天通知公司",
+          "failure_category": "排序",
+          "failure_hypothesis": "正式员工30天与试用期3天规则高度相似。",
+          "hit": false,
+          "latency_ms": 117.49,
+          "retrieved_chunk_ids": [
+            "day16-eval-employee-handbook_0"
+          ],
+          "top_contents": [
+            "XX科技有限公司员工手册\n\n一、工作时间与考勤\n\n公司实行标准工时制度。员工正常工作时间为周一至周五，每天工作8小时，上午9:00至12:00，下午13:30至18:30。周六、周日原则上为休息日。\n\n员工应按规定时间上下班。每月迟到或早退累计不超过2次且每次不超过10分钟的，由直属主管进行提醒。单月迟到或早退达到3次"
+          ],
+          "rerank_candidate_count": 5
+        },
+        {
+          "id": "ranking-leave-twenty",
+          "query": "工作刚满20年应当按10天还是15天年假执行？",
+          "expected_substring": "每年享有15天带薪年假",
+          "failure_category": "排序",
+          "failure_hypothesis": "问题同时包含两个候选数值，考验边界排序。",
+          "hit": true,
+          "latency_ms": 133.97,
+          "retrieved_chunk_ids": [
+            "day16-eval-employee-handbook_1"
+          ],
+          "top_contents": [
+            "作满10年但不满20年的员工，每年享有10天带薪年假。\n\n工作满20年及以上的员工，每年享有15天带薪年假。\n\n员工申请年假原则上应至少提前3个工作日提交申请，经直属主管审批后方可休假。\n\n年假原则上应在当年度使用。因业务原因确实无法休完的，应与直属主管和人力资源部门沟通处理。\n\n四、病假与事假\n\n员工因身体不适需要休"
+          ],
+          "rerank_candidate_count": 4
+        },
+        {
+          "id": "expression-overtime",
+          "query": "我没走流程但主动留下干活算加班吗？",
+          "expected_substring": "不认定为有效加班",
+          "failure_category": "表达",
+          "failure_hypothesis": "口语表达与制度中的审批、延长工作时间不同。",
+          "hit": true,
+          "latency_ms": 289.31,
+          "retrieved_chunk_ids": [
+            "day16-eval-employee-handbook_1"
+          ],
+          "top_contents": [
+            "作满10年但不满20年的员工，每年享有10天带薪年假。\n\n工作满20年及以上的员工，每年享有15天带薪年假。\n\n员工申请年假原则上应至少提前3个工作日提交申请，经直属主管审批后方可休假。\n\n年假原则上应在当年度使用。因业务原因确实无法休完的，应与直属主管和人力资源部门沟通处理。\n\n四、病假与事假\n\n员工因身体不适需要休"
+          ],
+          "rerank_candidate_count": 4
+        },
+        {
+          "id": "filter-phone-subsidy",
+          "query": "公司每月发多少通讯补贴？",
+          "expected_substring": null,
+          "failure_category": "过滤",
+          "failure_hypothesis": "通讯补贴缺失，费用和薪资章节可能造成误召。",
+          "hit": false,
+          "latency_ms": 198.89,
+          "retrieved_chunk_ids": [
+            "day16-eval-employee-handbook_1"
+          ],
+          "top_contents": [
+            "作满10年但不满20年的员工，每年享有10天带薪年假。\n\n工作满20年及以上的员工，每年享有15天带薪年假。\n\n员工申请年假原则上应至少提前3个工作日提交申请，经直属主管审批后方可休假。\n\n年假原则上应在当年度使用。因业务原因确实无法休完的，应与直属主管和人力资源部门沟通处理。\n\n四、病假与事假\n\n员工因身体不适需要休"
+          ],
+          "rerank_candidate_count": 3
+        },
+        {
+          "id": "filter-meal-overtime",
+          "query": "加班到几点可以领取餐补？",
+          "expected_substring": null,
+          "failure_category": "过滤",
+          "failure_hypothesis": "加班餐补缺失，加班和工作时间内容可能误召。",
+          "hit": false,
+          "latency_ms": 183.66,
+          "retrieved_chunk_ids": [
+            "day16-eval-employee-handbook_1"
+          ],
+          "top_contents": [
+            "作满10年但不满20年的员工，每年享有10天带薪年假。\n\n工作满20年及以上的员工，每年享有15天带薪年假。\n\n员工申请年假原则上应至少提前3个工作日提交申请，经直属主管审批后方可休假。\n\n年假原则上应在当年度使用。因业务原因确实无法休完的，应与直属主管和人力资源部门沟通处理。\n\n四、病假与事假\n\n员工因身体不适需要休"
+          ],
+          "rerank_candidate_count": 2
+        },
+        {
+          "id": "filter-seniority-award",
+          "query": "入职满五年有多少工龄奖金？",
+          "expected_substring": null,
+          "failure_category": "过滤",
+          "failure_hypothesis": "工龄奖缺失，工龄年假规则可能误召。",
+          "hit": false,
+          "latency_ms": 132.14,
+          "retrieved_chunk_ids": [
+            "day16-eval-employee-handbook_0"
+          ],
+          "top_contents": [
+            "XX科技有限公司员工手册\n\n一、工作时间与考勤\n\n公司实行标准工时制度。员工正常工作时间为周一至周五，每天工作8小时，上午9:00至12:00，下午13:30至18:30。周六、周日原则上为休息日。\n\n员工应按规定时间上下班。每月迟到或早退累计不超过2次且每次不超过10分钟的，由直属主管进行提醒。单月迟到或早退达到3次"
+          ],
+          "rerank_candidate_count": 1
+        },
+        {
+          "id": "filter-quarterly-bonus",
+          "query": "季度绩效奖金什么时候发放？",
+          "expected_substring": null,
+          "failure_category": "过滤",
+          "failure_hypothesis": "绩效奖金缺失，工资发放内容可能误召。",
+          "hit": false,
+          "latency_ms": 382.66,
+          "retrieved_chunk_ids": [
+            "day16-eval-employee-handbook_2"
+          ],
+          "top_contents": [
+            "排调休或按照公司相关制度处理。\n\n员工申请调休时，应提前与直属主管确认时间，避免影响正常业务工作。\n\n六、薪资发放\n\n公司原则上于每月10日发放上一个自然月的工资。\n\n如工资发放日遇法定节假日或休息日，公司可根据实际情况提前或顺延发放。\n\n员工如发现工资金额存在疑问，应及时联系直属主管或人力资源部门进行核对。\n\n员工的"
+          ],
+          "rerank_candidate_count": 2
+        },
+        {
+          "id": "filter-transport-subsidy",
+          "query": "员工上下班交通补贴标准是多少？",
+          "expected_substring": null,
+          "failure_category": "过滤",
+          "failure_hypothesis": "交通补贴缺失，出差交通费用可能造成误召。",
+          "hit": false,
+          "latency_ms": 125.79,
+          "retrieved_chunk_ids": [
+            "day16-eval-employee-handbook_0"
+          ],
+          "top_contents": [
+            "XX科技有限公司员工手册\n\n一、工作时间与考勤\n\n公司实行标准工时制度。员工正常工作时间为周一至周五，每天工作8小时，上午9:00至12:00，下午13:30至18:30。周六、周日原则上为休息日。\n\n员工应按规定时间上下班。每月迟到或早退累计不超过2次且每次不超过10分钟的，由直属主管进行提醒。单月迟到或早退达到3次"
+          ],
+          "rerank_candidate_count": 3
+        }
+      ]
+    }
+  ]
+}

@@ -2899,3 +2899,112 @@ Chroma 已召回包含“每晚 880 元”的 chunk，但 distance 为 `1.045920
 详细启动命令、测试范围、人工流程和截图见 `docs/day15_streamlit.md`。
 
 最终全量回归结果：`108 passed, 1 warning`；MySQL 迁移仍为 `b7e1c4d9a2f0 (head)`。
+
+---
+
+# Day16：检索质量优化（混合检索与重排）
+
+日期：2026-08-21
+
+## 1. 固定评测集与基线
+
+新增 `eval/datasets/day16_retrieval_cases.json`，包含 13 个固定问题：12 个
+可回答问题和 1 个信息不足问题。样例覆盖切分、表达、过滤和排序风险，尤其
+包括数字边界、相近年假规则、正式/试用期离职时限和口语化同义表达。
+原有 `retrieval_questions.jsonl` 的 30 问评测入口和三个兼容函数继续保留，
+Day16 数据集用于额外记录失败假设、逐模式结果与延迟。
+
+`eval/eval_retrieval.py` 会用仓库内公开样例员工手册建立独立评测知识库，
+分别运行 `vector`、`hybrid` 和 `rerank`，保存逐题 Top-K、命中结果、平均
+耗时和 P95。评测直接调用 Retriever，不经过 Redis，避免热缓存污染算法
+延迟结论。
+
+默认评测使用 `offline-hashed-bigram-v1` 本地哈希向量，只证明流程、隔离、
+融合和指标脚本可重复，不把它冒充生产 Embedding 质量。只有在明确授权将
+公开样例文本发送到 `.env` 配置的 Embedding 服务后，才使用
+`--live-embedding` 生成真实质量报告。
+
+## 2. 可切换检索策略
+
+新增配置：
+
+```text
+RAG_RETRIEVAL_MODE=vector|hybrid|rerank
+RAG_RETRIEVAL_CANDIDATE_MULTIPLIER=3
+RAG_KEYWORD_TOP_K=20
+RAG_KEYWORD_MIN_SCORE=0.3
+RAG_RRF_K=60
+RAG_RERANKER_MODEL=lexical-v1
+RAG_RERANK_LEXICAL_WEIGHT=0.7
+```
+
+默认 `vector` 不加载关键词语料，保持 Day15 行为。`hybrid` 对指定
+`knowledge_base_id` 下的 Chroma Chunk 计算无额外依赖的 BM25，并使用
+RRF 融合向量和关键词排名。`rerank` 在融合候选上使用本地词法分数再次
+排序，并单独记录 `rerank_ms`。
+
+## 3. 隔离、生命周期与缓存
+
+关键词候选直接来自 Chroma 的同一知识库过滤结果，没有第二套持久化索引，
+因此上传、删除和重建继续复用现有 Chroma 生命周期。RRF 按 `chunk_id`
+去重，输出仍保留 `chunk_id`、`content`、`distance` 和 `metadata`，不改变
+Chat Source 与 Day15 引用卡片契约。
+
+Redis 检索缓存键升级为 `rag:retrieval:v2`，加入模式、候选倍数、关键词
+候选数/阈值、RRF 常数、reranker 名称和权重的策略摘要，避免不同实验
+配置错误共享结果。
+
+## 4. 已知取舍
+
+当前 BM25 会扫描指定知识库的全部 Chunk，减少了索引一致性风险，适合 V1
+演示数据量；数据规模增大后延迟和内存会线性增长，应改用与文档生命周期
+绑定的持久化稀疏索引。`lexical-v1` 不是 cross-encoder，不产生模型调用
+成本，但无法获得深层语义重排收益。默认模式是否切换必须以固定评测报告为准。
+
+## 5. 本次真实评测结果
+
+经明确授权后，使用 `.env` 配置的真实 Embedding 服务运行 13 问固定集，
+Top-K=3、最大向量距离=1.1，且不经过 Redis：
+
+| 模式 | Recall@3 | 信息不足准确率 | 平均检索耗时 | P95 |
+| --- | ---: | ---: | ---: | ---: |
+| vector | 91.67% | 100% | 179.96 ms | 525.17 ms |
+| hybrid | 100% | 100% | 139.16 ms | 213.15 ms |
+| rerank | 100% | 100% | 202.91 ms | 512.93 ms |
+
+Hybrid 修复了 `attendance-third-event` 的排序失败，没有新增退化。Rerank
+没有比 Hybrid 增加命中，因此当前不值得设为默认模式。三种模式按顺序调用
+同一远程 Embedding 服务，13 问样本较小，预热和网络抖动会影响平均/P95，
+不能据此断言 Hybrid 比 Vector 更快。默认仍保留 `vector`，待更大真实数据集
+确认后再考虑切换生产默认值。
+
+Rerank 现在同时记录进入重排阶段的候选数。本轮平均候选数为 `3.46`，避免
+只记录最终 Top-K 而无法判断重排是否真的比较了更大的候选集合。
+
+## 6. 向量失败目录与边界结论
+
+另增 `eval/datasets/day16_failure_cases.json`，用 25 个压力问题验证真实向量
+基线失败，而不是只保存预设样例。其中 20 个是信息不足/过滤挑战，5 个是
+可回答排序挑战。真实 Embedding 运行结果中，Vector Top-1 共出现 14 个失败：
+12 个是信息不足误命中，2 个是可回答题排序错误，已逐条保存在
+`eval/results/day16_failure_catalog.json`，人类可读分析见
+`docs/day16_failure_catalog.md`。
+
+在这组专门施压的集合上，Hybrid/Rerank 虽将可回答题 Recall@1 从 60% 提升
+到 80%，却因关键词匹配扩大误召回，使信息不足准确率从 40% 降至 20%。这
+不与 13 问主质量集“Hybrid 无退化”的结论冲突：前者用于暴露边界，后者
+用于选择当前固定集上的候选策略。生产默认因此继续保持 `vector`。
+
+## 7. Streamlit 人工端到端验收
+
+在本机 FastAPI + Streamlit 中创建独立的“Day16 闭环验收”知识库，上传
+`employee_handbook.txt` 并等待入库成功。首问正确回答 10 天年假，引用卡片
+展示原始文件名、证据片段和 Chunk ID；同一 `conversation_id` 下追问工作满
+20 年的规则，正确回答 15 天并带引用。随后从文档管理页执行重建索引，知识
+库版本由 2 变为 4，任务最终回到“入库成功/可用”。
+
+人工验收同时发现前端默认 20 秒 HTTP 超时短于一次真实 LLM 请求。后端已
+返回 200，但页面先报超时。将默认超时调整为 60 秒并增加回归测试后，首问
+和追问均可在页面完整显示；这项修复不改变后端 LLM 超时策略。
+
+最终全量测试为 `119 passed, 1 warning`，数据库迁移未变更。

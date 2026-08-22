@@ -1,0 +1,93 @@
+[
+  {
+    "id": "work-hours-synonym",
+    "query": "员工每天几点打卡上班？",
+    "expected_substring": "上午9:00至12:00",
+    "failure_category": "表达",
+    "failure_hypothesis": "问题使用打卡而原文使用工作时间，容易漏召。"
+  },
+  {
+    "id": "attendance-third-event",
+    "query": "一个月第三次迟到会怎样？",
+    "expected_substring": "记录为一次考勤异常",
+    "failure_category": "排序",
+    "failure_hypothesis": "相邻段落同时包含迟到规则，数字条件可能排序错误。"
+  },
+  {
+    "id": "probation-synonym",
+    "query": "新人转正观察期通常多久？",
+    "expected_substring": "3个月试用期",
+    "failure_category": "表达",
+    "failure_hypothesis": "观察期与试用期属于同义表达。"
+  },
+  {
+    "id": "annual-leave-mid-band",
+    "query": "工龄十五年的员工每年休假额度是多少？",
+    "expected_substring": "每年享有10天带薪年假",
+    "failure_category": "排序",
+    "failure_hypothesis": "三个相近年假规则容易误召到5天或15天。"
+  },
+  {
+    "id": "annual-leave-high-band",
+    "query": "二十年工龄对应多少天年假？",
+    "expected_substring": "每年享有15天带薪年假",
+    "failure_category": "排序",
+    "failure_hypothesis": "边界值20年可能与不满20年的规则混淆。"
+  },
+  {
+    "id": "sick-leave-proof",
+    "query": "病假第二天开始需要交什么材料？",
+    "expected_substring": "正规医疗机构出具的相关证明材料",
+    "failure_category": "切分",
+    "failure_hypothesis": "时长条件与证明材料可能落在切分边界两侧。"
+  },
+  {
+    "id": "unapproved-overtime",
+    "query": "没审批自己留下来加班算有效加班吗？",
+    "expected_substring": "不认定为有效加班",
+    "failure_category": "表达",
+    "failure_hypothesis": "口语化问题与正式制度表述存在差异。"
+  },
+  {
+    "id": "salary-day",
+    "query": "上个月工资通常几号到账？",
+    "expected_substring": "每月10日发放",
+    "failure_category": "排序",
+    "failure_hypothesis": "日期数字容易被其他申请时限干扰。"
+  },
+  {
+    "id": "expense-extra-approval",
+    "query": "一张1200元的费用单需要谁额外审批？",
+    "expected_substring": "单笔费用超过1000元",
+    "failure_category": "排序",
+    "failure_hypothesis": "金额条件与30天报销时限位于相近文本。"
+  },
+  {
+    "id": "external-training",
+    "query": "公司出钱的外部课程要经过哪些人批准？",
+    "expected_substring": "直属主管及相关负责人审批",
+    "failure_category": "切分",
+    "failure_hypothesis": "费用承担条件与审批人可能被切分。"
+  },
+  {
+    "id": "lost-laptop",
+    "query": "公司电脑丢了应该联系谁？",
+    "expected_substring": "行政或信息技术人员",
+    "failure_category": "表达",
+    "failure_hypothesis": "问题使用电脑，原文上位概念是办公设备。"
+  },
+  {
+    "id": "probation-resignation",
+    "query": "试用期提出离职至少提前多久通知？",
+    "expected_substring": "至少提前3天通知公司",
+    "failure_category": "排序",
+    "failure_hypothesis": "正式员工30天与试用期3天规则高度相似。"
+  },
+  {
+    "id": "out-of-scope-stock-options",
+    "query": "员工股票期权如何行权？",
+    "expected_substring": null,
+    "failure_category": "过滤",
+    "failure_hypothesis": "知识库无答案时，弱相关结果不应越过距离或关键词门槛。"
+  }
+]
