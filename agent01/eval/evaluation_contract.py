@@ -4,7 +4,9 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 import re
+import statistics
 from collections import Counter
 from pathlib import Path
 from typing import Any
@@ -381,6 +383,11 @@ def summarize_answer_results(results: list[dict]) -> dict[str, Any]:
         if result["citation_correct"] is not None
     ]
     distribution = Counter(result["manual_score"] for result in results)
+    latencies = [
+        float(result["latency_ms"])
+        for result in results
+        if isinstance(result.get("latency_ms"), (int, float))
+    ]
 
     return {
         "case_count": len(results),
@@ -420,6 +427,16 @@ def summarize_answer_results(results: list[dict]) -> dict[str, Any]:
             / len(cited),
             4,
         ) if cited else None,
+        "average_latency_ms": round(
+            statistics.mean(latencies),
+            2,
+        ) if latencies else None,
+        "p95_latency_ms": round(
+            sorted(latencies)[
+                max(0, math.ceil(len(latencies) * 0.95) - 1)
+            ],
+            2,
+        ) if latencies else None,
         "failed_case_ids": [
             result["case_id"]
             for result in results

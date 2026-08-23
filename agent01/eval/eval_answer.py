@@ -295,6 +295,16 @@ def build_markdown(report: dict[str, Any]) -> str:
         f"- 回答相关率：{_format_rate(summary['answer_relevance'])}",
         f"- 拒答准确率：{_format_rate(summary['refusal_accuracy'])}",
         f"- 引用正确率：{_format_rate(summary['citation_correctness'])}",
+        (
+            f"- 平均回答耗时：{summary['average_latency_ms']:.2f} ms"
+            if summary["average_latency_ms"] is not None
+            else "- 平均回答耗时：N/A"
+        ),
+        (
+            f"- P95 回答耗时：{summary['p95_latency_ms']:.2f} ms"
+            if summary["p95_latency_ms"] is not None
+            else "- P95 回答耗时：N/A"
+        ),
         f"- 分数分布：`{json.dumps(summary['score_distribution'], ensure_ascii=False)}`",
         "",
         "## 0/1/2 人工复核标准",
@@ -403,11 +413,21 @@ def run(argv: list[str] | None = None) -> int:
         evaluation_backend = "configured-live-embedding-and-llm"
         llm_model = settings.LLM_MODEL or "unconfigured"
         embedding_model = settings.EMBEDDING_MODEL or "unconfigured"
+        response_capture = None
     else:
         responses_path = args.responses_json.resolve()
         results = _evaluate_saved(cases, responses_path)
-        evaluation_backend = f"saved-responses:{responses_path.name}"
         raw = json.loads(responses_path.read_text(encoding="utf-8"))
+        recorded_backend = (
+            raw.get("evaluation_backend")
+            if isinstance(raw, dict)
+            else None
+        )
+        evaluation_backend = (
+            f"replay:{recorded_backend}"
+            if recorded_backend
+            else f"saved-responses:{responses_path.name}"
+        )
         llm_model = (
             raw.get("llm_model", "recorded-unspecified")
             if isinstance(raw, dict)
@@ -418,6 +438,15 @@ def run(argv: list[str] | None = None) -> int:
             if isinstance(raw, dict)
             else "recorded-unspecified"
         )
+        response_capture = {
+            "path": str(responses_path),
+            "sha256": dataset_sha256(responses_path),
+            "generated_at": (
+                raw.get("generated_at")
+                if isinstance(raw, dict)
+                else None
+            ),
+        }
 
     summary = summarize_answer_results(results)
     thresholds = {
@@ -454,6 +483,7 @@ def run(argv: list[str] | None = None) -> int:
         "llm_model": llm_model,
         "embedding_model": embedding_model,
         "prompt": _prompt_metadata(),
+        "response_capture": response_capture,
         "chunking": {"chunk_size": 500, "chunk_overlap": 50},
         "retrieval": {
             "mode_override": args.mode,
