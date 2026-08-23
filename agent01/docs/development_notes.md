@@ -3076,3 +3076,14 @@ Vector 模式的真实回答结果为：49 题 2 分、1 题 1 分、0 题 0 分
 原始真实响应保存在 `day17_answer_responses_live.json`，重放报告记录该文件
 的 SHA-256；因此以后可以在不重复调用模型的情况下验证打分规则变化。以上
 百分比只适用于 `day17-v1` 合成手册固定集，不代表真实企业数据总体准确率。
+
+## 6. CI 自动化回归
+
+新增仓库级 `.github/workflows/agent01-ci.yml`，仅在 `agent01/**` 或工作流
+本身变化时触发。工作流采用只读 GitHub Token 权限，第三方 Action 固定到
+不可变提交 SHA，使用 Python 3.11、uv 0.12.1 和 `uv.lock` 安装依赖。
+
+CI 不加载 `.env`，而是使用不可联网成功的占位 URL，并关闭 Redis 缓存。
+它依次执行完整 pytest、编译检查、离线 Vector 检索门槛以及真实响应重放
+门槛。真实 Embedding 和 LLM 不参与 CI，避免密钥泄露、模型费用和网络波动。
+任何核心样本、指标门槛或编译失败都会使 GitHub Actions 返回非零状态。

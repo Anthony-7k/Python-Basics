@@ -1,0 +1,93 @@
+name: agent01-ci
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "agent01/**"
+      - ".github/workflows/agent01-ci.yml"
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "agent01/**"
+      - ".github/workflows/agent01-ci.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: agent01-ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  offline-regression:
+    name: Python 3.11 offline regression
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      LLM_API_KEY: ci-placeholder
+      LLM_BASE_URL: http://127.0.0.1:9/v1
+      LLM_MODEL: ci-placeholder
+      EMBEDDING_API_KEY: ci-placeholder
+      EMBEDDING_BASE_URL: http://127.0.0.1:9/v1
+      EMBEDDING_MODEL: ci-placeholder
+      DATABASE_URL: sqlite+pysqlite:///:memory:
+      REDIS_URL: redis://127.0.0.1:9/0
+      RAG_CACHE_ENABLED: "false"
+      CHROMA_PATH: ${{ runner.temp }}/agent01-chroma
+      UPLOAD_DIR: ${{ runner.temp }}/agent01-uploads
+
+    defaults:
+      run:
+        working-directory: agent01
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install uv and Python
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+        with:
+          version: "0.12.1"
+          python-version: "3.11"
+          enable-cache: true
+          cache-dependency-glob: "agent01/uv.lock"
+
+      - name: Install locked dependencies
+        run: uv sync --locked
+
+      - name: Run full test suite
+        run: uv run pytest -p no:cacheprovider
+
+      - name: Check Python compilation
+        run: uv run python -m compileall -q app frontend eval tests
+
+      - name: Run Day17 retrieval quality gate
+        run: |
+          uv run python eval/eval_retrieval.py \
+            --modes vector \
+            --min-recall-at-k 0.70 \
+            --min-mrr 0.65 \
+            --min-no-answer-accuracy 0.70 \
+            --json-report "${RUNNER_TEMP}/day17-retrieval.json" \
+            --csv-report "${RUNNER_TEMP}/day17-retrieval.csv" \
+            --markdown-report "${RUNNER_TEMP}/day17-retrieval.md"
+
+      - name: Run Day17 answer quality gate
+        run: |
+          uv run python eval/eval_answer.py \
+            --responses-json eval/results/day17_answer_responses_live.json \
+            --min-average-score 1.90 \
+            --min-fact-coverage 1.00 \
+            --min-fact-consistency 1.00 \
+            --min-answer-relevance 1.00 \
+            --min-refusal-accuracy 1.00 \
+            --min-citation-correctness 1.00 \
+            --json-report "${RUNNER_TEMP}/day17-answer.json" \
+            --csv-report "${RUNNER_TEMP}/day17-answer.csv" \
+            --markdown-report "${RUNNER_TEMP}/day17-answer.md"

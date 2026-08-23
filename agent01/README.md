@@ -154,3 +154,17 @@ uv run python eval/eval_answer.py \
 完整的 0/1/2 人工评分与独立引用规则见
 `docs/day17_evaluation_methodology.md`。CI 运行 10 个无网络核心样本，避免把
 模型或网络波动写成确定性单元测试。
+
+### 7. GitHub Actions 离线回归
+
+仓库根目录的 `.github/workflows/agent01-ci.yml` 会在 `main` 分支的
+`agent01/**` 发生 Push 或 Pull Request 时自动运行，也支持手动触发。
+工作流使用 Python 3.11 和锁定依赖，执行：
+
+- 128 项完整 pytest（包括 10 个 Day17 核心样本）。
+- Python 编译检查。
+- Day17 离线 Vector 检索质量门槛。
+- 已保存真实响应的回答质量重放门槛。
+
+CI 只使用占位配置，不读取 `.env`，不会调用真实 Embedding、LLM、MySQL
+或 Redis。任何测试或门槛失败都会让工作流返回非零状态并在 GitHub 标红。
