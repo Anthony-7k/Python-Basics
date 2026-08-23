@@ -103,3 +103,54 @@ Embedding 服务后，再运行真实质量评测：
 ```bash
 uv run python eval/eval_retrieval.py --live-embedding
 ```
+
+### 6. Day17 版本化 RAG 评测
+
+Day17 固定集位于 `eval/datasets/day17_rag_eval_v1.json`，包含 50 题并按
+25 个 Dev / 25 个 Holdout 分离。先运行完全离线的检索工程基线：
+
+```bash
+uv run python eval/eval_retrieval.py
+```
+
+命令同时输出 JSON、CSV 和 Markdown，并计算 Recall@K、MRR、信息不足
+准确率、平均延迟和 P95。离线哈希向量不能作为生产质量结论。确认合成员工
+手册可以发送到配置的外部 Embedding 服务后，再运行真实评测：
+
+```bash
+uv run python eval/eval_retrieval.py --live-embedding --split holdout
+```
+
+可用门槛让失败返回非零状态，例如：
+
+```bash
+uv run python eval/eval_retrieval.py \
+  --modes vector \
+  --min-recall-at-k 0.70 \
+  --min-mrr 0.65 \
+  --min-no-answer-accuracy 0.70
+```
+
+回答评测支持实时运行和保存响应重放。实时模式会调用 `.env` 配置的
+Embedding 与 LLM，只应对仓库中的合成手册执行：
+
+```bash
+uv run python eval/eval_answer.py --live --split holdout --mode vector
+```
+
+生成的 `eval/results/day17_answer_eval.json` 本身可以作为无网络重放输入：
+
+```bash
+uv run python eval/eval_answer.py \
+  --responses-json eval/results/day17_answer_eval.json \
+  --min-average-score 1.60 \
+  --min-fact-coverage 0.80 \
+  --min-fact-consistency 0.90 \
+  --min-answer-relevance 0.90 \
+  --min-refusal-accuracy 0.70 \
+  --min-citation-correctness 0.80
+```
+
+完整的 0/1/2 人工评分与独立引用规则见
+`docs/day17_evaluation_methodology.md`。CI 运行 10 个无网络核心样本，避免把
+模型或网络波动写成确定性单元测试。
