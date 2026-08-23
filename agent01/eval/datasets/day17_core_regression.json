@@ -1,0 +1,27 @@
+{
+  "suite_name": "day17-core-regression",
+  "dataset_name": "employee-handbook-rag-eval",
+  "dataset_version": "day17-v1",
+  "case_ids": [
+    "d17-002",
+    "d17-010",
+    "d17-011",
+    "d17-018",
+    "d17-025",
+    "d17-032",
+    "d17-034",
+    "d17-035",
+    "d17-036",
+    "d17-041"
+  ],
+  "coverage": [
+    "third lateness rule",
+    "ten-year and twenty-year annual leave boundaries",
+    "unapproved overtime",
+    "expense approval threshold",
+    "security incident contact",
+    "formal and probationary resignation notice",
+    "follow-up resolution",
+    "unanswerable refusal"
+  ]
+}
