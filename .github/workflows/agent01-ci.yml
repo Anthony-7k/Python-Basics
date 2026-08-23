@@ -37,8 +37,8 @@ jobs:
       DATABASE_URL: "sqlite+pysqlite:///:memory:"
       REDIS_URL: redis://127.0.0.1:9/0
       RAG_CACHE_ENABLED: "false"
-      CHROMA_PATH: ${{ runner.temp }}/agent01-chroma
-      UPLOAD_DIR: ${{ runner.temp }}/agent01-uploads
+      CHROMA_PATH: /tmp/agent01-chroma
+      UPLOAD_DIR: /tmp/agent01-uploads
 
     defaults:
       run:
