@@ -31,6 +31,23 @@ uv sync
 
 ### 2. 启动后端
 
+先在 `.env` 配置演示用户。JSON 的 key 是 Bearer Token，value 是用户邮箱；
+请使用随机 Token，示例占位符不能用于共享或生产环境：
+
+```bash
+DEMO_AUTH_USERS_JSON={"replace-with-random-demo-token":"local-user@agent01.local"}
+DEMO_API_KEY=replace-with-random-demo-token
+```
+
+除 `/health`、`/ready` 外，所有 `/api/v1/**` 接口都要求：
+
+```text
+Authorization: Bearer <token>
+```
+
+`DEMO_API_KEY` 供 Streamlit HTTP 客户端发送同一凭证，不会由后端用作用户
+映射。不要把真实 Token、模型密钥或 `.env` 提交到 Git。
+
 ```bash
 uv run alembic upgrade head
 uv run uvicorn app.main:app --host 127.0.0.1 --port 8000
@@ -52,13 +69,44 @@ API_BASE_URL=http://127.0.0.1:8000
 
 Streamlit 只通过 FastAPI HTTP 接口访问知识库、文档、入库任务、聊天和会话历史，不直接连接 MySQL、Chroma、Redis 或模型服务。
 
-### 4. 测试
+### 4. Day18 安全、权限与可靠性
+
+请求 Token 解析为明确用户邮箱，并随 FastAPI 依赖注入知识库、文档和会话
+服务。服务层的统一授权组件校验 `knowledge_base_id` 所有者；文档、入库任务、
+会话历史和 Chat 都复用该校验。其他用户猜中资源 ID 时也只得到 404，以减少
+资源枚举信息。
+
+上传和 Chat 使用按用户、按入口隔离的进程内固定窗口限流：
+
+```bash
+RATE_LIMIT_WINDOW_SECONDS=60
+UPLOAD_RATE_LIMIT_REQUESTS=10
+CHAT_RATE_LIMIT_REQUESTS=30
+```
+
+超限返回 429、`Retry-After` 和 `X-Request-ID`。该实现只适合单进程演示：
+多 worker、多实例或重启后状态不共享；生产环境应在网关、Redis 或专用限流
+服务中统一执行，并增加并发、请求体和成本预算限制。
+
+应用日志使用 JSON 字段白名单，只保留 `request_id`、路由、方法、状态码、
+耗时和不可逆 `actor_id` 等元数据。日志不记录 Authorization、API Key、完整
+问题/回答、Prompt、文档正文或上传二进制；已配置密钥和常见凭证格式会再次
+脱敏。第三方库与基础设施日志仍需独立审计。
+
+RAG Prompt 把 `<knowledge_base_evidence>` 明确标记为不可信数据，禁止文档
+修改角色、系统规则、认证、授权或知识库范围。程序侧授权、检索过滤、来源
+编号约束和注入回归共同形成分层缓解，但 Prompt Injection 无法被完全消除。
+
+完整威胁、信任边界和生产差距见
+`docs/day18_security_threat_model.md`。
+
+### 5. 测试
 
 ```bash
 uv run pytest -p no:cacheprovider
 ```
 
-### 5. Day16 检索模式与评测
+### 6. Day16 检索模式与评测
 
 默认仍使用纯向量检索。可在 `.env` 中切换：
 
@@ -104,7 +152,7 @@ Embedding 服务后，再运行真实质量评测：
 uv run python eval/eval_retrieval.py --live-embedding
 ```
 
-### 6. Day17 版本化 RAG 评测
+### 7. Day17 版本化 RAG 评测
 
 Day17 固定集位于 `eval/datasets/day17_rag_eval_v1.json`，包含 50 题并按
 25 个 Dev / 25 个 Holdout 分离。先运行完全离线的检索工程基线：
@@ -155,13 +203,13 @@ uv run python eval/eval_answer.py \
 `docs/day17_evaluation_methodology.md`。CI 运行 10 个无网络核心样本，避免把
 模型或网络波动写成确定性单元测试。
 
-### 7. GitHub Actions 离线回归
+### 8. GitHub Actions 离线回归
 
 仓库根目录的 `.github/workflows/agent01-ci.yml` 会在 `main` 分支的
 `agent01/**` 发生 Push 或 Pull Request 时自动运行，也支持手动触发。
 工作流使用 Python 3.11 和锁定依赖，执行：
 
-- 128 项完整 pytest（包括 10 个 Day17 核心样本）。
+- 完整 pytest（包括 10 个 Day17 核心样本与 Day18 安全回归）。
 - Python 编译检查。
 - Day17 离线 Vector 检索质量门槛。
 - 已保存真实响应的回答质量重放门槛。

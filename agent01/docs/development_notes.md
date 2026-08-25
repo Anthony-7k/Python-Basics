@@ -3087,3 +3087,16 @@ CI 不加载 `.env`，而是使用不可联网成功的占位 URL，并关闭 Re
 它依次执行完整 pytest、编译检查、离线 Vector 检索门槛以及真实响应重放
 门槛。真实 Embedding 和 LLM 不参与 CI，避免密钥泄露、模型费用和网络波动。
 任何核心样本、指标门槛或编译失败都会使 GitHub Actions 返回非零状态。
+# Day 18 - 安全、权限边界与可靠性
+
+- 从环境变量加载演示 Bearer Token 到用户邮箱映射，`/health`、`/ready` 公开，
+  `/api/v1/**` 业务接口受保护。
+- 请求身份通过依赖注入服务；统一服务层授权覆盖知识库、文档、入库任务、
+  会话和 Chat，越权按 404 处理。
+- 上传与 Chat 增加配置化进程内限流，429 响应包含 request ID 与 Retry-After。
+- HTTP 日志改为结构化 JSON 白名单，并对 Bearer/API Key/已配置密钥脱敏；
+  不记录完整问题、回答、Prompt 或文档原文。
+- 增强证据数据边界并加入认证、两用户越权、限流、日志脱敏和 Prompt
+  Injection 回归测试。
+- 新增 `docs/day18_security_threat_model.md`，明确演示认证、单进程限流和
+  Prompt Injection 分层缓解的剩余风险。
