@@ -71,13 +71,22 @@ def test_rag_retrieves_with_standalone_and_answers_original(
     assert response.used_chunk_ids == [
         "chunk-1"
     ]
-    assert "original_question='正式员工呢？'" in (
-        caplog.text
-    )
+    assert "正式员工呢？" not in caplog.text
     assert (
-        "standalone_question="
-        "'正式员工的年假规定是什么？'"
-        in caplog.text
+        "正式员工的年假规定是什么？"
+        not in caplog.text
+    )
+    retrieval_record = next(
+        record
+        for record in caplog.records
+        if getattr(record, "event", None)
+        == "rag_retrieval"
+    )
+    assert retrieval_record.request_id == (
+        "day12-request"
+    )
+    assert retrieval_record.knowledge_base_id == (
+        "kb-a"
     )
 
 

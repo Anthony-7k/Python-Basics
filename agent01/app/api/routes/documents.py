@@ -1,5 +1,3 @@
-from pathlib import Path
-
 from fastapi import (
     APIRouter,
     BackgroundTasks,
@@ -40,6 +38,7 @@ from app.services.ingestion.ingestion_service import (
 from app.services.ingestion.uploader import (
     get_uploaded_file_path,
     read_validated_file,
+    sanitize_file_name,
     save_uploaded_file,
 )
 
@@ -94,9 +93,9 @@ async def upload_document(
             detail=str(exc),
         ) from exc
 
-    original_file_name = Path(
+    original_file_name = sanitize_file_name(
         file.filename or ""
-    ).name
+    )
 
     document, job, created = (
         document_service.create_or_get_upload(

@@ -178,27 +178,29 @@ def answer_question(
     )
 
     logger.info(
-        "rag retrieval completed request_id=%s "
-        "original_question=%r "
-        "standalone_question=%r "
-        "knowledge_base_id=%s "
-        "knowledge_base_version=%s "
-        "cache_hit=%s cache_lookup_ms=%.2f "
-        "retrieval_mode=%s rerank_ms=%.2f "
-        "rerank_candidates=%s "
-        "sources=%s retrieval_ms=%.2f",
-        request_id,
-        original_question,
-        standalone_question,
-        knowledge_base_id,
-        knowledge_base_version,
-        cache_hit,
-        cache_lookup_ms,
-        retrieval_mode,
-        rerank_ms,
-        rerank_candidate_count,
-        len(retrieval_result["sources"]),
-        retrieval_ms,
+        "rag retrieval completed",
+        extra={
+            "event": "rag_retrieval",
+            "request_id": request_id,
+            "knowledge_base_id": (
+                knowledge_base_id
+            ),
+            "retrieval_mode": retrieval_mode,
+            "duration_ms": round(
+                retrieval_ms,
+                2,
+            ),
+            "result_summary": (
+                f"sources={len(retrieval_result['sources'])};"
+                f"cache_hit={cache_hit};"
+                f"cache_lookup_ms={cache_lookup_ms:.2f};"
+                f"rerank_ms={rerank_ms:.2f};"
+                "rerank_candidates="
+                f"{rerank_candidate_count};"
+                "knowledge_base_version="
+                f"{knowledge_base_version}"
+            ),
+        },
     )
 
     context = retrieval_result["context"]
@@ -209,10 +211,20 @@ def answer_question(
                    ) * 1000
 
         logger.info(
-            "rag request completed request_id=%s "
-            "status=refused total_ms=%.2f",
-            request_id,
-            total_ms,
+            "rag request completed",
+            extra={
+                "event": "rag_request",
+                "request_id": request_id,
+                "knowledge_base_id": (
+                    knowledge_base_id
+                ),
+                "duration_ms": round(
+                    total_ms,
+                    2,
+                ),
+                "status": "refused",
+                "result_summary": "sources=0",
+            },
         )
 
         return RAGResponse(
@@ -260,13 +272,23 @@ def answer_question(
     ) * 1000
 
     logger.info(
-        "rag request completed request_id=%s "
-        "status=answered sources=%s "
-        "generation_ms=%.2f total_ms=%.2f",
-        request_id,
-        len(sources),
-        generation_ms,
-        total_ms,
+        "rag request completed",
+        extra={
+            "event": "rag_request",
+            "request_id": request_id,
+            "knowledge_base_id": (
+                knowledge_base_id
+            ),
+            "duration_ms": round(
+                total_ms,
+                2,
+            ),
+            "status": "answered",
+            "result_summary": (
+                f"sources={len(sources)};"
+                f"generation_ms={generation_ms:.2f}"
+            ),
+        },
     )
 
     return RAGResponse(

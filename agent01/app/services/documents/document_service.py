@@ -1,6 +1,5 @@
 from collections.abc import Callable
 from hashlib import sha256
-from pathlib import Path
 
 from sqlalchemy.orm import Session
 
@@ -23,6 +22,9 @@ from app.repositories import (
 )
 from app.services.security import (
     AccessControlService,
+)
+from app.services.ingestion.uploader import (
+    sanitize_file_name,
 )
 
 
@@ -81,9 +83,9 @@ class DocumentService:
                     knowledge_base_id
                 )
             )
-            safe_file_name = Path(
+            safe_file_name = sanitize_file_name(
                 file_name
-            ).name
+            )
             existing_document = (
                 self.document_repository
                 .get_document_by_content_hash(

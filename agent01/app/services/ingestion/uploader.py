@@ -14,11 +14,20 @@ ALLOWED_MIME_TYPES = {
     },
 }
 
+
+def sanitize_file_name(file_name: str) -> str:
+    """Return a basename for both POSIX and Windows separators."""
+    return Path(
+        file_name.replace("\\", "/")
+    ).name
+
 def validate_file_type(file: UploadFile) -> str:
     if not file.filename:
         raise ValueError("Filename is required")
 
-    suffix = Path(file.filename).suffix.lower()
+    suffix = Path(
+        sanitize_file_name(file.filename)
+    ).suffix.lower()
     allowed_mime_types = ALLOWED_MIME_TYPES.get(suffix)
 
     if allowed_mime_types is None:
@@ -75,5 +84,7 @@ def get_uploaded_file_path(
     content_hash: str,
     file_name: str,
 ) -> Path:
-    suffix = Path(file_name).suffix.lower()
+    suffix = Path(
+        sanitize_file_name(file_name)
+    ).suffix.lower()
     return UPLOAD_DIR / f"{content_hash}{suffix}"
