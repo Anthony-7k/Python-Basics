@@ -9,6 +9,15 @@ from fastapi import (
 from app.api.dependencies import (
     get_conversation_service,
 )
+from app.api.authentication import (
+    get_current_user,
+)
+from app.core.rate_limit import request_limiter
+from app.core.security import AuthenticatedUser
+from app.core.settings import (
+    CHAT_RATE_LIMIT_REQUESTS,
+    RATE_LIMIT_WINDOW_SECONDS,
+)
 from app.schemas.rag import (
     ChatRequest,
     RAGResponse,
@@ -40,7 +49,18 @@ def chat(
     ) = Depends(
         get_conversation_service
     ),
+    current_user: AuthenticatedUser = Depends(
+        get_current_user
+    ),
 ):
+    request_limiter.check(
+        scope="chat",
+        actor_id=current_user.audit_id,
+        limit=CHAT_RATE_LIMIT_REQUESTS,
+        window_seconds=(
+            RATE_LIMIT_WINDOW_SECONDS
+        ),
+    )
     started_at = perf_counter()
 
     conversation = (

@@ -43,3 +43,16 @@ class DocumentFileMissingError(Exception):
     """文档的本地源文件已经不存在。"""
 
     pass
+
+
+class RateLimitExceededError(Exception):
+    """进程内请求速率已超过演示配置。"""
+
+    def __init__(
+        self,
+        retry_after_seconds: int,
+    ) -> None:
+        super().__init__("Request rate limit exceeded")
+        self.retry_after_seconds = (
+            retry_after_seconds
+        )

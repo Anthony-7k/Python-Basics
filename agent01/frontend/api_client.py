@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+import os
 from typing import Any
 
 import httpx
@@ -36,6 +37,7 @@ class APIClient:
         base_url: str = DEFAULT_API_BASE_URL,
         *,
         timeout_seconds: float = DEFAULT_API_TIMEOUT_SECONDS,
+        api_key: str | None = None,
         client: httpx.Client | None = None,
     ) -> None:
         normalized_url = base_url.strip().rstrip("/")
@@ -44,6 +46,11 @@ class APIClient:
 
         self.base_url = normalized_url
         self.timeout_seconds = timeout_seconds
+        self.api_key = (
+            api_key
+            if api_key is not None
+            else os.getenv("DEMO_API_KEY")
+        )
         self._client = client
 
     def _request(
@@ -52,6 +59,16 @@ class APIClient:
         path: str,
         **kwargs: Any,
     ) -> Any:
+        headers = dict(
+            kwargs.pop("headers", {})
+        )
+        if self.api_key:
+            headers["Authorization"] = (
+                f"Bearer {self.api_key}"
+            )
+        if headers:
+            kwargs["headers"] = headers
+
         try:
             if self._client is not None:
                 response = self._client.request(
@@ -273,6 +290,8 @@ def _extract_error_detail(response: httpx.Response) -> str:
 
 
 def _status_hint(status_code: int) -> str:
+    if status_code == 401:
+        return "请配置有效的 DEMO_API_KEY 后重试。"
     if status_code == 400:
         return "请检查文件格式、大小或输入内容后重试。"
     if status_code == 404:
@@ -281,6 +300,8 @@ def _status_hint(status_code: int) -> str:
         return "当前资源状态不允许此操作，请刷新状态后重试。"
     if status_code == 422:
         return "请检查必填项和输入长度后重试。"
+    if status_code == 429:
+        return "请求过于频繁，请等待 Retry-After 指示的秒数后重试。"
     if status_code >= 500:
         return "请查看 FastAPI 日志并确认 MySQL、Redis 与模型服务状态。"
     return "请刷新页面后重试；若仍失败，请查看 FastAPI 日志。"

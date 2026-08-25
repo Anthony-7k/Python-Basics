@@ -1,5 +1,6 @@
 from pathlib import Path
 
+from app.core.logging_config import get_logger
 from app.db.session import SessionLocal
 from app.models import (
     IngestionJobStatus,
@@ -30,6 +31,9 @@ from app.services.vector_stores.vector_store import (
     delete_by_document,
     upsert_chunks,
 )
+
+
+logger = get_logger(__name__)
 
 
 def load_documents(
@@ -155,13 +159,27 @@ def run_ingestion_task(
                 ),
             )
 
-        except Exception as exc:
+        except Exception:
             service.update_ingestion_status(
                 task_id=task_id,
                 status=(
                     IngestionJobStatus.FAILED
                 ),
-                error=str(exc),
+                error="Document ingestion failed",
+            )
+
+            logger.error(
+                "document ingestion failed",
+                extra={
+                    "event": "ingestion_error",
+                    "document_id": document.id,
+                    "knowledge_base_id": (
+                        document.knowledge_base_id
+                    ),
+                    "error_code": (
+                        "document_ingestion_failed"
+                    ),
+                },
             )
 
             return

@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.pool import StaticPool
 
 from app.db.base import Base
+from app.core.security import AuthenticatedUser
 from app.models import MessageRole
 from app.repositories import (
     ConversationRepository,
@@ -115,7 +116,10 @@ def test_prepare_context_keeps_recent_turns_and_summarizes_once(
     )
 
     service = ConversationService(
-        db_session
+        db_session,
+        current_user=AuthenticatedUser(
+            email="day12@example.com"
+        ),
     )
     context = service.prepare_context(
         conversation.id,
@@ -170,7 +174,10 @@ def test_summary_failure_keeps_bounded_recent_history(
     )
 
     context = ConversationService(
-        db_session
+        db_session,
+        current_user=AuthenticatedUser(
+            email="day12@example.com"
+        ),
     ).prepare_context(
         conversation.id,
         max_turns=1,

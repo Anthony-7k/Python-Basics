@@ -4,15 +4,13 @@ from sqlalchemy.orm import Session
 
 from app.core.exceptions import (
     ConversationKnowledgeBaseMismatchError,
-    ConversationNotFoundError,
-    KnowledgeBaseNotFoundError,
 )
 from app.core.settings import (
     CONVERSATION_HISTORY_MAX_TURNS,
     CONVERSATION_HISTORY_TOKEN_BUDGET,
     DEFAULT_KNOWLEDGE_BASE_NAME,
-    DEFAULT_USER_EMAIL,
 )
+from app.core.security import AuthenticatedUser
 from app.core.logging_config import get_logger
 from app.models import (
     Conversation,
@@ -27,6 +25,9 @@ from app.services.conversations.query_rewriter import (
     fit_summary_messages_to_budget,
     format_history,
     summarize_conversation,
+)
+from app.services.security import (
+    AccessControlService,
 )
 
 
@@ -45,12 +46,19 @@ class ConversationService:
     def __init__(
         self,
         session: Session,
+        current_user: AuthenticatedUser,
     ) -> None:
         self.session = session
 
         self.repository = (
             ConversationRepository(
                 session
+            )
+        )
+        self.access_control = (
+            AccessControlService(
+                session,
+                current_user,
             )
         )
 
@@ -62,18 +70,11 @@ class ConversationService:
         try:
             if conversation_id is not None:
                 conversation = (
-                    self.repository
-                    .get_conversation(
+                    self.access_control
+                    .require_conversation_access(
                         conversation_id
                     )
                 )
-
-                if conversation is None:
-                    raise (
-                        ConversationNotFoundError(
-                            "Conversation not found"
-                        )
-                    )
 
                 if (
                     knowledge_base_id
@@ -94,18 +95,11 @@ class ConversationService:
 
             if knowledge_base_id is not None:
                 knowledge_base = (
-                    self.repository
-                    .get_knowledge_base(
+                    self.access_control
+                    .require_knowledge_base_access(
                         knowledge_base_id
                     )
                 )
-
-                if knowledge_base is None:
-                    raise (
-                        KnowledgeBaseNotFoundError(
-                            "Knowledge base not found"
-                        )
-                    )
 
                 user_id = (
                     knowledge_base.owner_user_id
@@ -113,12 +107,8 @@ class ConversationService:
 
             else:
                 user = (
-                    self.repository.create_user(
-                        email=DEFAULT_USER_EMAIL,
-                        display_name=(
-                            "Local Development User"
-                        ),
-                    )
+                    self.access_control
+                    .get_or_create_user()
                 )
 
                 knowledge_base = (
@@ -157,16 +147,11 @@ class ConversationService:
         conversation_id: str,
     ) -> list[Message]:
         conversation = (
-            self.repository
-            .get_conversation(
+            self.access_control
+            .require_conversation_access(
                 conversation_id
             )
         )
-
-        if conversation is None:
-            raise ConversationNotFoundError(
-                "Conversation not found"
-            )
 
         return self.repository.list_messages(
             conversation_id
@@ -198,15 +183,11 @@ class ConversationService:
         ),
     ) -> ConversationContext:
         conversation = (
-            self.repository.get_conversation(
+            self.access_control
+            .require_conversation_access(
                 conversation_id
             )
         )
-
-        if conversation is None:
-            raise ConversationNotFoundError(
-                "Conversation not found"
-            )
 
         recent_messages = (
             self.repository
@@ -344,6 +325,10 @@ class ConversationService:
         source_summary: dict | None = None,
     ) -> None:
         try:
+            self.access_control\
+                .require_conversation_access(
+                    conversation_id
+                )
             self.repository.add_message(
                 conversation_id=(
                     conversation_id

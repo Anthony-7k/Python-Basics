@@ -1,5 +1,6 @@
 from types import SimpleNamespace
 from datetime import datetime, timezone
+from hashlib import sha256
 from unittest.mock import (
     MagicMock,
     call,
@@ -14,6 +15,11 @@ from app.api.dependencies import (
     get_document_service,
     get_knowledge_base_service,
 )
+from app.api.authentication import (
+    get_current_user,
+)
+from app.core.rate_limit import request_limiter
+from app.core.security import AuthenticatedUser
 from app.core.exceptions import (
     ConversationNotFoundError,
     UpstreamServiceError,
@@ -30,6 +36,10 @@ from app.services.ingestion.ingestion_service import (
 
 
 client = TestClient(app)
+
+TEST_USER = AuthenticatedUser(
+    email="api-user@example.test",
+)
 
 class FakeConversationService:
     def __init__(self):
@@ -261,6 +271,20 @@ class FakeKnowledgeBaseService:
 
     def get(self, knowledge_base_id):
         return self.items[knowledge_base_id]
+
+@pytest.fixture(autouse=True)
+def fake_authenticated_user():
+    request_limiter.clear()
+    app.dependency_overrides[
+        get_current_user
+    ] = lambda: TEST_USER
+    yield TEST_USER
+    app.dependency_overrides.pop(
+        get_current_user,
+        None,
+    )
+    request_limiter.clear()
+
 
 @pytest.fixture(autouse=True)
 def fake_document_service():
@@ -605,6 +629,77 @@ def test_upload_rejects_mime_mismatch():
     assert response.status_code == 400
     assert "Unsupported MIME type" in response.json()["detail"]
 
+
+@pytest.mark.parametrize(
+    "malicious_file_name",
+    (
+        "../../outside.txt",
+        r"..\..\outside.txt",
+    ),
+)
+def test_upload_sanitizes_path_traversal_file_name(
+    tmp_path,
+    fake_document_service,
+    malicious_file_name,
+):
+    content = (
+        f"path traversal regression: {malicious_file_name}"
+    ).encode("utf-8")
+    content_hash = sha256(content).hexdigest()
+
+    with patch(
+        "app.services.ingestion.uploader.UPLOAD_DIR",
+        tmp_path,
+    ), patch(
+        "app.api.routes.documents.run_ingestion_task"
+    ):
+        response = client.post(
+            "/api/v1/documents",
+            files={
+                "file": (
+                    malicious_file_name,
+                    content,
+                    "text/plain",
+                )
+            },
+        )
+
+    assert response.status_code == 202
+
+    record = fake_document_service.documents[
+        ("test-kb-id", content_hash)
+    ]
+    assert record.document.file_name == (
+        "outside.txt"
+    )
+
+    stored_files = list(tmp_path.iterdir())
+    assert stored_files == [
+        tmp_path / f"{content_hash}.txt"
+    ]
+    assert stored_files[0].read_bytes() == content
+    assert not (
+        tmp_path.parent / "outside.txt"
+    ).exists()
+
+
+def test_upload_rejects_double_extension_with_dangerous_final_suffix():
+    response = client.post(
+        "/api/v1/documents",
+        files={
+            "file": (
+                "policy.pdf.exe",
+                b"not-an-executable",
+                "application/pdf",
+            )
+        },
+    )
+
+    assert response.status_code == 400
+    assert response.json()["detail"] == (
+        "Unsupported file extension"
+    )
+
 def test_ingestion_task_succeeds():
     fake_service = MagicMock()
 
@@ -727,7 +822,7 @@ def test_ingestion_task_fails():
                 status=(
                     IngestionJobStatus.FAILED
                 ),
-                error="ingestion failed",
+                error="Document ingestion failed",
             ),
         ]
     )

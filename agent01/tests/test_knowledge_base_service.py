@@ -6,6 +6,7 @@ from sqlalchemy.pool import StaticPool
 from app.core.exceptions import (
     KnowledgeBaseNotFoundError,
 )
+from app.core.security import AuthenticatedUser
 from app.db.base import Base
 from app.services.knowledge_bases import (
     KnowledgeBaseService,
@@ -35,7 +36,10 @@ def test_create_list_and_get_knowledge_base(
     db_session: Session,
 ):
     service = KnowledgeBaseService(
-        db_session
+        db_session,
+        current_user=AuthenticatedUser(
+            email="kb-owner@example.com"
+        ),
     )
     created = service.create(
         name=" HR Policies ",
@@ -60,7 +64,10 @@ def test_get_missing_knowledge_base(
     db_session: Session,
 ):
     service = KnowledgeBaseService(
-        db_session
+        db_session,
+        current_user=AuthenticatedUser(
+            email="kb-owner@example.com"
+        ),
     )
     with pytest.raises(
         KnowledgeBaseNotFoundError

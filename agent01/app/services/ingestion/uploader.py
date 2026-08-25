@@ -22,14 +22,10 @@ def validate_file_type(file: UploadFile) -> str:
     allowed_mime_types = ALLOWED_MIME_TYPES.get(suffix)
 
     if allowed_mime_types is None:
-        raise ValueError(
-            f"Unsupported file extension: {suffix or 'none'}"
-        )
+        raise ValueError("Unsupported file extension")
 
     if file.content_type not in allowed_mime_types:
-        raise ValueError(
-            f"Unsupported MIME type: {file.content_type}"
-        )
+        raise ValueError("Unsupported MIME type")
 
     return suffix
 

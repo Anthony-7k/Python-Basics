@@ -14,6 +14,15 @@ from fastapi import (
 from app.api.dependencies import (
     get_document_service,
 )
+from app.api.authentication import (
+    get_current_user,
+)
+from app.core.rate_limit import request_limiter
+from app.core.security import AuthenticatedUser
+from app.core.settings import (
+    RATE_LIMIT_WINDOW_SECONDS,
+    UPLOAD_RATE_LIMIT_REQUESTS,
+)
 from app.schemas.document import (
     DocumentDeleteResponse,
     DocumentListResponse,
@@ -53,7 +62,18 @@ async def upload_document(
         get_document_service
     ),
     knowledge_base_id: str | None = None,
+    current_user: AuthenticatedUser = Depends(
+        get_current_user
+    ),
 ):
+    request_limiter.check(
+        scope="upload",
+        actor_id=current_user.audit_id,
+        limit=UPLOAD_RATE_LIMIT_REQUESTS,
+        window_seconds=(
+            RATE_LIMIT_WINDOW_SECONDS
+        ),
+    )
     try:
         content, suffix = (
             await read_validated_file(file)

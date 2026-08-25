@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.pool import StaticPool
 
 from app.db.base import Base
+from app.core.security import AuthenticatedUser
 from app.models import (
     DocumentStatus,
     IngestionJobStatus,
@@ -15,6 +16,11 @@ from app.repositories import (
 )
 from app.services.documents import (
     DocumentService,
+)
+
+
+TEST_DEFAULT_USER_EMAIL = (
+    "local-user@agent01.local"
 )
 
 @pytest.fixture
@@ -253,7 +259,10 @@ def test_document_service_is_idempotent(
     db_session: Session,
 ):
     service = DocumentService(
-        db_session
+        db_session,
+        current_user=AuthenticatedUser(
+            email=TEST_DEFAULT_USER_EMAIL
+        ),
     )
 
     document_id = "d" * 64
@@ -294,7 +303,10 @@ def test_document_service_updates_statuses(
     db_session: Session,
 ):
     service = DocumentService(
-        db_session
+        db_session,
+        current_user=AuthenticatedUser(
+            email=TEST_DEFAULT_USER_EMAIL
+        ),
     )
 
     document_id = "e" * 64
@@ -363,6 +375,9 @@ def test_delete_document_marks_it_deleted(
                 )
             )
         ),
+        current_user=AuthenticatedUser(
+            email=TEST_DEFAULT_USER_EMAIL
+        ),
     )
 
     document_id = "f" * 64
@@ -418,6 +433,9 @@ def test_delete_document_rolls_back_when_vector_delete_fails(
     service = DocumentService(
         db_session,
         vector_delete=failing_vector_delete,
+        current_user=AuthenticatedUser(
+            email=TEST_DEFAULT_USER_EMAIL
+        ),
     )
 
     document_id = "1" * 64
@@ -478,7 +496,12 @@ def test_same_content_is_scoped_to_knowledge_base(
     )
     db_session.commit()
 
-    service = DocumentService(db_session)
+    service = DocumentService(
+        db_session,
+        current_user=AuthenticatedUser(
+            email="scope-test@example.com"
+        ),
+    )
     content_hash = "2" * 64
 
     doc_a, _, created_a = (
@@ -528,7 +551,12 @@ def test_same_content_is_scoped_to_knowledge_base(
 def test_reindex_is_idempotent_and_failed_job_can_retry(
     db_session: Session,
 ):
-    service = DocumentService(db_session)
+    service = DocumentService(
+        db_session,
+        current_user=AuthenticatedUser(
+            email=TEST_DEFAULT_USER_EMAIL
+        ),
+    )
     document, first_job, _ = (
         service.create_or_get_upload(
             content_hash="3" * 64,

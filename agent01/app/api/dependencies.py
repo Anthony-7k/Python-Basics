@@ -1,6 +1,10 @@
 from fastapi import Depends
 from sqlalchemy.orm import Session
 
+from app.api.authentication import (
+    get_current_user,
+)
+from app.core.security import AuthenticatedUser
 from app.db.session import get_db
 from app.services.conversations import (
     ConversationService,
@@ -12,19 +16,38 @@ from app.services.knowledge_bases import (
     KnowledgeBaseService,
 )
 
+
 def get_conversation_service(
     db: Session = Depends(get_db),
+    current_user: AuthenticatedUser = Depends(
+        get_current_user
+    ),
 ) -> ConversationService:
-    return ConversationService(db)
+    return ConversationService(
+        db,
+        current_user=current_user,
+    )
 
 
 def get_document_service(
     db: Session = Depends(get_db),
+    current_user: AuthenticatedUser = Depends(
+        get_current_user
+    ),
 ) -> DocumentService:
-    return DocumentService(db)
+    return DocumentService(
+        db,
+        current_user=current_user,
+    )
 
 
 def get_knowledge_base_service(
     db: Session = Depends(get_db),
+    current_user: AuthenticatedUser = Depends(
+        get_current_user
+    ),
 ) -> KnowledgeBaseService:
-    return KnowledgeBaseService(db)
+    return KnowledgeBaseService(
+        db,
+        current_user=current_user,
+    )

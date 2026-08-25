@@ -1,14 +1,12 @@
 from sqlalchemy.orm import Session
 
-from app.core.exceptions import (
-    KnowledgeBaseNotFoundError,
-)
-from app.core.settings import (
-    DEFAULT_USER_EMAIL,
-)
-from app.models import KnowledgeBase, User
+from app.core.security import AuthenticatedUser
+from app.models import KnowledgeBase
 from app.repositories import (
     ConversationRepository,
+)
+from app.services.security import (
+    AccessControlService,
 )
 
 
@@ -16,10 +14,17 @@ class KnowledgeBaseService:
     def __init__(
         self,
         session: Session,
+        current_user: AuthenticatedUser,
     ) -> None:
         self.session = session
         self.repository = (
             ConversationRepository(session)
+        )
+        self.access_control = (
+            AccessControlService(
+                session,
+                current_user,
+            )
         )
 
     def create(
@@ -28,7 +33,10 @@ class KnowledgeBaseService:
         description: str | None = None,
     ) -> KnowledgeBase:
         try:
-            user = self._get_default_user()
+            user = (
+                self.access_control
+                .get_or_create_user()
+            )
             knowledge_base = (
                 self.repository
                 .create_knowledge_base(
@@ -48,7 +56,10 @@ class KnowledgeBaseService:
             raise
 
     def list(self) -> list[KnowledgeBase]:
-        user = self._get_default_user()
+        user = (
+            self.access_control
+            .get_or_create_user()
+        )
         self.session.commit()
         return self.repository.list_knowledge_bases(
             owner_user_id=user.id
@@ -58,29 +69,12 @@ class KnowledgeBaseService:
         self,
         knowledge_base_id: str,
     ) -> KnowledgeBase:
-        user = self._get_default_user()
         knowledge_base = (
-            self.repository.get_knowledge_base(
+            self.access_control
+            .require_knowledge_base_access(
                 knowledge_base_id
             )
         )
 
-        if (
-            knowledge_base is None
-            or knowledge_base.owner_user_id
-            != user.id
-        ):
-            raise KnowledgeBaseNotFoundError(
-                "Knowledge base not found"
-            )
-
         self.session.commit()
         return knowledge_base
-
-    def _get_default_user(self) -> User:
-        return self.repository.create_user(
-            email=DEFAULT_USER_EMAIL,
-            display_name=(
-                "Local Development User"
-            ),
-        )

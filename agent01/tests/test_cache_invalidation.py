@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.pool import StaticPool
 
 from app.db.base import Base
+from app.core.security import AuthenticatedUser
 from app.models import IngestionJobStatus
 from app.services.documents import DocumentService
 from app.services.knowledge_bases import (
@@ -33,12 +34,17 @@ def db_session():
 def test_knowledge_base_version_tracks_document_lifecycle(
     db_session: Session,
 ):
+    current_user = AuthenticatedUser(
+        email="cache-test@example.com"
+    )
     knowledge_base = KnowledgeBaseService(
-        db_session
+        db_session,
+        current_user=current_user,
     ).create("HR Policies")
     service = DocumentService(
         db_session,
         vector_delete=lambda _kb, _doc: None,
+        current_user=current_user,
     )
     document, job, created = (
         service.create_or_get_upload(

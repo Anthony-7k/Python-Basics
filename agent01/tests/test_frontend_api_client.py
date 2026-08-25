@@ -16,6 +16,32 @@ def test_default_timeout_allows_slow_llm_responses():
     assert client.timeout_seconds == DEFAULT_API_TIMEOUT_SECONDS == 60.0
 
 
+def test_client_sends_configured_bearer_token():
+    def handler(request):
+        assert request.headers["Authorization"] == (
+            "Bearer frontend-demo-token"
+        )
+        return httpx.Response(
+            200,
+            json={"status": "ok"},
+        )
+
+    transport = httpx.MockTransport(handler)
+    http_client = httpx.Client(
+        base_url="http://testserver",
+        transport=transport,
+    )
+    client = APIClient(
+        "http://testserver",
+        api_key="frontend-demo-token",
+        client=http_client,
+    )
+    try:
+        assert client.health()["status"] == "ok"
+    finally:
+        http_client.close()
+
+
 def make_client(handler):
     transport = httpx.MockTransport(handler)
     http_client = httpx.Client(

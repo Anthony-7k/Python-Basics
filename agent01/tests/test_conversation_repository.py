@@ -16,6 +16,12 @@ from app.services.conversations import (
 from app.core.exceptions import (
     ConversationNotFoundError,
 )
+from app.core.security import AuthenticatedUser
+
+
+TEST_DEFAULT_USER_EMAIL = (
+    "local-user@agent01.local"
+)
 
 @pytest.fixture
 def db_session():
@@ -186,7 +192,10 @@ def test_conversation_service_commits_exchange(
     )
 
     service = ConversationService(
-        db_session
+        db_session,
+        current_user=AuthenticatedUser(
+            email="day11@example.com"
+        ),
     )
 
     service.save_exchange(
@@ -228,7 +237,10 @@ def test_conversation_service_rolls_back_exchange(
     )
 
     service = ConversationService(
-        db_session
+        db_session,
+        current_user=AuthenticatedUser(
+            email="day11@example.com"
+        ),
     )
 
     original_add_message = (
@@ -282,7 +294,10 @@ def test_service_creates_default_conversation(
     db_session: Session,
 ):
     service = ConversationService(
-        db_session
+        db_session,
+        current_user=AuthenticatedUser(
+            email=TEST_DEFAULT_USER_EMAIL
+        ),
     )
 
     conversation = (
@@ -318,7 +333,10 @@ def test_service_rejects_missing_conversation(
     db_session: Session,
 ):
     service = ConversationService(
-        db_session
+        db_session,
+        current_user=AuthenticatedUser(
+            email=TEST_DEFAULT_USER_EMAIL
+        ),
     )
 
     with pytest.raises(

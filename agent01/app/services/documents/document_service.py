@@ -6,12 +6,11 @@ from sqlalchemy.orm import Session
 
 from app.core.exceptions import (
     DocumentReindexConflictError,
-    KnowledgeBaseNotFoundError,
 )
 from app.core.settings import (
     DEFAULT_KNOWLEDGE_BASE_NAME,
-    DEFAULT_USER_EMAIL,
 )
+from app.core.security import AuthenticatedUser
 from app.models import (
     Document,
     DocumentStatus,
@@ -21,6 +20,9 @@ from app.models import (
 from app.repositories import (
     ConversationRepository,
     DocumentRepository,
+)
+from app.services.security import (
+    AccessControlService,
 )
 
 
@@ -44,6 +46,7 @@ class DocumentService:
             Callable[[str, str], None]
             | None
         ) = None,
+        current_user: AuthenticatedUser | None = None,
     ) -> None:
         self.session = session
         self.vector_delete = vector_delete
@@ -52,6 +55,14 @@ class DocumentService:
         )
         self.conversation_repository = (
             ConversationRepository(session)
+        )
+        self.access_control = (
+            AccessControlService(
+                session,
+                current_user,
+            )
+            if current_user is not None
+            else None
         )
 
     def create_or_get_upload(
@@ -128,6 +139,10 @@ class DocumentService:
         knowledge_base_id: str,
         document_id: str,
     ) -> Document | None:
+        self._require_access_control()\
+            .require_knowledge_base_access(
+                knowledge_base_id
+            )
         return (
             self.document_repository
             .get_document_for_knowledge_base(
@@ -160,10 +175,25 @@ class DocumentService:
         self,
         task_id: str,
     ) -> IngestionJob | None:
-        return (
+        job = (
             self.document_repository
             .get_ingestion_job(task_id)
         )
+        if job is None:
+            return None
+
+        document = (
+            self.document_repository
+            .get_document(job.document_id)
+        )
+        if document is None:
+            return None
+
+        self._require_access_control()\
+            .require_knowledge_base_access(
+                document.knowledge_base_id
+            )
+        return job
 
     def update_ingestion_status(
         self,
@@ -408,28 +438,16 @@ class DocumentService:
         knowledge_base_id: str | None,
     ):
         if knowledge_base_id is not None:
-            knowledge_base = (
-                self.conversation_repository
-                .get_knowledge_base(
+            return (
+                self._require_access_control()
+                .require_knowledge_base_access(
                     knowledge_base_id
                 )
             )
 
-            if knowledge_base is None:
-                raise KnowledgeBaseNotFoundError(
-                    "Knowledge base not found"
-                )
-
-            return knowledge_base
-
         user = (
-            self.conversation_repository
-            .create_user(
-                email=DEFAULT_USER_EMAIL,
-                display_name=(
-                    "Local Development User"
-                ),
-            )
+            self._require_access_control()
+            .get_or_create_user()
         )
         return (
             self.conversation_repository
@@ -440,3 +458,12 @@ class DocumentService:
                 ),
             )
         )
+
+    def _require_access_control(
+        self,
+    ) -> AccessControlService:
+        if self.access_control is None:
+            raise RuntimeError(
+                "Authenticated user context is required"
+            )
+        return self.access_control

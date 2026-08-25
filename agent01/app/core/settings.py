@@ -1,7 +1,8 @@
+import json
 import os
+from pathlib import Path
 
 from dotenv import load_dotenv
-from pathlib import Path
 
 
 load_dotenv()
@@ -26,6 +27,57 @@ MAX_UPLOAD_SIZE_BYTES = int(
         "MAX_UPLOAD_SIZE_BYTES",
         str(10 * 1024 * 1024),
     )
+)
+
+DEMO_AUTH_USERS_JSON = os.getenv(
+    "DEMO_AUTH_USERS_JSON",
+    "{}",
+)
+
+
+def _read_demo_auth_users(
+    raw_value: str,
+) -> dict[str, str]:
+    try:
+        parsed = json.loads(raw_value)
+    except json.JSONDecodeError as exc:
+        raise ValueError(
+            "DEMO_AUTH_USERS_JSON must be valid JSON"
+        ) from exc
+
+    if not isinstance(parsed, dict):
+        raise ValueError(
+            "DEMO_AUTH_USERS_JSON must be a JSON object"
+        )
+
+    users: dict[str, str] = {}
+
+    for token, email in parsed.items():
+        if not isinstance(token, str) or not token:
+            raise ValueError(
+                "Demo authentication tokens must be non-empty strings"
+            )
+        if not isinstance(email, str) or "@" not in email:
+            raise ValueError(
+                "Demo authentication users must be email addresses"
+            )
+        users[token] = email.strip().lower()
+
+    return users
+
+
+DEMO_AUTH_USERS = _read_demo_auth_users(
+    DEMO_AUTH_USERS_JSON
+)
+
+RATE_LIMIT_WINDOW_SECONDS = int(
+    os.getenv("RATE_LIMIT_WINDOW_SECONDS", "60")
+)
+UPLOAD_RATE_LIMIT_REQUESTS = int(
+    os.getenv("UPLOAD_RATE_LIMIT_REQUESTS", "10")
+)
+CHAT_RATE_LIMIT_REQUESTS = int(
+    os.getenv("CHAT_RATE_LIMIT_REQUESTS", "30")
 )
 
 
@@ -167,11 +219,6 @@ def validate_settings():
 
 DATABASE_URL = os.getenv("DATABASE_URL")
 
-DEFAULT_USER_EMAIL = os.getenv(
-    "DEFAULT_USER_EMAIL",
-    "local-user@agent01.local",
-)
-
 DEFAULT_KNOWLEDGE_BASE_NAME = os.getenv(
     "DEFAULT_KNOWLEDGE_BASE_NAME",
     "Default Knowledge Base",
@@ -266,4 +313,19 @@ if REDIS_CONNECT_TIMEOUT_SECONDS <= 0:
 if REDIS_SOCKET_TIMEOUT_SECONDS <= 0:
     raise ValueError(
         "REDIS_SOCKET_TIMEOUT_SECONDS must be greater than 0"
+    )
+
+if RATE_LIMIT_WINDOW_SECONDS < 1:
+    raise ValueError(
+        "RATE_LIMIT_WINDOW_SECONDS must be at least 1"
+    )
+
+if UPLOAD_RATE_LIMIT_REQUESTS < 1:
+    raise ValueError(
+        "UPLOAD_RATE_LIMIT_REQUESTS must be at least 1"
+    )
+
+if CHAT_RATE_LIMIT_REQUESTS < 1:
+    raise ValueError(
+        "CHAT_RATE_LIMIT_REQUESTS must be at least 1"
     )
