@@ -5,6 +5,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
 from app.api.routes.chat import router as chat_router
+from app.api.routes.agent import router as agent_router
 from app.api.routes.conversations import (
     router as conversations_router,
 )
@@ -300,6 +301,7 @@ async def global_exception_handler(
 
 app.include_router(health_router)
 app.include_router(chat_router)
+app.include_router(agent_router)
 
 app.include_router(documents_router)
 app.include_router(knowledge_bases_router)

@@ -22,6 +22,13 @@ SAFE_LOG_FIELDS = (
     "actor_id",
     "knowledge_base_id",
     "document_id",
+    "tool_call_id",
+    "tool_name",
+    "selection_reason_summary",
+    "resource_ids",
+    "duration_ms",
+    "status",
+    "result_summary",
     "retrieval_mode",
     "error_code",
 )

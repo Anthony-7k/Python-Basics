@@ -15,6 +15,7 @@ from app.services.documents import (
 from app.services.knowledge_bases import (
     KnowledgeBaseService,
 )
+from app.services.agent import BoundedAgentService
 
 
 def get_conversation_service(
@@ -48,6 +49,18 @@ def get_knowledge_base_service(
     ),
 ) -> KnowledgeBaseService:
     return KnowledgeBaseService(
+        db,
+        current_user=current_user,
+    )
+
+
+def get_agent_service(
+    db: Session = Depends(get_db),
+    current_user: AuthenticatedUser = Depends(
+        get_current_user
+    ),
+) -> BoundedAgentService:
+    return BoundedAgentService(
         db,
         current_user=current_user,
     )

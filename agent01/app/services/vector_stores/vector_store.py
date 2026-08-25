@@ -151,6 +151,41 @@ def list_chunks(
         )
     ]
 
+
+def list_document_chunks(
+    knowledge_base_id: str,
+    document_id: str,
+) -> list[dict]:
+    results = collection.get(
+        where={
+            "$and": [
+                {
+                    "knowledge_base_id": (
+                        knowledge_base_id
+                    )
+                },
+                {"document_id": document_id},
+            ]
+        },
+        include=[
+            "documents",
+            "metadatas",
+        ],
+    )
+
+    return [
+        {
+            "chunk_id": chunk_id,
+            "content": content,
+            "metadata": dict(metadata or {}),
+        }
+        for chunk_id, content, metadata in zip(
+            results.get("ids", []),
+            results.get("documents", []),
+            results.get("metadatas", []),
+        )
+    ]
+
 def delete_by_document(
     knowledge_base_id: str,
     document_id: str,

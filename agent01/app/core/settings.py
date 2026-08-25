@@ -79,6 +79,21 @@ UPLOAD_RATE_LIMIT_REQUESTS = int(
 CHAT_RATE_LIMIT_REQUESTS = int(
     os.getenv("CHAT_RATE_LIMIT_REQUESTS", "30")
 )
+AGENT_MAX_TOOL_STEPS = int(
+    os.getenv("AGENT_MAX_TOOL_STEPS", "2")
+)
+AGENT_TOOL_TIMEOUT_SECONDS = float(
+    os.getenv("AGENT_TOOL_TIMEOUT_SECONDS", "15")
+)
+AGENT_REQUEST_BUDGET_SECONDS = float(
+    os.getenv("AGENT_REQUEST_BUDGET_SECONDS", "25")
+)
+AGENT_MAX_DOCUMENT_CHUNKS = int(
+    os.getenv("AGENT_MAX_DOCUMENT_CHUNKS", "20")
+)
+AGENT_MAX_DOCUMENT_CHARS = int(
+    os.getenv("AGENT_MAX_DOCUMENT_CHARS", "12000")
+)
 
 
 LLM_API_KEY = os.getenv("LLM_API_KEY")
@@ -328,4 +343,29 @@ if UPLOAD_RATE_LIMIT_REQUESTS < 1:
 if CHAT_RATE_LIMIT_REQUESTS < 1:
     raise ValueError(
         "CHAT_RATE_LIMIT_REQUESTS must be at least 1"
+    )
+
+if AGENT_MAX_TOOL_STEPS < 1:
+    raise ValueError(
+        "AGENT_MAX_TOOL_STEPS must be at least 1"
+    )
+
+if AGENT_TOOL_TIMEOUT_SECONDS <= 0:
+    raise ValueError(
+        "AGENT_TOOL_TIMEOUT_SECONDS must be greater than 0"
+    )
+
+if AGENT_REQUEST_BUDGET_SECONDS <= 0:
+    raise ValueError(
+        "AGENT_REQUEST_BUDGET_SECONDS must be greater than 0"
+    )
+
+if AGENT_MAX_DOCUMENT_CHUNKS < 1:
+    raise ValueError(
+        "AGENT_MAX_DOCUMENT_CHUNKS must be at least 1"
+    )
+
+if AGENT_MAX_DOCUMENT_CHARS < 1:
+    raise ValueError(
+        "AGENT_MAX_DOCUMENT_CHARS must be at least 1"
     )
