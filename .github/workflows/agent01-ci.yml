@@ -67,6 +67,9 @@ jobs:
       - name: Check Python compilation
         run: uv run python -m compileall -q app frontend eval tests
 
+      - name: Run Day19 agent routing gate
+        run: uv run python eval/eval_agent_routing.py --min-correct 10
+
       - name: Run Day17 retrieval quality gate
         run: |
           uv run python eval/eval_retrieval.py \

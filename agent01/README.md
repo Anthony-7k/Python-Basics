@@ -100,13 +100,46 @@ RAG Prompt 把 `<knowledge_base_evidence>` 明确标记为不可信数据，禁�
 完整威胁、信任边界和生产差距见
 `docs/day18_security_threat_model.md`。
 
-### 5. 测试
+### 5. Day19 有限 Agent 工具调用
+
+`POST /api/v1/agent/run` 在三个白名单工具中做确定性路由：普通知识问答使用
+`search_knowledge`，单文档总结使用 `summarize_document`，双文档对比使用
+`compare_documents`。路由器只识别意图，资源权限、参数 schema 和知识库范围
+都在执行层再次校验；未注册工具、跨库参数、Shell/SQL/文件系统/URL 请求会被
+拒绝。
+
+```bash
+curl -X POST http://127.0.0.1:8000/api/v1/agent/run \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "knowledge_base_id": "<knowledge-base-id>",
+    "instruction": "总结这份员工手册的关键规定",
+    "document_ids": ["<document-id>"]
+  }'
+```
+
+Agent 默认最多 2 个工具步骤，单工具超时 15 秒，总请求预算 25 秒。总结与
+对比只读取已授权、已入库的 Chroma Chunk，并限制证据数量和字符数。工具
+轨迹记录调用 ID、工具名、资源 ID、耗时、状态和安全摘要，不记录完整问题、
+文档证据、Prompt、答案或凭证。Agent 入口使用与 Chat 相同的请求次数配置，
+但采用独立 `agent` 计数 scope。
+
+12 个固定路由样例可单独验收：
+
+```bash
+uv run python eval/eval_agent_routing.py --min-correct 10
+```
+
+设计、安全边界和已知限制见 `docs/day19_bounded_agent.md`。
+
+### 6. 测试
 
 ```bash
 uv run pytest -p no:cacheprovider
 ```
 
-### 6. Day16 检索模式与评测
+### 7. Day16 检索模式与评测
 
 默认仍使用纯向量检索。可在 `.env` 中切换：
 
@@ -152,7 +185,7 @@ Embedding 服务后，再运行真实质量评测：
 uv run python eval/eval_retrieval.py --live-embedding
 ```
 
-### 7. Day17 版本化 RAG 评测
+### 8. Day17 版本化 RAG 评测
 
 Day17 固定集位于 `eval/datasets/day17_rag_eval_v1.json`，包含 50 题并按
 25 个 Dev / 25 个 Holdout 分离。先运行完全离线的检索工程基线：
@@ -203,7 +236,7 @@ uv run python eval/eval_answer.py \
 `docs/day17_evaluation_methodology.md`。CI 运行 10 个无网络核心样本，避免把
 模型或网络波动写成确定性单元测试。
 
-### 8. GitHub Actions 离线回归
+### 9. GitHub Actions 离线回归
 
 仓库根目录的 `.github/workflows/agent01-ci.yml` 会在 `main` 分支的
 `agent01/**` 发生 Push 或 Pull Request 时自动运行，也支持手动触发。
