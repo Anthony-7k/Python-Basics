@@ -20,12 +20,18 @@ class FakeRedis:
             (key, value, ex)
         )
 
+    def ping(self):
+        return True
+
 
 class BrokenRedis:
     def get(self, key):
         raise RuntimeError("redis unavailable")
 
     def set(self, key, value, ex):
+        raise RuntimeError("redis unavailable")
+
+    def ping(self):
         raise RuntimeError("redis unavailable")
 
 
@@ -107,6 +113,23 @@ def test_cache_round_trip_uses_ttl():
     assert json.loads(
         client.set_calls[0][1]
     ) == results
+
+
+def test_cache_ping_reflects_required_dependency():
+    enabled = RetrievalCacheService(
+        redis_url="redis://unused",
+        ttl_seconds=45,
+        client=FakeRedis(),
+    )
+    disabled = RetrievalCacheService(
+        redis_url="redis://unused",
+        ttl_seconds=45,
+        enabled=False,
+        client=BrokenRedis(),
+    )
+
+    assert enabled.ping() is True
+    assert disabled.ping() is True
 
 
 def test_cache_failures_degrade_to_miss(caplog):

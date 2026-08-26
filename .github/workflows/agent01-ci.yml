@@ -61,6 +61,20 @@ jobs:
       - name: Install locked dependencies
         run: uv sync --locked
 
+      - name: Validate Docker Compose configuration
+        env:
+          LLM_API_KEY: ci-placeholder
+          LLM_BASE_URL: http://127.0.0.1:9/v1
+          LLM_MODEL: ci-placeholder
+          EMBEDDING_API_KEY: ci-placeholder
+          EMBEDDING_BASE_URL: http://127.0.0.1:9/v1
+          EMBEDDING_MODEL: ci-placeholder
+          DEMO_AUTH_USERS_JSON: '{"ci-demo-token":"ci-user@example.test"}'
+          DEMO_API_KEY: ci-demo-token
+          MYSQL_PASSWORD: ci-password
+          MYSQL_ROOT_PASSWORD: ci-root-password
+        run: docker compose config --quiet
+
       - name: Run full test suite
         run: uv run pytest -p no:cacheprovider
 

@@ -339,11 +339,54 @@ def test_health():
 
 
 def test_ready():
-    response = client.get("/ready")
+    checks = (
+        ("database", lambda: "ok"),
+        ("vector_store", lambda: "ok"),
+        ("upload_storage", lambda: "ok"),
+        ("redis", lambda: "disabled"),
+    )
+
+    with patch(
+        "app.api.routes.health.READINESS_CHECKS",
+        checks,
+    ):
+        response = client.get("/ready")
 
     assert response.status_code == 200
 
     assert response.json()["status"] == "ready"
+    assert response.json()["checks"] == {
+        "database": "ok",
+        "vector_store": "ok",
+        "upload_storage": "ok",
+        "redis": "disabled",
+    }
+
+
+def test_ready_returns_503_when_dependency_fails():
+    def failed_check():
+        raise RuntimeError("sensitive upstream detail")
+
+    checks = (
+        ("database", lambda: "ok"),
+        ("redis", failed_check),
+    )
+
+    with patch(
+        "app.api.routes.health.READINESS_CHECKS",
+        checks,
+    ):
+        response = client.get("/ready")
+
+    assert response.status_code == 503
+    assert response.json() == {
+        "status": "not_ready",
+        "checks": {
+            "database": "ok",
+            "redis": "failed",
+        },
+    }
+    assert "sensitive upstream detail" not in response.text
 
 
 def test_chat_validation_error():

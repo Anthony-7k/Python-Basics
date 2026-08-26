@@ -1,0 +1,201 @@
+name: agent01
+
+services:
+  mysql:
+    image: mysql:8.4
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: "${MYSQL_DATABASE:-agent01}"
+      MYSQL_USER: "${MYSQL_USER:-agent01}"
+      MYSQL_PASSWORD: "${MYSQL_PASSWORD:?Set MYSQL_PASSWORD in .env}"
+      MYSQL_ROOT_PASSWORD: "${MYSQL_ROOT_PASSWORD:?Set MYSQL_ROOT_PASSWORD in .env}"
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - mysqladmin ping --host=127.0.0.1 --user=root --password="$$MYSQL_ROOT_PASSWORD" --silent
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+    logging:
+      driver: local
+      options:
+        max-size: 10m
+        max-file: "3"
+    mem_limit: 768m
+    cpus: 1.0
+    pids_limit: 256
+
+  redis:
+    image: redis:7.4-alpine
+    restart: unless-stopped
+    command:
+      - redis-server
+      - --save
+      - ""
+      - --appendonly
+      - "no"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+    logging:
+      driver: local
+      options:
+        max-size: 10m
+        max-file: "3"
+    mem_limit: 256m
+    cpus: 0.5
+    pids_limit: 128
+
+  api:
+    image: agent01:day20
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    init: true
+    user: "10001:10001"
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    tmpfs:
+      - /tmp:size=256m,mode=1777
+    environment:
+      HOME: /tmp
+      LLM_API_KEY: "${LLM_API_KEY:?Set LLM_API_KEY in .env}"
+      LLM_BASE_URL: "${LLM_BASE_URL:?Set LLM_BASE_URL in .env}"
+      LLM_MODEL: "${LLM_MODEL:?Set LLM_MODEL in .env}"
+      LLM_TIMEOUT_SECONDS: "${LLM_TIMEOUT_SECONDS:-30}"
+      EMBEDDING_API_KEY: "${EMBEDDING_API_KEY:?Set EMBEDDING_API_KEY in .env}"
+      EMBEDDING_BASE_URL: "${EMBEDDING_BASE_URL:?Set EMBEDDING_BASE_URL in .env}"
+      EMBEDDING_MODEL: "${EMBEDDING_MODEL:?Set EMBEDDING_MODEL in .env}"
+      EMBEDDING_DIMENSIONS: "${EMBEDDING_DIMENSIONS:-1024}"
+      DATABASE_URL: "mysql+pymysql://${MYSQL_USER:-agent01}:${MYSQL_PASSWORD:?Set MYSQL_PASSWORD in .env}@mysql:3306/${MYSQL_DATABASE:-agent01}?charset=utf8mb4"
+      REDIS_URL: redis://redis:6379/0
+      CHROMA_PATH: /app/data/chroma
+      UPLOAD_DIR: /app/data/uploads
+      DEMO_AUTH_USERS_JSON: "${DEMO_AUTH_USERS_JSON:?Set DEMO_AUTH_USERS_JSON in .env}"
+      DEFAULT_KNOWLEDGE_BASE_NAME: "${DEFAULT_KNOWLEDGE_BASE_NAME:-Default Knowledge Base}"
+      MAX_UPLOAD_SIZE_BYTES: "${MAX_UPLOAD_SIZE_BYTES:-10485760}"
+      RATE_LIMIT_WINDOW_SECONDS: "${RATE_LIMIT_WINDOW_SECONDS:-60}"
+      UPLOAD_RATE_LIMIT_REQUESTS: "${UPLOAD_RATE_LIMIT_REQUESTS:-10}"
+      CHAT_RATE_LIMIT_REQUESTS: "${CHAT_RATE_LIMIT_REQUESTS:-30}"
+      AGENT_MAX_TOOL_STEPS: "${AGENT_MAX_TOOL_STEPS:-2}"
+      AGENT_TOOL_TIMEOUT_SECONDS: "${AGENT_TOOL_TIMEOUT_SECONDS:-15}"
+      AGENT_REQUEST_BUDGET_SECONDS: "${AGENT_REQUEST_BUDGET_SECONDS:-25}"
+      AGENT_MAX_DOCUMENT_CHUNKS: "${AGENT_MAX_DOCUMENT_CHUNKS:-20}"
+      AGENT_MAX_DOCUMENT_CHARS: "${AGENT_MAX_DOCUMENT_CHARS:-12000}"
+      CONVERSATION_HISTORY_MAX_TURNS: "${CONVERSATION_HISTORY_MAX_TURNS:-3}"
+      CONVERSATION_HISTORY_TOKEN_BUDGET: "${CONVERSATION_HISTORY_TOKEN_BUDGET:-1800}"
+      CONVERSATION_SUMMARY_MAX_CHARS: "${CONVERSATION_SUMMARY_MAX_CHARS:-2000}"
+      RAG_CACHE_ENABLED: "${RAG_CACHE_ENABLED:-true}"
+      RAG_CACHE_TTL_SECONDS: "${RAG_CACHE_TTL_SECONDS:-300}"
+      RAG_RETRIEVAL_MAX_DISTANCE: "${RAG_RETRIEVAL_MAX_DISTANCE:-1.1}"
+      RAG_RETRIEVAL_MODE: "${RAG_RETRIEVAL_MODE:-vector}"
+      RAG_RETRIEVAL_CANDIDATE_MULTIPLIER: "${RAG_RETRIEVAL_CANDIDATE_MULTIPLIER:-3}"
+      RAG_KEYWORD_TOP_K: "${RAG_KEYWORD_TOP_K:-20}"
+      RAG_KEYWORD_MIN_SCORE: "${RAG_KEYWORD_MIN_SCORE:-0.3}"
+      RAG_RRF_K: "${RAG_RRF_K:-60}"
+      RAG_RERANKER_MODEL: "${RAG_RERANKER_MODEL:-lexical-v1}"
+      RAG_RERANK_LEXICAL_WEIGHT: "${RAG_RERANK_LEXICAL_WEIGHT:-0.7}"
+      REDIS_CONNECT_TIMEOUT_SECONDS: "${REDIS_CONNECT_TIMEOUT_SECONDS:-0.2}"
+      REDIS_SOCKET_TIMEOUT_SECONDS: "${REDIS_SOCKET_TIMEOUT_SECONDS:-0.2}"
+    command:
+      - sh
+      - -c
+      - alembic upgrade head && exec uvicorn app.main:app --host 0.0.0.0 --port 8000
+    volumes:
+      - chroma_data:/app/data/chroma
+      - upload_data:/app/data/uploads
+    ports:
+      - "${API_PORT:-8000}:8000"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/ready', timeout=3)
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 45s
+    logging:
+      driver: local
+      options:
+        max-size: 10m
+        max-file: "3"
+    mem_limit: 1536m
+    cpus: 1.5
+    pids_limit: 256
+    stop_grace_period: 30s
+
+  ui:
+    image: agent01:day20
+    restart: unless-stopped
+    init: true
+    user: "10001:10001"
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    tmpfs:
+      - /tmp:size=128m,mode=1777
+    environment:
+      HOME: /tmp
+      API_BASE_URL: http://api:8000
+      DEMO_API_KEY: "${DEMO_API_KEY:?Set DEMO_API_KEY in .env}"
+      STREAMLIT_BROWSER_GATHER_USAGE_STATS: "false"
+      STREAMLIT_SERVER_HEADLESS: "true"
+    command:
+      - streamlit
+      - run
+      - frontend/app.py
+      - --server.address=0.0.0.0
+      - --server.port=8501
+    ports:
+      - "${UI_PORT:-8501}:8501"
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - import urllib.request; urllib.request.urlopen('http://127.0.0.1:8501/_stcore/health', timeout=3)
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+    logging:
+      driver: local
+      options:
+        max-size: 10m
+        max-file: "3"
+    mem_limit: 512m
+    cpus: 0.75
+    pids_limit: 192
+    stop_grace_period: 20s
+
+volumes:
+  mysql_data:
+    name: agent01_mysql_data
+  chroma_data:
+    name: agent01_chroma_data
+  upload_data:
+    name: agent01_upload_data

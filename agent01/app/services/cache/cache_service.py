@@ -118,6 +118,12 @@ class RetrievalCacheService:
 
         return self._client
 
+    def ping(self) -> bool:
+        if not self.enabled:
+            return True
+
+        return bool(self._get_client().ping())
+
     def get_retrieval_result(
         self,
         key: str,
