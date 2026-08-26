@@ -249,3 +249,43 @@ uv run python eval/eval_answer.py \
 
 CI 只使用占位配置，不读取 `.env`，不会调用真实 Embedding、LLM、MySQL
 或 Redis。任何测试或门槛失败都会让工作流返回非零状态并在 GitHub 标红。
+
+### 10. Day20 Docker Compose 部署
+
+Docker 方式使用同一个非 root、锁定依赖的镜像运行 FastAPI 和 Streamlit，
+并由 Compose 启动 MySQL、Redis、健康检查、资源限制和日志轮转。首次启动前：
+
+```bash
+cp .env.example .env
+```
+
+至少替换 `.env` 中的模型/Embedding 配置、两个演示 Token、
+`MYSQL_PASSWORD` 和 `MYSQL_ROOT_PASSWORD`。MySQL 密码使用随机字母和数字，
+不要保留示例占位符，也不要提交 `.env`。
+
+```bash
+docker compose up --build -d
+docker compose ps
+curl http://127.0.0.1:8000/health
+curl http://127.0.0.1:8000/ready
+```
+
+- UI：`http://127.0.0.1:8501`
+- API/OpenAPI：`http://127.0.0.1:8000/docs`
+- MySQL 与 Redis 只在 Compose 内部网络开放。
+- API 启动时自动执行 `alembic upgrade head`，数据库和 Redis 健康后才启动。
+- `agent01_mysql_data`、`agent01_chroma_data`、`agent01_upload_data`
+  分别保存关系数据、向量数据和上传原件。
+
+停止服务但保留数据：
+
+```bash
+docker compose down
+docker compose up -d
+```
+
+不要把 `docker compose down -v` 当成普通停止命令；`-v` 会删除上述三个命名
+卷。完整的初始化、部署演练、备份恢复、日志审计和故障排查见
+[`docs/day20_deployment.md`](docs/day20_deployment.md)。项目没有内置模型 mock；
+若只验证部署层，可检查健康接口和不调用模型的管理接口，但不能把它表述为真实
+RAG/Agent 演示。

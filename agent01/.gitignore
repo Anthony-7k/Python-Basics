@@ -16,3 +16,6 @@ data/chroma/
 
 # Uploaded source files
 data/uploads/
+
+# Local deployment backups
+backups/
