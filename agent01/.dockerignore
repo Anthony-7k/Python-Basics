@@ -1,0 +1,15 @@
+.git
+.github
+.idea
+.pytest_cache
+.venv
+__pycache__
+*.py[cod]
+*.log
+.env
+.env.*
+data
+docs
+eval
+tests
+day*
