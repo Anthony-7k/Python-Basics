@@ -1,291 +1,246 @@
-# Agent01 - LLM Client Demo
+# Enterprise Knowledge Agent
 
+> 面向企业文档的可追溯 RAG 与有限工具调用系统：支持多格式入库、知识库隔离、多轮问答、拒答、来源引用、固定集评测和容器化编排。
 
-## 项目介绍
+[![agent01-ci](https://github.com/Anthony-7k/Python-Basics/actions/workflows/agent01-ci.yml/badge.svg)](https://github.com/Anthony-7k/Python-Basics/actions/workflows/agent01-ci.yml)
 
-这是一个基于 Python 的大模型调用测试项目。
+## 项目解决什么问题
 
-第一阶段目标：
+企业内部知识常分散在 PDF、Word 和文本文件中。普通关键词搜索难以理解语义，直接把整份文档交给大模型又会带来上下文成本、权限过滤和来源追踪问题。本项目把“解析 → 切分 → 向量检索 → 受约束生成 → 服务端引用回填”做成一条可测试的工程链路，并为信息不足、跨知识库、缓存失效、Prompt Injection 和受控 Agent 提供明确边界。
 
-- 搭建可复现的 Python 开发环境
-- 使用环境变量管理模型配置
-- 调用 OpenAI-compatible API
-- 实现命令行输入问题并获取模型回复
+当前项目适合学习、作品展示和单机演示，不是已经完成生产合规审计的企业平台。
 
+## 已实现能力
 
-## 环境要求
+- PDF、DOCX、TXT 上传，文件类型/大小校验、文件名净化、内容哈希与幂等入库。
+- 清洗、Chunk、Embedding、Chroma 向量索引；Vector、Hybrid（BM25 + RRF）和本地词法 Rerank 三种检索模式。
+- 按 `knowledge_base_id` 强制过滤，多知识库所有者校验、文档删除与重建索引。
+- 多轮会话、有限历史、追问改写、MySQL 消息持久化和来源摘要。
+- 证据约束回答、信息不足拒答，以及由后端映射文件名、页码和 `chunk_id` 的可追溯引用。
+- Redis 版本化缓存；知识库索引变化后避免旧答案继续命中。
+- 三个白名单 Agent 工具：知识检索、单文档总结、双文档对比。
+- Bearer 演示身份、资源所有者授权、进程内限流、请求 ID、结构化脱敏日志和 Prompt Injection 分层缓解。
+- Streamlit 演示前端、FastAPI/OpenAPI、Alembic 迁移、160 项测试和 GitHub Actions 离线质量门槛。
+- 非 root 多阶段镜像与 API/UI/MySQL/Redis Compose，真实 `/ready`、命名卷、只读根文件系统、资源限制和日志轮转。
 
-- Python 3.11+
-- uv
-- OpenAI-compatible API
+## 架构
 
+```mermaid
+flowchart LR
+    USER[用户] --> UI[Streamlit]
+    UI -->|Bearer Token| API[FastAPI]
+    API --> AUTH[认证 / 授权 / 限流]
+    AUTH --> INGEST[文档入库]
+    AUTH --> RAG[RAG 问答]
+    AUTH --> AGENT[有限 Agent]
 
-## 项目启动
-
-
-### 1. 安装依赖
-
-```bash
-uv sync
+    INGEST --> FILES[PDF / DOCX / TXT]
+    FILES --> EMB[清洗 / Chunk / Embedding]
+    EMB --> CHROMA[(Chroma)]
+    INGEST --> MYSQL[(MySQL)]
+    RAG --> CHROMA
+    RAG --> REDIS[(Redis)]
+    RAG --> MODEL[外部 Embedding / LLM]
+    RAG --> MYSQL
+    AGENT --> TOOLS[检索 / 总结 / 对比]
+    TOOLS --> CHROMA
+    TOOLS --> MODEL
 ```
 
-### 2. 启动后端
+Streamlit 只通过 HTTP 调用 FastAPI；MySQL 保存业务关系和会话，Chroma 保存 Chunk/向量，Redis 只保存可重建缓存，上传原件单独持久化。详细组件职责、入库/问答时序和关键取舍见 [`docs/day21_architecture.md`](docs/day21_architecture.md)。
 
-先在 `.env` 配置演示用户。JSON 的 key 是 Bearer Token，value 是用户邮箱；
-请使用随机 Token，示例占位符不能用于共享或生产环境：
+## 技术栈
+
+| 层次 | 技术 |
+| --- | --- |
+| 前端 / API | Streamlit、FastAPI、Pydantic、Uvicorn |
+| 数据 | SQLAlchemy 2、Alembic、MySQL、Chroma、Redis |
+| 模型 | OpenAI-compatible LLM 与 Embedding API |
+| 文档 | pypdf、python-docx、纯文本加载器 |
+| 工程 | uv、pytest、Docker Compose、GitHub Actions |
+
+## 快速启动：Docker Compose
+
+前置条件：Docker Engine 24+ 或 Docker Desktop、Compose v2.24+，建议至少 4 GB 内存、2 CPU 和 10 GB 磁盘。
+
+### 1. 配置环境变量
+
+全新克隆可从 `.env.example` 创建 `.env`；如果 `.env` 已存在，只手动合并缺少的键，禁止覆盖原有模型配置。
+
+必须替换：
+
+- `LLM_API_KEY`、`LLM_BASE_URL`、`LLM_MODEL`
+- `EMBEDDING_API_KEY`、`EMBEDDING_BASE_URL`、`EMBEDDING_MODEL`
+- `DEMO_AUTH_USERS_JSON` 与使用同一 Token 的 `DEMO_API_KEY`
+- `MYSQL_PASSWORD`、`MYSQL_ROOT_PASSWORD`
+
+不要提交 `.env`，不要在截图或日志中展示真实密钥。Compose 会把 MySQL 密码放入连接 URL，建议使用随机的 URL 安全字母数字密码。
+
+### 2. 构建并启动
 
 ```bash
-DEMO_AUTH_USERS_JSON={"replace-with-random-demo-token":"local-user@agent01.local"}
-DEMO_API_KEY=replace-with-random-demo-token
+docker compose config --quiet
+docker compose up --build -d
+docker compose ps
 ```
 
-除 `/health`、`/ready` 外，所有 `/api/v1/**` 接口都要求：
-
-```text
-Authorization: Bearer <token>
-```
-
-`DEMO_API_KEY` 供 Streamlit HTTP 客户端发送同一凭证，不会由后端用作用户
-映射。不要把真实 Token、模型密钥或 `.env` 提交到 Git。
+### 3. 检查服务
 
 ```bash
+curl http://127.0.0.1:8000/health
+curl http://127.0.0.1:8000/ready
+curl http://127.0.0.1:8501/_stcore/health
+```
+
+- Streamlit：<http://127.0.0.1:8501>
+- OpenAPI：<http://127.0.0.1:8000/docs>
+- MySQL、Redis：仅 Compose 内部网络访问
+
+`/health` 只表示 API 进程可响应；`/ready` 会检查数据库、Chroma、上传目录写入能力和启用状态下的 Redis。模型供应商网络不属于就绪检查。
+
+> 2026-08-28 已在 Docker Desktop 上完成真实镜像构建、四服务健康、两次端到端演示、`down/up` 持久化、日志脱敏抽查、三类备份生成/可读性校验及经授权的覆盖式恢复演练。详见 [`docs/day21_demo_release_runbook.md`](docs/day21_demo_release_runbook.md)。
+
+## 本地开发
+
+要求 Python 3.11+ 和 uv。
+
+```bash
+uv sync --locked
 uv run alembic upgrade head
 uv run uvicorn app.main:app --host 127.0.0.1 --port 8000
 ```
 
-### 3. 启动 Day15 Streamlit 前端
-
-另开一个终端：
+另开终端启动前端：
 
 ```bash
 uv run streamlit run frontend/app.py
 ```
 
-前端默认连接 `http://127.0.0.1:8000`。需要连接其他地址时，可在页面左侧修改，或设置：
+本地方式需要自行准备 `.env` 中的数据库、Chroma、Redis和模型配置。若 Redis 缓存不可用，可将 `RAG_CACHE_ENABLED=false`；这不会替代 MySQL、Chroma 或模型依赖。
 
-```bash
-API_BASE_URL=http://127.0.0.1:8000
+## 演示主链路
+
+1. 创建知识库。
+2. 上传仓库内的合成 TXT/PDF/DOCX，轮询到入库完成。
+3. 提问可回答问题，核对答案及文件名、页码、`chunk_id`。
+4. 提问信息不足问题，确认明确拒答且不伪造引用。
+5. 运行一次单文档总结和一次双文档对比。
+6. 刷新页面，确认会话历史仍可读取。
+7. 在第二个知识库完整重复一次，并验证没有串库。
+
+截图示例：
+
+| 文档管理 | 问答与引用 | 会话就绪 |
+| --- | --- | --- |
+| ![文档管理](docs/screenshots/day15/documents.png) | ![问答与引用](docs/screenshots/day15/chat-citations.png) | ![会话就绪](docs/screenshots/day15/chat-ready.png) |
+
+## API 概览
+
+除 `/health`、`/ready` 外，`/api/v1/**` 都需要：
+
+```text
+Authorization: Bearer <token>
 ```
 
-Streamlit 只通过 FastAPI HTTP 接口访问知识库、文档、入库任务、聊天和会话历史，不直接连接 MySQL、Chroma、Redis 或模型服务。
+| 方法 | 路径 | 用途 |
+| --- | --- | --- |
+| GET | `/health` | 进程存活 |
+| GET | `/ready` | 数据库、Chroma、上传目录、Redis 就绪 |
+| POST / GET | `/api/v1/knowledge-bases` | 创建、列出知识库 |
+| GET | `/api/v1/knowledge-bases/{id}` | 获取知识库 |
+| POST | `/api/v1/documents` | 上传文档并创建后台入库任务 |
+| GET | `/api/v1/ingestion/{task_id}` | 查询入库状态 |
+| GET | `/api/v1/knowledge-bases/{id}/documents` | 列出知识库文档 |
+| GET | `/api/v1/knowledge-bases/{id}/documents/{document_id}` | 获取文档 |
+| POST | `/api/v1/knowledge-bases/{id}/documents/{document_id}/reindex` | 重建文档索引 |
+| DELETE | `/api/v1/documents/{document_id}` | 删除文档（需查询参数 `knowledge_base_id`） |
+| POST | `/api/v1/chat` | 多轮 RAG 问答 |
+| GET | `/api/v1/conversations/{id}/messages` | 获取历史消息 |
+| POST | `/api/v1/agent/run` | 运行有限 Agent |
 
-### 4. Day18 安全、权限与可靠性
+## 评测结果
 
-请求 Token 解析为明确用户邮箱，并随 FastAPI 依赖注入知识库、文档和会话
-服务。服务层的统一授权组件校验 `knowledge_base_id` 所有者；文档、入库任务、
-会话历史和 Chat 都复用该校验。其他用户猜中资源 ID 时也只得到 404，以减少
-资源枚举信息。
+数据集 `employee-handbook-rag-eval/day17-v1` 共 50 题，Dev/Holdout 各 25 题，包含 40 个可回答问题和 10 个信息不足问题。
 
-上传和 Chat 使用按用户、按入口隔离的进程内固定窗口限流：
+### 保存的真实模型响应
 
-```bash
-RATE_LIMIT_WINDOW_SECONDS=60
-UPLOAD_RATE_LIMIT_REQUESTS=10
-CHAT_RATE_LIMIT_REQUESTS=30
-```
+运行配置：`deepseek-chat`、`text-embedding-v4`、Vector Top-K 5、最大距离 1.1、Prompt `rag-prompt-day14-v1`。
 
-超限返回 429、`Retry-After` 和 `X-Request-ID`。该实现只适合单进程演示：
-多 worker、多实例或重启后状态不共享；生产环境应在网关、Redis 或专用限流
-服务中统一执行，并增加并发、请求体和成本预算限制。
+| 指标 | 结果 |
+| --- | ---: |
+| 平均 0/1/2 分 | 1.98 |
+| 2 分 / 1 分 / 0 分 | 49 / 1 / 0 |
+| 事实覆盖率 | 100% |
+| 事实一致率 | 100% |
+| 回答相关率 | 100% |
+| 拒答准确率 | 100% |
+| 引用正确率 | 100% |
 
-应用日志使用 JSON 字段白名单，只保留 `request_id`、路由、方法、状态码、
-耗时和不可逆 `actor_id` 等元数据。日志不记录 Authorization、API Key、完整
-问题/回答、Prompt、文档正文或上传二进制；已配置密钥和常见凭证格式会再次
-脱敏。第三方库与基础设施日志仍需独立审计。
+这是对 2026-08-23 已保存真实响应的确定性重放，只说明该固定数据集、模型、Prompt 与参数下的结果，不代表当前外部服务状态或生产流量。
 
-RAG Prompt 把 `<knowledge_base_evidence>` 明确标记为不可信数据，禁止文档
-修改角色、系统规则、认证、授权或知识库范围。程序侧授权、检索过滤、来源
-编号约束和注入回归共同形成分层缓解，但 Prompt Injection 无法被完全消除。
+### 离线 CI 门槛
 
-完整威胁、信任边界和生产差距见
-`docs/day18_security_threat_model.md`。
+2026-08-28 的 50 题离线哈希向量回归：Vector Recall@3 72.50%、MRR 70.00%、信息不足准确率 80.00%，门槛通过。离线哈希向量只用于稳定工程回归，不能作为生产 Embedding 质量或简历百分比。
 
-### 5. Day19 有限 Agent 工具调用
+真实 Embedding 的检索对比、失败样例、限制和发布矩阵见 [`docs/day21_evaluation_report.md`](docs/day21_evaluation_report.md)。
 
-`POST /api/v1/agent/run` 在三个白名单工具中做确定性路由：普通知识问答使用
-`search_knowledge`，单文档总结使用 `summarize_document`，双文档对比使用
-`compare_documents`。路由器只识别意图，资源权限、参数 schema 和知识库范围
-都在执行层再次校验；未注册工具、跨库参数、Shell/SQL/文件系统/URL 请求会被
-拒绝。
-
-```bash
-curl -X POST http://127.0.0.1:8000/api/v1/agent/run \
-  -H "Authorization: Bearer <token>" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "knowledge_base_id": "<knowledge-base-id>",
-    "instruction": "总结这份员工手册的关键规定",
-    "document_ids": ["<document-id>"]
-  }'
-```
-
-Agent 默认最多 2 个工具步骤，单工具超时 15 秒，总请求预算 25 秒。总结与
-对比只读取已授权、已入库的 Chroma Chunk，并限制证据数量和字符数。工具
-轨迹记录调用 ID、工具名、资源 ID、耗时、状态和安全摘要，不记录完整问题、
-文档证据、Prompt、答案或凭证。Agent 入口使用与 Chat 相同的请求次数配置，
-但采用独立 `agent` 计数 scope。
-
-12 个固定路由样例可单独验收：
-
-```bash
-uv run python eval/eval_agent_routing.py --min-correct 10
-```
-
-设计、安全边界和已知限制见 `docs/day19_bounded_agent.md`。
-
-### 6. 测试
+## 测试与质量门槛
 
 ```bash
 uv run pytest -p no:cacheprovider
+uv run python -m compileall -q app frontend eval tests
+uv run python eval/eval_agent_routing.py --min-correct 10
 ```
 
-### 7. Day16 检索模式与评测
+Day17 评测命令支持 `--json-report`、`--csv-report`、`--markdown-report`。在有用户本地结果时，应把输出指向临时目录，避免覆盖已有报告。GitHub Actions 使用锁定依赖、占位配置、内存 SQLite 和禁用缓存的离线环境，不调用外部模型。
 
-默认仍使用纯向量检索。可在 `.env` 中切换：
+## 安全与可靠性边界
 
-```bash
-RAG_RETRIEVAL_MODE=vector  # vector | hybrid | rerank
-```
+- Token 解析为明确用户，服务层统一校验知识库所有者；无权限资源与不存在资源都返回 404。
+- 上传和 Chat/Agent 使用按用户、按入口隔离的进程内固定窗口限流，超限返回 429、`Retry-After` 和 `X-Request-ID`。
+- JSON 日志只保留请求 ID、路由、状态、耗时和不可逆 actor ID 等元数据，不记录凭证、完整问答、Prompt 或文档正文。
+- 文档证据被标记为不可信数据；授权、知识库过滤、工具白名单、参数 schema、步骤/超时和注入回归共同缓解 Prompt Injection。
+- API/UI 容器使用非 root、只读根文件系统、移除 capabilities 和 `no-new-privileges`。
 
-- `vector`：保持原有 Chroma 向量检索和距离过滤行为。
-- `hybrid`：从同一知识库的 Chroma Chunk 计算轻量 BM25，并通过 RRF
-  与向量候选融合。
-- `rerank`：在融合候选上应用本地 `lexical-v1` 词法重排；它不是外部
-  cross-encoder，不增加模型费用，但只能强化词面匹配。
+以上措施不等于生产 IAM、WAF、DLP 或完整合规体系。详细威胁模型见 [`docs/day18_security_threat_model.md`](docs/day18_security_threat_model.md)。
 
-运行固定的 13 问检索评测（评测时不经过 Redis 缓存）：
+## 持久化、备份与关闭
 
-```bash
-uv run python eval/eval_retrieval.py
-```
+Compose 的三个命名卷：
 
-结果写入 `eval/results/day16_retrieval_eval.json` 和
-`docs/day16_retrieval_quality.md`。关键词分支当前会扫描指定知识库的全部
-Chunk，适合本项目 V1 数据量；知识库扩大后应换成持久化稀疏索引。
+- `agent01_mysql_data`：业务关系、任务、会话和消息。
+- `agent01_chroma_data`：Chunk、向量和检索元数据。
+- `agent01_upload_data`：上传原件。
 
-运行 25 问压力集，生成真实向量失败目录并对比三种模式：
-
-```bash
-uv run python eval/eval_retrieval.py \
-  --dataset eval/datasets/day16_failure_cases.json \
-  --live-embedding \
-  --output eval/results/day16_failure_catalog.json \
-  --report docs/day16_failure_catalog.md
-```
-
-该压力集用于暴露排序失败和信息不足误命中，不作为默认模式的唯一选择依据。
-主质量集和压力集应结合阅读。Rerank 的结果还会记录
-`rerank_candidate_count`，用于确认重排前实际候选规模。
-
-默认命令使用完全离线的哈希向量，只用于稳定回归和验证融合逻辑，不代表
-生产 Embedding 质量。明确确认公开样例可以发送到 `.env` 配置的外部
-Embedding 服务后，再运行真实质量评测：
-
-```bash
-uv run python eval/eval_retrieval.py --live-embedding
-```
-
-### 8. Day17 版本化 RAG 评测
-
-Day17 固定集位于 `eval/datasets/day17_rag_eval_v1.json`，包含 50 题并按
-25 个 Dev / 25 个 Holdout 分离。先运行完全离线的检索工程基线：
-
-```bash
-uv run python eval/eval_retrieval.py
-```
-
-命令同时输出 JSON、CSV 和 Markdown，并计算 Recall@K、MRR、信息不足
-准确率、平均延迟和 P95。离线哈希向量不能作为生产质量结论。确认合成员工
-手册可以发送到配置的外部 Embedding 服务后，再运行真实评测：
-
-```bash
-uv run python eval/eval_retrieval.py --live-embedding --split holdout
-```
-
-可用门槛让失败返回非零状态，例如：
-
-```bash
-uv run python eval/eval_retrieval.py \
-  --modes vector \
-  --min-recall-at-k 0.70 \
-  --min-mrr 0.65 \
-  --min-no-answer-accuracy 0.70
-```
-
-回答评测支持实时运行和保存响应重放。实时模式会调用 `.env` 配置的
-Embedding 与 LLM，只应对仓库中的合成手册执行：
-
-```bash
-uv run python eval/eval_answer.py --live --split holdout --mode vector
-```
-
-生成的 `eval/results/day17_answer_eval.json` 本身可以作为无网络重放输入：
-
-```bash
-uv run python eval/eval_answer.py \
-  --responses-json eval/results/day17_answer_eval.json \
-  --min-average-score 1.60 \
-  --min-fact-coverage 0.80 \
-  --min-fact-consistency 0.90 \
-  --min-answer-relevance 0.90 \
-  --min-refusal-accuracy 0.70 \
-  --min-citation-correctness 0.80
-```
-
-完整的 0/1/2 人工评分与独立引用规则见
-`docs/day17_evaluation_methodology.md`。CI 运行 10 个无网络核心样本，避免把
-模型或网络波动写成确定性单元测试。
-
-### 9. GitHub Actions 离线回归
-
-仓库根目录的 `.github/workflows/agent01-ci.yml` 会在 `main` 分支的
-`agent01/**` 发生 Push 或 Pull Request 时自动运行，也支持手动触发。
-工作流使用 Python 3.11 和锁定依赖，执行：
-
-- 完整 pytest（包括 10 个 Day17 核心样本与 Day18 安全回归）。
-- Python 编译检查。
-- Day17 离线 Vector 检索质量门槛。
-- 已保存真实响应的回答质量重放门槛。
-
-CI 只使用占位配置，不读取 `.env`，不会调用真实 Embedding、LLM、MySQL
-或 Redis。任何测试或门槛失败都会让工作流返回非零状态并在 GitHub 标红。
-
-### 10. Day20 Docker Compose 部署
-
-Docker 方式使用同一个非 root、锁定依赖的镜像运行 FastAPI 和 Streamlit，
-并由 Compose 启动 MySQL、Redis、健康检查、资源限制和日志轮转。首次启动前：
-
-```bash
-cp .env.example .env
-```
-
-至少替换 `.env` 中的模型/Embedding 配置、两个演示 Token、
-`MYSQL_PASSWORD` 和 `MYSQL_ROOT_PASSWORD`。MySQL 密码使用随机字母和数字，
-不要保留示例占位符，也不要提交 `.env`。
-
-```bash
-docker compose up --build -d
-docker compose ps
-curl http://127.0.0.1:8000/health
-curl http://127.0.0.1:8000/ready
-```
-
-- UI：`http://127.0.0.1:8501`
-- API/OpenAPI：`http://127.0.0.1:8000/docs`
-- MySQL 与 Redis 只在 Compose 内部网络开放。
-- API 启动时自动执行 `alembic upgrade head`，数据库和 Redis 健康后才启动。
-- `agent01_mysql_data`、`agent01_chroma_data`、`agent01_upload_data`
-  分别保存关系数据、向量数据和上传原件。
-
-停止服务但保留数据：
+普通停止保留数据：
 
 ```bash
 docker compose down
 docker compose up -d
 ```
 
-不要把 `docker compose down -v` 当成普通停止命令；`-v` 会删除上述三个命名
-卷。完整的初始化、部署演练、备份恢复、日志审计和故障排查见
-[`docs/day20_deployment.md`](docs/day20_deployment.md)。项目没有内置模型 mock；
-若只验证部署层，可检查健康接口和不调用模型的管理接口，但不能把它表述为真实
-RAG/Agent 演示。
+不要把 `docker compose down -v` 当成普通停止；它会删除三个持久卷。备份/恢复和故障排查见 [`docs/day20_deployment.md`](docs/day20_deployment.md)。恢复会覆盖数据，执行前必须确认目标与范围。
+
+## 已知限制与 Roadmap
+
+- OCR、扫描 PDF 和复杂表格解析未完成。
+- 入库任务基于 FastAPI `BackgroundTasks`，不是可恢复的生产队列。
+- 认证是演示 Token 映射，限流是进程内实现；尚无 SSO、精细 RBAC 和多实例共享策略。
+- Hybrid 关键词分支扫描指定知识库全部 Chunk，尚未使用持久化稀疏索引。
+- Agent 路由由关键词和文档数量驱动，只支持同一知识库内两文档对比。
+- 尚未完成大规模压测和生产监控告警。
+
+下一步优先级：可靠任务队列与幂等恢复 → 权限审计与 RBAC → 信息不足阈值校准 → 持久化关键词索引 → OCR/版面解析 → 压测、Tracing 与告警。
+
+## Day21 交付材料
+
+- [架构与关键调用链](docs/day21_architecture.md)
+- [最终评测与验收证据](docs/day21_evaluation_report.md)
+- [演示、最终验收与发布 Runbook](docs/day21_demo_release_runbook.md)
+- [简历、3 分钟口述与两轮面试演练](docs/day21_interview_pack.md)
+- [有限 Agent 设计](docs/day19_bounded_agent.md)
+- [Docker、备份与恢复](docs/day20_deployment.md)
+
+## 发布状态
+
+`v1.0.0` 尚未创建。真实 Docker P0 验收和最终回归已经完成；仍需录制/复核演示视频、确认最新 GitHub Actions，并在获得用户明确授权后提交、推送、创建 Tag 与 GitHub Release。
