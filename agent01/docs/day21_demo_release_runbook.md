@@ -2,7 +2,7 @@
 
 ## 1. 2026-08-28 验收结果
 
-Docker Desktop 4.88.1 已安装并完成真实验收：四服务 healthy、Alembic head、两轮端到端主链路、`down/up` 持久化、日志脱敏抽查、三类备份生成/可读性校验及经授权的覆盖式恢复均通过。恢复前另建回滚快照；恢复后 A/B 各 3 个 ready 文档、原 4 条历史、5 条引用、Upload 原件和 Chroma Chunk 全部复验通过。验收过程中修复了 MySQL 非事务 DDL 迁移重试和 Streamlit 硬刷新会话恢复两个缺陷。视频录制、推送、Tag 和 Release 尚未执行。
+Docker Desktop 4.88.1 已安装并完成真实验收：四服务 healthy、Alembic head、两轮端到端主链路、`down/up` 持久化、日志脱敏抽查、三类备份生成/可读性校验及经授权的覆盖式恢复均通过。恢复前另建回滚快照；恢复后 A/B 各 3 个 ready 文档、原 4 条历史、5 条引用、Upload 原件和 Chroma Chunk 全部复验通过。验收过程中修复了 MySQL 非事务 DDL 迁移重试和 Streamlit 硬刷新会话恢复两个缺陷。最终 GitHub Actions `33164581409` 已通过，用户已明确授权推送、Tag 和 Release；演示视频仍未录制。
 
 ## 2. 准备环境
 
@@ -164,10 +164,10 @@ git diff --cached --name-only
 - [x] 两次主链路连续成功。
 - [x] `down/up` 后数据与引用恢复。
 - [x] 三类备份生成并校验。
-- [ ] 全量回归与最新 GitHub Actions 通过（本地全量回归已通过；代码变更后的 GitHub Actions 尚未触发）。
+- [x] 全量回归与最新 GitHub Actions 通过（运行 `33164581409`）。
 - [ ] README、视频、简历和实际功能一致。
-- [ ] 已向用户报告提交内容、测试结果和所有已知限制。
-- [ ] 已获得推送、Tag 和 Release 的明确授权。
+- [x] 已向用户报告提交内容、测试结果和所有已知限制。
+- [x] 已获得推送、Tag 和 Release 的明确授权。
 
 建议提交拆分：
 

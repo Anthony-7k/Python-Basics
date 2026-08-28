@@ -243,4 +243,4 @@ docker compose up -d
 
 ## 发布状态
 
-`v1.0.0` 尚未创建。真实 Docker P0 验收和最终回归已经完成；仍需录制/复核演示视频、确认最新 GitHub Actions，并在获得用户明确授权后提交、推送、创建 Tag 与 GitHub Release。
+项目版本已提升为 `1.0.0`。真实 Docker P0 验收、覆盖恢复、最终回归和 GitHub Actions `33164581409` 已通过，用户已明确授权创建 `v1.0.0` Tag/Release；演示视频仍需另行录制和人工复核。
