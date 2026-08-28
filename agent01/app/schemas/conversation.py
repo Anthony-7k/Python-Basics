@@ -25,6 +25,7 @@ class ConversationMessagesResponse(
     BaseModel
 ):
     conversation_id: str
+    knowledge_base_id: str
 
     messages: list[
         ConversationMessageResponse

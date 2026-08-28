@@ -30,7 +30,7 @@ dependencies = [
 agent01 = "agent01:main"
 
 [[tool.uv.index]]
-url = "https://pypi.tuna.tsinghua.edu.cn/simple"
+url = "https://pypi.org/simple"
 default = true
 
 [build-system]

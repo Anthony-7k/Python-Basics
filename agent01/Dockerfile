@@ -31,8 +31,9 @@ ENV HOME=/home/agent01 \
     PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1
 
-RUN apt-get update \
-    && apt-get install --yes --no-install-recommends ca-certificates libgomp1 \
+RUN sed -i 's|http://deb.debian.org|https://deb.debian.org|g' /etc/apt/sources.list.d/debian.sources \
+    && apt-get -o Acquire::Retries=5 update \
+    && apt-get -o Acquire::Retries=5 install --yes --no-install-recommends ca-certificates libgomp1 \
     && rm -rf /var/lib/apt/lists/* \
     && groupadd --gid ${APP_UID} agent01 \
     && useradd --uid ${APP_UID} --gid agent01 --create-home agent01 \

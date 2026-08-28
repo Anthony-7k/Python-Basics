@@ -34,6 +34,12 @@ def get_conversation_messages(
         get_conversation_service
     ),
 ):
+    conversation = (
+        conversation_service
+        .get_or_create_conversation(
+            conversation_id=conversation_id,
+        )
+    )
     messages = (
         conversation_service.get_messages(
             conversation_id
@@ -42,5 +48,8 @@ def get_conversation_messages(
 
     return ConversationMessagesResponse(
         conversation_id=conversation_id,
+        knowledge_base_id=(
+            conversation.knowledge_base_id
+        ),
         messages=messages,
-    )   
+    )

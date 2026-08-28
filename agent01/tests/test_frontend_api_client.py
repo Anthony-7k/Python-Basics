@@ -166,6 +166,25 @@ def test_chat_reuses_conversation_id_and_keeps_sources():
     assert second["sources"][0]["content"] == "住宿标准为每日 500 元。"
 
 
+def test_get_conversation_keeps_knowledge_base_scope():
+    client, http_client = make_client(
+        lambda request: httpx.Response(
+            200,
+            json={
+                "conversation_id": "conv-1",
+                "knowledge_base_id": "kb-1",
+                "messages": [],
+            },
+        )
+    )
+    try:
+        result = client.get_conversation("conv-1")
+    finally:
+        http_client.close()
+
+    assert result["knowledge_base_id"] == "kb-1"
+
+
 def test_timeout_becomes_actionable_error():
     def handler(request):
         raise httpx.ReadTimeout("slow", request=request)

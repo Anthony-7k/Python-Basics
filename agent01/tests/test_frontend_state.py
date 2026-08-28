@@ -7,6 +7,7 @@ from frontend.state import (
     ingestion_status_copy,
     initialize_state,
     normalize_source,
+    restore_chat,
     set_conversation_id,
     set_ingestion_task,
     switch_knowledge_base,
@@ -51,6 +52,45 @@ def test_clear_current_chat_does_not_clear_other_knowledge_base():
     switch_knowledge_base(state, "kb-1")
 
     assert state["conversation_id"] == "conv-1"
+
+
+def test_restore_chat_rebuilds_authorized_history():
+    state = {}
+
+    restore_chat(
+        state,
+        knowledge_base_id="kb-1",
+        conversation_id="conv-1",
+        messages=[
+            {
+                "role": "user",
+                "content": "question",
+                "source_summary": None,
+            },
+            {
+                "role": "assistant",
+                "content": "answer",
+                "source_summary": {
+                    "sources": [
+                        {
+                            "source_id": "S1",
+                            "chunk_id": "chunk-1",
+                        }
+                    ]
+                },
+            },
+        ],
+    )
+
+    assert state["selected_knowledge_base_id"] == "kb-1"
+    assert state["conversation_id"] == "conv-1"
+    assert [item["role"] for item in state["messages"]] == [
+        "user",
+        "assistant",
+    ]
+    assert state["messages"][1]["sources"][0]["chunk_id"] == (
+        "chunk-1"
+    )
 
 
 @pytest.mark.parametrize("page", [None, -1, 0])

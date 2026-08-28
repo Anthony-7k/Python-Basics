@@ -82,6 +82,46 @@ def clear_current_chat(state: MutableMapping[str, Any]) -> None:
         }
 
 
+def restore_chat(
+    state: MutableMapping[str, Any],
+    *,
+    knowledge_base_id: str,
+    conversation_id: str,
+    messages: list[Mapping[str, Any]],
+) -> None:
+    """Restore one authorized conversation after a full page reload."""
+
+    switch_knowledge_base(
+        state,
+        knowledge_base_id,
+    )
+    restored_messages: list[dict[str, Any]] = []
+    for item in messages:
+        role = str(item.get("role") or "user")
+        restored: dict[str, Any] = {
+            "role": role,
+            "content": str(item.get("content") or ""),
+        }
+        source_summary = item.get("source_summary")
+        if (
+            role == "assistant"
+            and isinstance(source_summary, Mapping)
+        ):
+            raw_sources = source_summary.get("sources")
+            if isinstance(raw_sources, list):
+                restored["sources"] = [
+                    dict(source)
+                    for source in raw_sources
+                    if isinstance(source, Mapping)
+                ]
+        restored_messages.append(restored)
+
+    state["conversation_id"] = conversation_id
+    state["messages"] = restored_messages
+    state["last_chat_meta"] = None
+    _save_current_chat(state)
+
+
 def set_ingestion_task(
     state: MutableMapping[str, Any],
     knowledge_base_id: str,

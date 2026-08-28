@@ -967,6 +967,7 @@ def test_get_conversation_messages(
         data["conversation_id"]
         == "test-conversation-id"
     )
+    assert data["knowledge_base_id"] == "test-kb-id"
 
     assert len(data["messages"]) == 2
 

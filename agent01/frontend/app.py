@@ -29,6 +29,7 @@ from frontend.state import (
     get_ingestion_task,
     ingestion_status_copy,
     initialize_state,
+    restore_chat,
     set_conversation_id,
     set_ingestion_task,
     switch_knowledge_base,
@@ -71,6 +72,11 @@ def main() -> None:
     documents = _load_documents(client, selected_id)
     if documents is None:
         documents = []
+
+    _restore_conversation_from_query(
+        client,
+        selected_id,
+    )
 
     chat_tab, documents_tab = st.tabs(["💬 知识问答", "📄 文档管理"])
     with chat_tab:
@@ -138,6 +144,13 @@ def _render_create_knowledge_base(client: APIClient) -> None:
                     st.error(exc.user_message)
                 else:
                     st.session_state.selected_knowledge_base_id = created.get("id")
+                    st.query_params["knowledge_base_id"] = str(
+                        created.get("id")
+                    )
+                    st.query_params.pop(
+                        "conversation_id",
+                        None,
+                    )
                     st.success("知识库已创建")
                     st.rerun()
 
@@ -161,7 +174,17 @@ def _render_knowledge_base_selector(
     ids = list(by_id)
     current_id = st.session_state.selected_knowledge_base_id
     if current_id not in by_id:
-        current_id = ids[0]
+        requested_id = str(
+            st.query_params.get(
+                "knowledge_base_id"
+            )
+            or ""
+        )
+        current_id = (
+            requested_id
+            if requested_id in by_id
+            else ids[0]
+        )
 
     selected_id = st.sidebar.selectbox(
         "当前知识库",
@@ -170,6 +193,15 @@ def _render_knowledge_base_selector(
         format_func=lambda item_id: str(by_id[item_id].get("name") or item_id),
     )
     switch_knowledge_base(st.session_state, selected_id)
+    if (
+        st.query_params.get("knowledge_base_id")
+        != selected_id
+    ):
+        st.query_params["knowledge_base_id"] = selected_id
+        st.query_params.pop(
+            "conversation_id",
+            None,
+        )
 
     selected = by_id[selected_id]
     description = selected.get("description") or "暂无描述"
@@ -177,6 +209,69 @@ def _render_knowledge_base_selector(
         f"版本 {selected.get('version', '-')} · {description}"
     )
     return selected_id
+
+
+def _restore_conversation_from_query(
+    client: APIClient,
+    knowledge_base_id: str,
+) -> None:
+    conversation_id = str(
+        st.query_params.get("conversation_id")
+        or ""
+    ).strip()
+    if not conversation_id:
+        return
+    if (
+        st.session_state.conversation_id
+        == conversation_id
+        and st.session_state.messages
+    ):
+        return
+
+    try:
+        conversation = client.get_conversation(
+            conversation_id
+        )
+    except APIClientError as exc:
+        st.warning(
+            "无法恢复 URL 中的会话："
+            f"{exc.user_message}"
+        )
+        st.query_params.pop(
+            "conversation_id",
+            None,
+        )
+        return
+
+    if (
+        str(conversation.get("knowledge_base_id"))
+        != knowledge_base_id
+    ):
+        st.warning(
+            "该会话不属于当前知识库，已停止恢复。"
+        )
+        st.query_params.pop(
+            "conversation_id",
+            None,
+        )
+        return
+
+    raw_messages = conversation.get("messages")
+    messages = (
+        [
+            dict(item)
+            for item in raw_messages
+            if isinstance(item, Mapping)
+        ]
+        if isinstance(raw_messages, list)
+        else []
+    )
+    restore_chat(
+        st.session_state,
+        knowledge_base_id=knowledge_base_id,
+        conversation_id=conversation_id,
+        messages=messages,
+    )
 
 
 def _render_uploader(client: APIClient, knowledge_base_id: str) -> None:
@@ -273,6 +368,10 @@ def _render_chat(
     with action:
         if st.button("清空当前会话", use_container_width=True):
             clear_current_chat(st.session_state)
+            st.query_params.pop(
+                "conversation_id",
+                None,
+            )
             st.rerun()
 
     if not documents:
@@ -317,6 +416,12 @@ def _render_chat(
     conversation_id = response.get("conversation_id")
     if conversation_id:
         set_conversation_id(st.session_state, str(conversation_id))
+        st.query_params["knowledge_base_id"] = (
+            knowledge_base_id
+        )
+        st.query_params["conversation_id"] = str(
+            conversation_id
+        )
 
     raw_sources = response.get("sources")
     sources = (

@@ -243,6 +243,18 @@ class APIClient:
         self,
         conversation_id: str,
     ) -> list[dict[str, Any]]:
+        payload = self.get_conversation(
+            conversation_id
+        )
+        return _as_object_list(
+            payload.get("messages"),
+            "会话历史",
+        )
+
+    def get_conversation(
+        self,
+        conversation_id: str,
+    ) -> dict[str, Any]:
         payload = _as_mapping(
             self._request(
                 "GET",
@@ -250,7 +262,11 @@ class APIClient:
             ),
             "会话历史",
         )
-        return _as_object_list(payload.get("messages"), "会话历史")
+        _as_object_list(
+            payload.get("messages"),
+            "会话历史",
+        )
+        return payload
 
 
 def _as_mapping(value: Any, label: str) -> dict[str, Any]:
