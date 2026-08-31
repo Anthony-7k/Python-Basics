@@ -1,12 +1,14 @@
 # Day21｜演示、最终验收与发布 Runbook
 
-## 1. 2026-08-28 验收结果
+## 1. 2026-08-28 与 2026-08-31 验收结果
 
-Docker Desktop 4.88.1 已安装并完成真实验收：四服务 healthy、Alembic head、两轮端到端主链路、`down/up` 持久化、日志脱敏抽查、三类备份生成/可读性校验及经授权的覆盖式恢复均通过。恢复前另建回滚快照；恢复后 A/B 各 3 个 ready 文档、原 4 条历史、5 条引用、Upload 原件和 Chroma Chunk 全部复验通过。验收过程中修复了 MySQL 非事务 DDL 迁移重试和 Streamlit 硬刷新会话恢复两个缺陷。最终 GitHub Actions `33164581409` 已通过，用户已明确授权推送、Tag 和 Release；演示视频仍未录制。
+Docker Desktop 4.88.1 已安装并完成真实验收：四服务 healthy、Alembic head、两轮端到端主链路、`down/up` 持久化、日志脱敏抽查、三类备份生成/可读性校验及经授权的覆盖式恢复均通过。恢复前另建回滚快照；恢复后 A/B 各 3 个 ready 文档、原 4 条历史、5 条引用、Upload 原件和 Chroma Chunk 全部复验通过。验收过程中修复了 MySQL 非事务 DDL 迁移重试和 Streamlit 硬刷新会话恢复两个缺陷。最终 GitHub Actions `33164825390` 已通过；`main` 与 `v1.0.0` Tag 已普通推送，按用户最后指示未创建 GitHub Release。3–5 分钟演示视频暂缓录制和人工复核。
+
+2026-08-31 从远端 `main@0991533` 全新克隆，在 `agent01:day21-cleanclone`、端口 `18000/18501` 和 `agent01_cleanclone_*` 三类独立卷中完成 `--no-cache` 构建。四服务 healthy，`/health`、`/ready`、UI 均返回 200，Alembic 为 `b7e1c4d9a2f0 (head)`，API/UI 均以 UID 10001 运行且根文件系统只读。本地 401 边界、知识库创建/查询、`down/up` 后 MySQL 记录与 Chroma/Upload 哨兵持久化、日志零敏感值/致命错误，以及无网络只读容器内的 160 项测试和全部质量门槛均通过。此次 clean-clone 未在缺少具体数据与模型目的地授权时再次外发样例；8 月 28 日 A/B 两轮真实模型链路不受影响。
 
 ## 2. 准备环境
 
-由用户安装并启动 Docker Desktop，然后确认：
+启动 Docker Desktop，然后确认：
 
 ```powershell
 docker --version
@@ -164,10 +166,13 @@ git diff --cached --name-only
 - [x] 两次主链路连续成功。
 - [x] `down/up` 后数据与引用恢复。
 - [x] 三类备份生成并校验。
-- [x] 全量回归与最新 GitHub Actions 通过（运行 `33164581409`）。
-- [ ] README、视频、简历和实际功能一致。
+- [x] 远端 clean-clone 的无缓存构建、隔离运行、持久化和离线回归通过。
+- [x] 全量回归与最新 GitHub Actions 通过（运行 `33164825390`）。
+- [x] README、架构、评测、演示文档、面试材料和实际功能一致。
+- [ ] 3–5 分钟演示视频已录制并人工复核（按用户指示暂缓，不阻塞其余 Day21 验收）。
 - [x] 已向用户报告提交内容、测试结果和所有已知限制。
-- [x] 已获得推送、Tag 和 Release 的明确授权。
+- [x] `main` 与 `v1.0.0` Tag 已普通推送。
+- [x] 按用户最后指示未创建 GitHub Release。
 
 建议提交拆分：
 
@@ -177,4 +182,4 @@ fix: resolve final acceptance issues
 release: publish enterprise-knowledge-agent v1.0.0
 ```
 
-当前阶段只准备文档和验收材料；不要提前执行 `git push`、`git tag`、发布 GitHub Release 或把包版本改成 `1.0.0`。
+当前仓库版本为 `1.0.0`，`main` 与 `v1.0.0` Tag 已推送。除非用户另行明确要求，不创建 GitHub Release；后续只提交事实修正、Day21 截图和验收证据，不改写既有发布历史。

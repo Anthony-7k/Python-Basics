@@ -100,6 +100,8 @@ curl http://127.0.0.1:8501/_stcore/health
 
 > 2026-08-28 已在 Docker Desktop 上完成真实镜像构建、四服务健康、两次端到端演示、`down/up` 持久化、日志脱敏抽查、三类备份生成/可读性校验及经授权的覆盖式恢复演练。详见 [`docs/day21_demo_release_runbook.md`](docs/day21_demo_release_runbook.md)。
 
+> 2026-08-31 又从远端 `main@0991533` 全新克隆，以独立镜像、端口和三类数据卷完成 `--no-cache` 构建、四服务健康、Alembic head、非 root/只读根文件系统、本地认证与知识库 CRUD、`down/up` 持久化、日志脱敏及 160 项离线回归。clean-clone 未在缺少具体数据外发授权时再次把样例发送给第三方模型；8 月 28 日原环境的两轮真实模型主链路证据仍然有效。
+
 ## 本地开发
 
 要求 Python 3.11+ 和 uv。
@@ -128,11 +130,11 @@ uv run streamlit run frontend/app.py
 6. 刷新页面，确认会话历史仍可读取。
 7. 在第二个知识库完整重复一次，并验证没有串库。
 
-截图示例：
+Day21 真实验收截图：
 
-| 文档管理 | 问答与引用 | 会话就绪 |
+| 文档管理 | 问答与引用 | 刷新后历史恢复 |
 | --- | --- | --- |
-| ![文档管理](docs/screenshots/day15/documents.png) | ![问答与引用](docs/screenshots/day15/chat-citations.png) | ![会话就绪](docs/screenshots/day15/chat-ready.png) |
+| ![Day21 文档管理](docs/screenshots/day21/documents.png) | ![Day21 问答与引用](docs/screenshots/day21/citation.png) | ![Day21 刷新后历史恢复](docs/screenshots/day21/history-restored.png) |
 
 ## API 概览
 
@@ -243,4 +245,4 @@ docker compose up -d
 
 ## 发布状态
 
-项目版本已提升为 `1.0.0`。真实 Docker P0 验收、覆盖恢复、最终回归和 GitHub Actions `33164581409` 已通过，用户已明确授权创建 `v1.0.0` Tag/Release；演示视频仍需另行录制和人工复核。
+项目版本已提升为 `1.0.0`。真实 Docker P0 验收、覆盖恢复、独立 clean-clone 复验、最终回归和 GitHub Actions `33164825390` 已通过；`main` 与 `v1.0.0` Tag 已普通推送。按用户最后指示未创建 GitHub Release；3–5 分钟演示视频暂缓录制和人工复核。
