@@ -245,4 +245,4 @@ docker compose up -d
 
 ## 发布状态
 
-项目版本已提升为 `1.0.0`。真实 Docker P0 验收、覆盖恢复、独立 clean-clone 复验、最终回归和 GitHub Actions `33164825390` 已通过；`main` 与 `v1.0.0` Tag 已普通推送。按用户最后指示未创建 GitHub Release；3–5 分钟演示视频暂缓录制和人工复核。
+项目版本已提升为 `1.0.0`。真实 Docker P0 验收、覆盖恢复、独立 clean-clone 复验和最终回归已通过；`v1.0.0` 发布提交对应的 GitHub Actions 运行 `33164825390` 成功，后续文档提交也要求 CI 通过。`main` 与 `v1.0.0` Tag 已普通推送。按用户最后指示未创建 GitHub Release；3–5 分钟演示视频暂缓录制和人工复核。
