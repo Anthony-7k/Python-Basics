@@ -84,6 +84,16 @@ docker compose up --build -d
 docker compose ps
 ```
 
+Windows 环境可使用启动脚本。先打开 Docker Desktop，等待 Engine 就绪；需要下载且所在网络使用本地代理时，可按实际代理地址传入参数，例如：
+
+```powershell
+.\scripts\Start-Day21.ps1 -ProxyUrl 'http://127.0.0.1:7890'
+# 镜像已构建、代码未改变时，仅启动服务：
+.\scripts\Start-Day21.ps1 -SkipBuild
+```
+
+脚本默认从 `PATH` 自动查找 Docker；若 Docker CLI 未加入 `PATH`，可用 `-DockerBin` 指定其目录。`-ProxyUrl` 只在脚本运行期间作用于进程，结束后恢复原值，不修改系统代理或 `.env`，不删除容器卷。无需代理的网络可省略该参数。不要使用 `BUILDKIT_SYNTAX=dockerfile.v0` 绕过网络问题：在本次环境中它被解释为远程镜像名，不能解决授权端点连接问题。
+
 ### 3. 检查服务
 
 ```bash
@@ -101,6 +111,8 @@ curl http://127.0.0.1:8501/_stcore/health
 > 2026-08-28 已在 Docker Desktop 上完成真实镜像构建、四服务健康、两次端到端演示、`down/up` 持久化、日志脱敏抽查、三类备份生成/可读性校验及经授权的覆盖式恢复演练。详见 [`docs/day21_demo_release_runbook.md`](docs/day21_demo_release_runbook.md)。
 
 > 2026-08-31 又从远端 `main@0991533` 全新克隆，以独立镜像、端口和三类数据卷完成 `--no-cache` 构建、四服务健康、Alembic head、非 root/只读根文件系统、本地认证与知识库 CRUD、`down/up` 持久化、日志脱敏及 160 项离线回归。clean-clone 未在缺少具体数据外发授权时再次把样例发送给第三方模型；8 月 28 日原环境的两轮真实模型主链路证据仍然有效。
+
+> 2026-09-03 D 盘重装环境已重新构建并通过四服务健康、160 项测试、两轮授权的真实模型问答、`stop/up` 数据持久化、网页连接与文档列表复验。随后用户完整关机再开机，09:51 启动后的冷启动验收也通过：安全启动正常，原文档、会话、上传文件和向量索引保留，未重复调用模型。启动方式、证据及边界见 [`docs/day21_d_drive_revalidation.md`](docs/day21_d_drive_revalidation.md)。视频和人工口述按用户要求暂缓验收。
 
 ## 本地开发
 
