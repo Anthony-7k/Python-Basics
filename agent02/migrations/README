@@ -1,0 +1,5 @@
+Database migrations for the enterprise AI agent platform.
+
+The active database URL is read from ``DATABASE_URL`` through ``app.config``.
+Use ``alembic upgrade head`` for both empty databases and existing databases
+that have already been stamped at the Week 1 baseline.

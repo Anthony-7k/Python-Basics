@@ -1,0 +1,58 @@
+{
+  "generated_at": "2026-09-24T06:27:11.071833+00:00",
+  "passed": true,
+  "checks": [
+    {
+      "name": "ruff",
+      "passed": true,
+      "exit_code": 0,
+      "duration_seconds": 0.115,
+      "stdout_tail": "All checks passed!\n",
+      "stderr_tail": ""
+    },
+    {
+      "name": "format",
+      "passed": true,
+      "exit_code": 0,
+      "duration_seconds": 0.12,
+      "stdout_tail": "78 files already formatted\n",
+      "stderr_tail": ""
+    },
+    {
+      "name": "tests",
+      "passed": true,
+      "exit_code": 0,
+      "duration_seconds": 30.195,
+      "stdout_tail": "/capture-warnings.html\n=============================== tests coverage ================================\n______________ coverage: platform win32, python 3.12.14-final-0 _______________\n\nName                           Stmts   Miss  Cover   Missing\n------------------------------------------------------------\napp\\agent\\planner.py             129      7    95%   41, 43-44, 251, 270, 311-312\napp\\agent\\workflow.py            241     12    95%   203-204, 230-231, 448, 453, 457, 461, 482, 528-529, 535\napp\\api_v2.py                    104     18    83%   89, 100-101, 176-177, 216-224, 258-267, 315-338, 349-371\napp\\config.py                     79     14    82%   67, 85, 89, 91, 101, 103, 113-119, 130\napp\\database.py                  147      4    97%   231-235\napp\\domain.py                    149      1    99%   108\napp\\llm\\provider.py               59     15    75%   61, 73-109, 130\napp\\logging_config.py             39      5    87%   25, 27, 33, 47, 49\napp\\main.py                       96      6    94%   109-118, 207-208, 212\napp\\mcp_client.py                 35      5    86%   36-44, 46-47, 53\napp\\memory.py                     22      1    95%   45\napp\\observability\\metrics.py      55      2    96%   9, 96\napp\\repositories.py              126      5    96%   67, 75, 89-95, 249\napp\\security\\auth.py              44      2    95%   86, 93\napp\\service.py                   103      5    95%   176, 180, 202, 223, 226\napp\\tools\\base.py                 79      6    92%   58, 69, 71, 82, 142-143\napp\\tools\\factory.py              13      2    85%   28-34\napp\\tools\\knowledge.py            98      1    99%   159\napp\\tools\\mcp_tool.py             17      2    88%   26-27\napp\\tools\\standard.py             90      5    94%   33, 38-39, 123, 129\n------------------------------------------------------------\nTOTAL                           1809    118    93%\n\n9 files skipped due to complete coverage.\nRequired test coverage of 90% reached. Total coverage: 93.48%\n79 passed, 1 warning in 22.85s\n",
+      "stderr_tail": ""
+    },
+    {
+      "name": "week2-evaluation",
+      "passed": true,
+      "exit_code": 0,
+      "duration_seconds": 5.864,
+      "stdout_tail": "{\n  \"task_success_rate\": 1.0,\n  \"tool_selection_accuracy\": 1.0,\n  \"tool_execution_success_rate\": 0.9649122807017544,\n  \"average_steps\": 1.1,\n  \"average_token_usage\": null,\n  \"average_latency_ms\": 67.1863860002486\n}\npassed=50 failed=0\n",
+      "stderr_tail": "Processing request of type CallToolRequest\nProcessing request of type ListToolsRequest\nProcessing request of type CallToolRequest\nProcessing request of type ListToolsRequest\n"
+    },
+    {
+      "name": "empty-database-migration",
+      "passed": true,
+      "exit_code": 0,
+      "duration_seconds": 0.867,
+      "stdout_tail": "Database migration is at head\n",
+      "stderr_tail": "INFO  [alembic.runtime.migration] Context impl SQLiteImpl.\nINFO  [alembic.runtime.migration] Will assume non-transactional DDL.\nINFO  [alembic.runtime.migration] Running upgrade  -> b0097d8017cf, week1 baseline schema\nINFO  [alembic.runtime.migration] Running upgrade b0097d8017cf -> 9095d8de5244, tenant identity and audit\nINFO  [alembic.runtime.migration] Running upgrade 9095d8de5244 -> 8f77b62f034d, record llm calls\n"
+    },
+    {
+      "name": "web-build-artifact",
+      "passed": true,
+      "exit_code": 0,
+      "duration_seconds": 0,
+      "stdout_tail": "D:\\AI-Agent-Roadmap-2026\\Python-Basics\\agent02\\web\\dist\\index.html",
+      "stderr_tail": ""
+    }
+  ],
+  "external_credentials": {
+    "live_llm_evaluation": "not_run_by_offline_acceptance",
+    "agent01_evaluation": "not_run_by_offline_acceptance"
+  }
+}

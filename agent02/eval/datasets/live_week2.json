@@ -1,0 +1,22 @@
+[
+  {"id":"live-01","message":"查询公司年假制度","expected_tools":["knowledge"]},
+  {"id":"live-02","message":"公司年假有多少天","expected_tools":["knowledge"]},
+  {"id":"live-03","message":"查询上海差旅标准","expected_tools":["knowledge"]},
+  {"id":"live-04","message":"查询差旅报销政策并计算 2 天最高合计","expected_tools":["knowledge","calculator"]},
+  {"id":"live-05","message":"上海出差 4 天，查询标准并计算最高费用","expected_tools":["knowledge","calculator"]},
+  {"id":"live-06","message":"根据年假制度从 2026-10-12 安排 3 天休假方案","expected_tools":["knowledge","calendar"]},
+  {"id":"live-07","message":"计算 125.5 乘以 3","expected_tools":["calculator"]},
+  {"id":"live-08","message":"计算 81 除以 9","expected_tools":["calculator"]},
+  {"id":"live-09","message":"搜索本周公开行业信息","expected_tools":["search"]},
+  {"id":"live-10","message":"search public web information","expected_tools":["search"]},
+  {"id":"live-11","message":"创建任务：提交周报","expected_tools":["task"]},
+  {"id":"live-12","message":"创建提醒：发送合同","expected_tools":["task"]},
+  {"id":"live-13","message":"通过 MCP 查询年假制度","expected_tools":["mcp_company_policy"]},
+  {"id":"live-14","message":"演示故障恢复","expected_tools":["failure_demo"]},
+  {"id":"live-15","message":"你好","expected_tools":[]},
+  {"id":"live-16","message":"预测明年的精确销售额","expected_tools":[]},
+  {"id":"live-17","message":"写一篇没有背景资料的董事会报告","expected_tools":[]},
+  {"id":"live-18","message":"查询上海报销标准，计算 5 天合计上限","expected_tools":["knowledge","calculator"]},
+  {"id":"live-19","message":"依据年假制度从 2026-12-28 安排 4 天休假方案","expected_tools":["knowledge","calendar"]},
+  {"id":"live-20","message":"新增任务：完成第二周发布检查","expected_tools":["task"]}
+]

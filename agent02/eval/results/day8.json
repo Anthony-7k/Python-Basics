@@ -1,0 +1,565 @@
+{
+  "dataset": "portfolio_mvp.json",
+  "dataset_size": 30,
+  "generated_at": "2026-09-22T02:15:21.171607+00:00",
+  "configuration": {
+    "planner_mode": "rule_based",
+    "knowledge_backend": "sample",
+    "agent_max_steps": 10,
+    "tool_timeout_seconds": 10.0
+  },
+  "metrics": {
+    "task_success_rate": 1.0,
+    "tool_selection_accuracy": 1.0,
+    "tool_execution_success_rate": 0.9705882352941176,
+    "average_steps": 1.1,
+    "average_token_usage": null,
+    "average_latency_ms": 56.01131333290444
+  },
+  "passed": 30,
+  "failed": 0,
+  "cases": [
+    {
+      "id": "simple-01",
+      "category": "simple",
+      "passed": true,
+      "expected_status": "COMPLETED",
+      "actual_status": "COMPLETED",
+      "expected_tools": [],
+      "actual_tools": [],
+      "answer_ok": true,
+      "latency_ms": 29.41,
+      "steps": 0,
+      "retry_count": 0,
+      "error_type": null
+    },
+    {
+      "id": "simple-02",
+      "category": "simple",
+      "passed": true,
+      "expected_status": "COMPLETED",
+      "actual_status": "COMPLETED",
+      "expected_tools": [],
+      "actual_tools": [],
+      "answer_ok": true,
+      "latency_ms": 13.453,
+      "steps": 0,
+      "retry_count": 0,
+      "error_type": null
+    },
+    {
+      "id": "simple-03",
+      "category": "simple",
+      "passed": true,
+      "expected_status": "COMPLETED",
+      "actual_status": "COMPLETED",
+      "expected_tools": [],
+      "actual_tools": [],
+      "answer_ok": true,
+      "latency_ms": 13.861,
+      "steps": 0,
+      "retry_count": 0,
+      "error_type": null
+    },
+    {
+      "id": "unanswerable-01",
+      "category": "unanswerable",
+      "passed": true,
+      "expected_status": "COMPLETED",
+      "actual_status": "COMPLETED",
+      "expected_tools": [],
+      "actual_tools": [],
+      "answer_ok": true,
+      "latency_ms": 12.587,
+      "steps": 0,
+      "retry_count": 0,
+      "error_type": null
+    },
+    {
+      "id": "unanswerable-02",
+      "category": "unanswerable",
+      "passed": true,
+      "expected_status": "COMPLETED",
+      "actual_status": "COMPLETED",
+      "expected_tools": [],
+      "actual_tools": [],
+      "answer_ok": true,
+      "latency_ms": 12.795,
+      "steps": 0,
+      "retry_count": 0,
+      "error_type": null
+    },
+    {
+      "id": "tool-01",
+      "category": "tool_call",
+      "passed": true,
+      "expected_status": "COMPLETED",
+      "actual_status": "COMPLETED",
+      "expected_tools": [
+        "knowledge"
+      ],
+      "actual_tools": [
+        "knowledge"
+      ],
+      "answer_ok": true,
+      "latency_ms": 19.149,
+      "steps": 1,
+      "retry_count": 0,
+      "error_type": null
+    },
+    {
+      "id": "tool-02",
+      "category": "tool_call",
+      "passed": true,
+      "expected_status": "COMPLETED",
+      "actual_status": "COMPLETED",
+      "expected_tools": [
+        "knowledge"
+      ],
+      "actual_tools": [
+        "knowledge"
+      ],
+      "answer_ok": true,
+      "latency_ms": 16.623,
+      "steps": 1,
+      "retry_count": 0,
+      "error_type": null
+    },
+    {
+      "id": "tool-03",
+      "category": "tool_call",
+      "passed": true,
+      "expected_status": "COMPLETED",
+      "actual_status": "COMPLETED",
+      "expected_tools": [
+        "calculator"
+      ],
+      "actual_tools": [
+        "calculator"
+      ],
+      "answer_ok": true,
+      "latency_ms": 16.965,
+      "steps": 1,
+      "retry_count": 0,
+      "error_type": null
+    },
+    {
+      "id": "tool-04",
+      "category": "tool_call",
+      "passed": true,
+      "expected_status": "COMPLETED",
+      "actual_status": "COMPLETED",
+      "expected_tools": [
+        "search"
+      ],
+      "actual_tools": [
+        "search"
+      ],
+      "answer_ok": true,
+      "latency_ms": 16.686,
+      "steps": 1,
+      "retry_count": 0,
+      "error_type": null
+    },
+    {
+      "id": "tool-05",
+      "category": "tool_call",
+      "passed": true,
+      "expected_status": "COMPLETED",
+      "actual_status": "COMPLETED",
+      "expected_tools": [
+        "knowledge"
+      ],
+      "actual_tools": [
+        "knowledge"
+      ],
+      "answer_ok": true,
+      "latency_ms": 16.596,
+      "steps": 1,
+      "retry_count": 0,
+      "error_type": null
+    },
+    {
+      "id": "multi-tool-01",
+      "category": "multi_tool",
+      "passed": true,
+      "expected_status": "COMPLETED",
+      "actual_status": "COMPLETED",
+      "expected_tools": [
+        "knowledge",
+        "calculator"
+      ],
+      "actual_tools": [
+        "knowledge",
+        "calculator"
+      ],
+      "answer_ok": true,
+      "latency_ms": 21.22,
+      "steps": 2,
+      "retry_count": 0,
+      "error_type": null
+    },
+    {
+      "id": "multi-tool-02",
+      "category": "multi_tool",
+      "passed": true,
+      "expected_status": "COMPLETED",
+      "actual_status": "COMPLETED",
+      "expected_tools": [
+        "knowledge",
+        "calculator"
+      ],
+      "actual_tools": [
+        "knowledge",
+        "calculator"
+      ],
+      "answer_ok": true,
+      "latency_ms": 29.313,
+      "steps": 2,
+      "retry_count": 0,
+      "error_type": null
+    },
+    {
+      "id": "multi-tool-03",
+      "category": "multi_tool",
+      "passed": true,
+      "expected_status": "COMPLETED",
+      "actual_status": "COMPLETED",
+      "expected_tools": [
+        "knowledge",
+        "calculator"
+      ],
+      "actual_tools": [
+        "knowledge",
+        "calculator"
+      ],
+      "answer_ok": true,
+      "latency_ms": 35.121,
+      "steps": 2,
+      "retry_count": 0,
+      "error_type": null
+    },
+    {
+      "id": "multi-tool-04",
+      "category": "multi_tool",
+      "passed": true,
+      "expected_status": "COMPLETED",
+      "actual_status": "COMPLETED",
+      "expected_tools": [
+        "knowledge",
+        "calculator"
+      ],
+      "actual_tools": [
+        "knowledge",
+        "calculator"
+      ],
+      "answer_ok": true,
+      "latency_ms": 33.777,
+      "steps": 2,
+      "retry_count": 0,
+      "error_type": null
+    },
+    {
+      "id": "multi-tool-05",
+      "category": "multi_tool",
+      "passed": true,
+      "expected_status": "COMPLETED",
+      "actual_status": "COMPLETED",
+      "expected_tools": [
+        "knowledge",
+        "calculator"
+      ],
+      "actual_tools": [
+        "knowledge",
+        "calculator"
+      ],
+      "answer_ok": true,
+      "latency_ms": 32.997,
+      "steps": 2,
+      "retry_count": 0,
+      "error_type": null
+    },
+    {
+      "id": "multi-step-01",
+      "category": "multi_step",
+      "passed": true,
+      "expected_status": "COMPLETED",
+      "actual_status": "COMPLETED",
+      "expected_tools": [
+        "knowledge",
+        "calendar"
+      ],
+      "actual_tools": [
+        "knowledge",
+        "calendar"
+      ],
+      "answer_ok": true,
+      "latency_ms": 34.626,
+      "steps": 2,
+      "retry_count": 0,
+      "error_type": null
+    },
+    {
+      "id": "multi-step-02",
+      "category": "multi_step",
+      "passed": true,
+      "expected_status": "COMPLETED",
+      "actual_status": "COMPLETED",
+      "expected_tools": [
+        "knowledge",
+        "calendar"
+      ],
+      "actual_tools": [
+        "knowledge",
+        "calendar"
+      ],
+      "answer_ok": true,
+      "latency_ms": 32.088,
+      "steps": 2,
+      "retry_count": 0,
+      "error_type": null
+    },
+    {
+      "id": "multi-step-03",
+      "category": "multi_step",
+      "passed": true,
+      "expected_status": "COMPLETED",
+      "actual_status": "COMPLETED",
+      "expected_tools": [
+        "knowledge",
+        "calendar"
+      ],
+      "actual_tools": [
+        "knowledge",
+        "calendar"
+      ],
+      "answer_ok": true,
+      "latency_ms": 41.94,
+      "steps": 2,
+      "retry_count": 0,
+      "error_type": null
+    },
+    {
+      "id": "multi-step-04",
+      "category": "multi_step",
+      "passed": true,
+      "expected_status": "COMPLETED",
+      "actual_status": "COMPLETED",
+      "expected_tools": [
+        "knowledge",
+        "calendar"
+      ],
+      "actual_tools": [
+        "knowledge",
+        "calendar"
+      ],
+      "answer_ok": true,
+      "latency_ms": 43.558,
+      "steps": 2,
+      "retry_count": 0,
+      "error_type": null
+    },
+    {
+      "id": "multi-step-05",
+      "category": "multi_step",
+      "passed": true,
+      "expected_status": "COMPLETED",
+      "actual_status": "COMPLETED",
+      "expected_tools": [
+        "knowledge",
+        "calendar"
+      ],
+      "actual_tools": [
+        "knowledge",
+        "calendar"
+      ],
+      "answer_ok": true,
+      "latency_ms": 34.813,
+      "steps": 2,
+      "retry_count": 0,
+      "error_type": null
+    },
+    {
+      "id": "approval-01",
+      "category": "approval",
+      "passed": true,
+      "expected_status": "COMPLETED",
+      "actual_status": "COMPLETED",
+      "expected_tools": [
+        "task"
+      ],
+      "actual_tools": [
+        "task"
+      ],
+      "answer_ok": true,
+      "latency_ms": 50.693,
+      "steps": 1,
+      "retry_count": 0,
+      "error_type": null
+    },
+    {
+      "id": "approval-02",
+      "category": "approval",
+      "passed": true,
+      "expected_status": "FAILED",
+      "actual_status": "FAILED",
+      "expected_tools": [
+        "task"
+      ],
+      "actual_tools": [
+        "task"
+      ],
+      "answer_ok": true,
+      "latency_ms": 26.054,
+      "steps": 0,
+      "retry_count": 0,
+      "error_type": "approval_rejected"
+    },
+    {
+      "id": "approval-03",
+      "category": "approval",
+      "passed": true,
+      "expected_status": "COMPLETED",
+      "actual_status": "COMPLETED",
+      "expected_tools": [
+        "task"
+      ],
+      "actual_tools": [
+        "task"
+      ],
+      "answer_ok": true,
+      "latency_ms": 57.452,
+      "steps": 1,
+      "retry_count": 0,
+      "error_type": null
+    },
+    {
+      "id": "approval-04",
+      "category": "approval",
+      "passed": true,
+      "expected_status": "COMPLETED",
+      "actual_status": "COMPLETED",
+      "expected_tools": [
+        "task"
+      ],
+      "actual_tools": [
+        "task"
+      ],
+      "answer_ok": true,
+      "latency_ms": 64.37,
+      "steps": 1,
+      "retry_count": 0,
+      "error_type": null
+    },
+    {
+      "id": "approval-05",
+      "category": "approval",
+      "passed": true,
+      "expected_status": "FAILED",
+      "actual_status": "FAILED",
+      "expected_tools": [
+        "task"
+      ],
+      "actual_tools": [
+        "task"
+      ],
+      "answer_ok": true,
+      "latency_ms": 25.818,
+      "steps": 0,
+      "retry_count": 0,
+      "error_type": "approval_rejected"
+    },
+    {
+      "id": "failure-01",
+      "category": "failure",
+      "passed": true,
+      "expected_status": "COMPLETED",
+      "actual_status": "COMPLETED",
+      "expected_tools": [
+        "failure_demo"
+      ],
+      "actual_tools": [
+        "failure_demo"
+      ],
+      "answer_ok": true,
+      "latency_ms": 88.938,
+      "steps": 1,
+      "retry_count": 1,
+      "error_type": null
+    },
+    {
+      "id": "failure-02",
+      "category": "failure",
+      "passed": true,
+      "expected_status": "COMPLETED",
+      "actual_status": "COMPLETED",
+      "expected_tools": [
+        "failure_demo"
+      ],
+      "actual_tools": [
+        "failure_demo"
+      ],
+      "answer_ok": true,
+      "latency_ms": 93.857,
+      "steps": 1,
+      "retry_count": 1,
+      "error_type": null
+    },
+    {
+      "id": "failure-03",
+      "category": "failure",
+      "passed": true,
+      "expected_status": "FAILED",
+      "actual_status": "FAILED",
+      "expected_tools": [
+        "knowledge",
+        "calculator"
+      ],
+      "actual_tools": [
+        "knowledge",
+        "calculator"
+      ],
+      "answer_ok": true,
+      "latency_ms": 34.552,
+      "steps": 1,
+      "retry_count": 0,
+      "error_type": "max_steps_exceeded"
+    },
+    {
+      "id": "failure-04",
+      "category": "failure",
+      "passed": true,
+      "expected_status": "COMPLETED",
+      "actual_status": "COMPLETED",
+      "expected_tools": [
+        "failure_demo"
+      ],
+      "actual_tools": [
+        "failure_demo"
+      ],
+      "answer_ok": true,
+      "latency_ms": 60.891,
+      "steps": 1,
+      "retry_count": 0,
+      "error_type": null
+    },
+    {
+      "id": "mcp-01",
+      "category": "tool_call",
+      "passed": true,
+      "expected_status": "COMPLETED",
+      "actual_status": "COMPLETED",
+      "expected_tools": [
+        "mcp_company_policy"
+      ],
+      "actual_tools": [
+        "mcp_company_policy"
+      ],
+      "answer_ok": true,
+      "latency_ms": 670.136,
+      "steps": 1,
+      "retry_count": 0,
+      "error_type": null
+    }
+  ]
+}

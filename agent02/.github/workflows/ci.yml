@@ -1,0 +1,53 @@
+name: agent02-ci
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install dependencies
+        run: python -m pip install -e ".[dev]"
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.19.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: pnpm
+          cache-dependency-path: web/pnpm-lock.yaml
+      - name: Build Web console
+        working-directory: web
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm run build
+      - name: Lint and formatting
+        run: |
+          ruff check .
+          ruff format --check .
+      - name: Migration smoke test
+        env:
+          APP_ENV: integration
+          DATABASE_URL: sqlite:///./data/ci.db
+        run: |
+          mkdir -p data
+          python scripts/migrate.py
+          alembic current
+      - name: Unit and integration tests
+        run: pytest --cov=app --cov-report=term-missing --cov-fail-under=90 -q
+      - name: Evaluation smoke test
+        run: python -m eval.run_eval --dataset eval/datasets/week2.json --output eval/results/ci.json
+      - name: Validate Compose configuration
+        run: docker compose config --quiet

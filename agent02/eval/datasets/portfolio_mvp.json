@@ -1,0 +1,37 @@
+[
+  {"id":"simple-01","category":"simple","message":"你好","expected_status":"COMPLETED","expected_tools":[],"answer_contains":"无法可靠完成"},
+  {"id":"simple-02","category":"simple","message":"请解释量子纠缠","expected_status":"COMPLETED","expected_tools":[],"answer_contains":"无法可靠完成"},
+  {"id":"simple-03","category":"simple","message":"写一篇营销文案","expected_status":"COMPLETED","expected_tools":[],"answer_contains":"无法可靠完成"},
+  {"id":"unanswerable-01","category":"unanswerable","message":"预测明年的精确销售额","expected_status":"COMPLETED","expected_tools":[],"answer_contains":"无法可靠完成"},
+  {"id":"unanswerable-02","category":"unanswerable","message":"替我决定所有公司战略","expected_status":"COMPLETED","expected_tools":[],"answer_contains":"无法可靠完成"},
+
+  {"id":"tool-01","category":"tool_call","message":"查询公司年假制度","expected_status":"COMPLETED","expected_tools":["knowledge"],"answer_contains":"10 天"},
+  {"id":"tool-02","category":"tool_call","message":"查询公司的年假政策","expected_status":"COMPLETED","expected_tools":["knowledge"],"answer_contains":"年假"},
+  {"id":"tool-03","category":"tool_call","message":"计算 125.5 乘以 3","expected_status":"COMPLETED","expected_tools":["calculator"],"answer_contains":"376.5"},
+  {"id":"tool-04","category":"tool_call","message":"搜索 public web information","expected_status":"COMPLETED","expected_tools":["search"],"answer_contains":"公共信息"},
+  {"id":"tool-05","category":"tool_call","message":"查询公司制度中的年假","expected_status":"COMPLETED","expected_tools":["knowledge"],"answer_contains":"年假"},
+
+  {"id":"multi-tool-01","category":"multi_tool","message":"查询上海差旅标准并计算 3 天最高报销金额","expected_status":"COMPLETED","expected_tools":["knowledge","calculator"],"answer_contains":"2250"},
+  {"id":"multi-tool-02","category":"multi_tool","message":"查询差旅报销政策并计算 2 天最高合计","expected_status":"COMPLETED","expected_tools":["knowledge","calculator"],"answer_contains":"1500"},
+  {"id":"multi-tool-03","category":"multi_tool","message":"上海出差 4 天，查询标准并计算最高费用","expected_status":"COMPLETED","expected_tools":["knowledge","calculator"],"answer_contains":"3000"},
+  {"id":"multi-tool-04","category":"multi_tool","message":"按差旅制度计算 1 天最高报销金额","expected_status":"COMPLETED","expected_tools":["knowledge","calculator"],"answer_contains":"750"},
+  {"id":"multi-tool-05","category":"multi_tool","message":"查询上海报销标准，计算 5 天合计上限","expected_status":"COMPLETED","expected_tools":["knowledge","calculator"],"answer_contains":"3750"},
+
+  {"id":"multi-step-01","category":"multi_step","message":"根据年假制度从 2026-09-07 安排 3 天休假方案","expected_status":"COMPLETED","expected_tools":["knowledge","calendar"],"answer_contains":"2026-09-09"},
+  {"id":"multi-step-02","category":"multi_step","message":"查询年假政策并从 2026-09-11 安排 2 天休假","expected_status":"COMPLETED","expected_tools":["knowledge","calendar"],"answer_contains":"2026-09-14"},
+  {"id":"multi-step-03","category":"multi_step","message":"制定从 2026-10-01 开始 1 天的休假方案并查询年假制度","expected_status":"COMPLETED","expected_tools":["knowledge","calendar"],"answer_contains":"2026-10-01"},
+  {"id":"multi-step-04","category":"multi_step","message":"依据年假制度从 2026-12-28 安排 4 天休假方案","expected_status":"COMPLETED","expected_tools":["knowledge","calendar"],"answer_contains":"2026-12-31"},
+  {"id":"multi-step-05","category":"multi_step","message":"根据休假政策从 2026-09-05 安排 2 天日期方案","expected_status":"COMPLETED","expected_tools":["knowledge","calendar"],"answer_contains":"2026-09-08"},
+
+  {"id":"approval-01","category":"approval","message":"创建任务：提交周报","approval_action":"approve","expected_status":"COMPLETED","expected_tools":["task"],"answer_contains":"任务已创建"},
+  {"id":"approval-02","category":"approval","message":"创建提醒：发送合同","approval_action":"reject","expected_status":"FAILED","expected_tools":["task"],"answer_contains":"Rejected"},
+  {"id":"approval-03","category":"approval","message":"新增任务：原始标题","approval_action":"approve","modified_payload":{"action":"create","title":"修改后的标题","due_date":"2026-09-10"},"expected_status":"COMPLETED","expected_tools":["task"],"answer_contains":"修改后的标题"},
+  {"id":"approval-04","category":"approval","message":"创建任务：准备演示","approval_action":"approve","expected_status":"COMPLETED","expected_tools":["task"],"answer_contains":"准备演示"},
+  {"id":"approval-05","category":"approval","message":"创建提醒：复查测试","approval_action":"reject","expected_status":"FAILED","expected_tools":["task"],"answer_contains":"Rejected"},
+
+  {"id":"failure-01","category":"failure","message":"演示故障恢复","expected_status":"COMPLETED","expected_tools":["failure_demo"],"answer_contains":"恢复成功"},
+  {"id":"failure-02","category":"failure","message":"failure recovery demo","expected_status":"COMPLETED","expected_tools":["failure_demo"],"answer_contains":"恢复成功"},
+  {"id":"failure-03","category":"failure","message":"查询差旅标准并计算 3 天上限","max_steps":1,"expected_status":"FAILED","expected_tools":["knowledge","calculator"],"answer_contains":"step limit"},
+  {"id":"failure-04","category":"failure","message":"演示故障恢复并从 Checkpoint 继续","tool_max_retries":0,"resume_on_failure":true,"expected_status":"COMPLETED","expected_tools":["failure_demo"],"answer_contains":"恢复成功"},
+  {"id":"mcp-01","category":"tool_call","message":"通过 MCP 查询年假制度","expected_status":"COMPLETED","expected_tools":["mcp_company_policy"],"answer_contains":"10 天"}
+]

@@ -1,0 +1,68 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: enterprise_agent
+      POSTGRES_USER: agent
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-local-demo-password}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U agent -d enterprise_agent"]
+      interval: 3s
+      timeout: 3s
+      retries: 15
+    volumes:
+      - agent02-postgres:/var/lib/postgresql/data
+
+  api:
+    build:
+      context: .
+      args:
+        NODE_IMAGE: ${NODE_IMAGE:-mirror.gcr.io/library/node:22-alpine}
+        BASE_IMAGE: ${BASE_IMAGE:-mirror.gcr.io/library/python:3.12-slim}
+    environment:
+      APP_ENV: integration
+      LOG_LEVEL: INFO
+      DATABASE_URL: postgresql+psycopg://agent:${POSTGRES_PASSWORD:-local-demo-password}@postgres:5432/enterprise_agent
+      AGENT_MAX_STEPS: 10
+      TOOL_TIMEOUT_SECONDS: 10
+      TOOL_MAX_RETRIES: 2
+      PLANNER_MODE: ${PLANNER_MODE:-rule_based}
+      LLM_API_KEY: ${LLM_API_KEY:-}
+      LLM_BASE_URL: ${LLM_BASE_URL:-https://api.openai.com/v1}
+      LLM_MODEL: ${LLM_MODEL:-gpt-4.1-mini}
+      LLM_TIMEOUT_SECONDS: ${LLM_TIMEOUT_SECONDS:-30}
+      LLM_MAX_RETRIES: ${LLM_MAX_RETRIES:-2}
+      LLM_INPUT_COST_PER_MILLION: ${LLM_INPUT_COST_PER_MILLION:-}
+      LLM_OUTPUT_COST_PER_MILLION: ${LLM_OUTPUT_COST_PER_MILLION:-}
+      JWT_ISSUER: ${JWT_ISSUER:-enterprise-ai-agent}
+      JWT_AUDIENCE: ${JWT_AUDIENCE:-enterprise-ai-agent-api}
+      JWT_ALGORITHM: ${JWT_ALGORITHM:-HS256}
+      JWT_SECRET: ${JWT_SECRET:-local-demo-jwt-secret-change-me-32-bytes}
+      ALLOW_DEV_IDENTITY: ${ALLOW_DEV_IDENTITY:-true}
+      KNOWLEDGE_BACKEND: ${KNOWLEDGE_BACKEND:-sample}
+      AGENT01_BASE_URL: ${AGENT01_BASE_URL:-http://host.docker.internal:8000}
+      AGENT01_BEARER_TOKEN: ${AGENT01_BEARER_TOKEN:-}
+      AGENT01_KNOWLEDGE_BASE_ID: ${AGENT01_KNOWLEDGE_BASE_ID:-}
+      KNOWLEDGE_FALLBACK_TO_SAMPLE: ${KNOWLEDGE_FALLBACK_TO_SAMPLE:-true}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://127.0.0.1:8001}
+      PROMETHEUS_ENABLED: ${PROMETHEUS_ENABLED:-true}
+    ports:
+      - "${API_PORT:-8001}:8001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8001/ready', timeout=3)",
+        ]
+      interval: 5s
+      timeout: 4s
+      retries: 12
+    command: ["python", "-m", "scripts.start_api"]
+
+volumes:
+  agent02-postgres:
