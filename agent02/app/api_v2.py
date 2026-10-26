@@ -105,6 +105,28 @@ def issue_dev_token(payload: DevTokenRequest, request: Request) -> TokenResponse
     )
 
 
+@router.get("/workspace")
+def workspace(
+    request: Request,
+    identity: Annotated[UserContext, Depends(get_current_user)],
+) -> dict:
+    """Display the verified identity and non-secret runtime capabilities."""
+    settings = request.app.state.settings
+    return {
+        "subject": identity.subject,
+        "tenant_id": identity.tenant_id,
+        "roles": sorted(identity.roles),
+        "permissions": sorted(
+            permission.value
+            for permission in Permission
+            if has_permission(identity, permission)
+        ),
+        "environment": settings.app_env,
+        "planner_mode": settings.planner_mode,
+        "knowledge_backend": settings.knowledge_backend,
+    }
+
+
 @router.post("/agent/chat", response_model=AgentResponse)
 async def chat(
     payload: AgentV2Request,

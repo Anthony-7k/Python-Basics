@@ -33,6 +33,9 @@ jobs:
         run: |
           pnpm install --frozen-lockfile
           pnpm run build
+      - name: Web interaction regression tests
+        working-directory: web
+        run: pnpm test
       - name: Lint and formatting
         run: |
           ruff check .

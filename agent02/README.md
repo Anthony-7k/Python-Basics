@@ -13,6 +13,7 @@
 - 有上限的重试、超时、幂等写操作和 Checkpoint 恢复。
 - 自建 Enterprise Tools MCP Server 与 stdio Client。
 - React TypeScript Web 控制台、SSE 实时轨迹、历史任务和人工审批。
+- FlowPilot 工作台：任务搜索与筛选、按工作区保存的会话草稿、表单式审批、失败恢复、结果复制和 Markdown 导出；权限与工作区信息来自已验证身份。
 - Prometheus 指标、租户运行摘要、50 条第二周评测和五个固定 Demo。
 
 ## 本地启动
@@ -101,6 +102,7 @@ Invoke-RestMethod -Method Post -Uri http://127.0.0.1:8001/api/v1/agent/chat -Con
 .\.venv\Scripts\python.exe -m eval.run_eval --dataset eval/datasets/week2.json --output eval/results/week2.json
 pnpm --dir web install
 pnpm --dir web run build
+pnpm --dir web test
 .\.venv\Scripts\python.exe scripts/week2_acceptance.py
 .\.venv\Scripts\python.exe scripts/run_demos.py
 ```

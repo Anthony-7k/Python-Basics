@@ -159,6 +159,7 @@ class AgentResponse(BaseModel):
 
 
 class TaskView(AgentResponse):
+    message: str = ""
     user_id: str
     created_at: datetime
     updated_at: datetime

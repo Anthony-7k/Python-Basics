@@ -225,7 +225,9 @@ class AgentService:
         if checkpoint is None:
             raise InvalidTaskStateError("Task has no recoverable checkpoint")
         state = deepcopy(checkpoint.state_json)
-        state["resume_from_checkpoint"] = True
+        # A provider failure may happen before a plan exists. Such tasks need
+        # planning again, rather than skipping straight to an empty tool list.
+        state["resume_from_checkpoint"] = bool(state.get("planned_calls"))
         state["status"] = TaskStatus.RUNNING.value
         state["error"] = None
         final = await self._workflow().run(state)
@@ -243,6 +245,7 @@ class AgentService:
         response = self._response(state)
         return TaskView(
             **response.model_dump(),
+            message=record.message,
             user_id=record.user_id,
             created_at=record.created_at,
             updated_at=record.updated_at,

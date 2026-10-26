@@ -5,6 +5,7 @@
 | 方法 | 路径 | 权限 |
 | --- | --- | --- |
 | POST | `/api/v2/auth/dev-token` | 仅启用开发身份的非生产环境 |
+| GET | `/api/v2/workspace` | 有效 JWT，返回当前身份、角色、有效权限和非敏感运行模式 |
 | POST | `/api/v2/agent/chat` | `task:create` |
 | POST | `/api/v2/agent/chat/stream` | `task:create` |
 | GET | `/api/v2/tasks` | `task:read` |
@@ -32,5 +33,7 @@ Invoke-RestMethod -Method Post `
 ```
 
 v2 请求体只包含业务参数。`request_id` 和 `task_id` 由服务端生成，用户与租户来自 JWT。
+
+`GET /api/v2/tasks` 与任务详情返回的 `TaskView` 包含 `message`，即提交任务时的原始目标。前端以此作为任务标题；`answer` 保留用于展示执行结果。`/workspace` 不返回模型密钥、数据库连接串或其他凭据。
 
 流式接口使用标准 SSE，按运行情况发送 `task_created`、`planning`、`tool_started`、`tool_finished`、`approval_required`、`completed` 或 `failed`。每个事件的 `data` 都是 JSON；客户端断开后应通过任务查询接口恢复状态，不应自动重复提交。
