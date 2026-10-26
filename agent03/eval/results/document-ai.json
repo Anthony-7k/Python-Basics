@@ -1,0 +1,670 @@
+{
+  "dataset": "synthetic-docflow-v1",
+  "warning": "Synthetic raster variants are correlated; not real-world OCR accuracy.",
+  "ocr_backend": "rapidocr",
+  "extraction_backend": "deterministic",
+  "groups": {
+    "native": {
+      "samples": 5,
+      "failures": 0,
+      "classification_accuracy": 1.0,
+      "field_precision": 1.0,
+      "field_recall": 1.0,
+      "mean_latency_ms": 3.07,
+      "p95_latency_ms": 4.38
+    },
+    "scan": {
+      "samples": 5,
+      "failures": 0,
+      "classification_accuracy": 1.0,
+      "field_precision": 1.0,
+      "field_recall": 1.0,
+      "mean_latency_ms": 3035.78,
+      "p95_latency_ms": 4030.18
+    },
+    "rotated": {
+      "samples": 5,
+      "failures": 0,
+      "classification_accuracy": 1.0,
+      "field_precision": 1.0,
+      "field_recall": 1.0,
+      "mean_latency_ms": 2949.57,
+      "p95_latency_ms": 3182.11
+    },
+    "low_resolution": {
+      "samples": 5,
+      "failures": 0,
+      "classification_accuracy": 1.0,
+      "field_precision": 1.0,
+      "field_recall": 1.0,
+      "mean_latency_ms": 1610.51,
+      "p95_latency_ms": 1763.81
+    }
+  },
+  "records": [
+    {
+      "id": "contract-01",
+      "variant": "native",
+      "expected_classification": "contract",
+      "expected_fields": {
+        "contract_number": "HT-DEMO-01",
+        "party_a": "晨曦测试采购有限公司",
+        "party_b": "星河测试设备有限公司",
+        "total_amount": "120000.00",
+        "effective_date": "2026-09-01"
+      },
+      "status": "ok",
+      "model_usage": null,
+      "classification": "contract",
+      "actual_fields": {
+        "contract_number": "HT-DEMO-01",
+        "party_a": "晨曦测试采购有限公司",
+        "party_b": "星河测试设备有限公司",
+        "total_amount": "120000.00",
+        "effective_date": "2026-09-01"
+      },
+      "field_scores": {
+        "correct": 5,
+        "expected": 5,
+        "predicted": 5
+      },
+      "classification_correct": true,
+      "page_methods": [
+        "native"
+      ],
+      "latency_ms": 4.38
+    },
+    {
+      "id": "contract-01",
+      "variant": "scan",
+      "expected_classification": "contract",
+      "expected_fields": {
+        "contract_number": "HT-DEMO-01",
+        "party_a": "晨曦测试采购有限公司",
+        "party_b": "星河测试设备有限公司",
+        "total_amount": "120000.00",
+        "effective_date": "2026-09-01"
+      },
+      "status": "ok",
+      "model_usage": null,
+      "classification": "contract",
+      "actual_fields": {
+        "contract_number": "HT-DEMO-01",
+        "party_a": "晨曦测试采购有限公司",
+        "party_b": "星河测试设备有限公司",
+        "total_amount": "120000.00",
+        "effective_date": "2026-09-01"
+      },
+      "field_scores": {
+        "correct": 5,
+        "expected": 5,
+        "predicted": 5
+      },
+      "classification_correct": true,
+      "page_methods": [
+        "rapidocr"
+      ],
+      "latency_ms": 4030.18
+    },
+    {
+      "id": "contract-01",
+      "variant": "rotated",
+      "expected_classification": "contract",
+      "expected_fields": {
+        "contract_number": "HT-DEMO-01",
+        "party_a": "晨曦测试采购有限公司",
+        "party_b": "星河测试设备有限公司",
+        "total_amount": "120000.00",
+        "effective_date": "2026-09-01"
+      },
+      "status": "ok",
+      "model_usage": null,
+      "classification": "contract",
+      "actual_fields": {
+        "contract_number": "HT-DEMO-01",
+        "party_a": "晨曦测试采购有限公司",
+        "party_b": "星河测试设备有限公司",
+        "total_amount": "120000.00",
+        "effective_date": "2026-09-01"
+      },
+      "field_scores": {
+        "correct": 5,
+        "expected": 5,
+        "predicted": 5
+      },
+      "classification_correct": true,
+      "page_methods": [
+        "rapidocr"
+      ],
+      "latency_ms": 3051.79
+    },
+    {
+      "id": "contract-01",
+      "variant": "low_resolution",
+      "expected_classification": "contract",
+      "expected_fields": {
+        "contract_number": "HT-DEMO-01",
+        "party_a": "晨曦测试采购有限公司",
+        "party_b": "星河测试设备有限公司",
+        "total_amount": "120000.00",
+        "effective_date": "2026-09-01"
+      },
+      "status": "ok",
+      "model_usage": null,
+      "classification": "contract",
+      "actual_fields": {
+        "contract_number": "HT-DEMO-01",
+        "party_a": "晨曦测试采购有限公司",
+        "party_b": "星河测试设备有限公司",
+        "total_amount": "120000.00",
+        "effective_date": "2026-09-01"
+      },
+      "field_scores": {
+        "correct": 5,
+        "expected": 5,
+        "predicted": 5
+      },
+      "classification_correct": true,
+      "page_methods": [
+        "rapidocr"
+      ],
+      "latency_ms": 1700.0
+    },
+    {
+      "id": "order-01",
+      "variant": "native",
+      "expected_classification": "purchase_order",
+      "expected_fields": {
+        "order_number": "PO-DEMO-01",
+        "supplier": "星河测试设备有限公司",
+        "total_amount": "100000.00"
+      },
+      "status": "ok",
+      "model_usage": null,
+      "classification": "purchase_order",
+      "actual_fields": {
+        "order_number": "PO-DEMO-01",
+        "supplier": "星河测试设备有限公司",
+        "total_amount": "100000.00"
+      },
+      "field_scores": {
+        "correct": 3,
+        "expected": 3,
+        "predicted": 3
+      },
+      "classification_correct": true,
+      "page_methods": [
+        "native"
+      ],
+      "latency_ms": 2.15
+    },
+    {
+      "id": "order-01",
+      "variant": "scan",
+      "expected_classification": "purchase_order",
+      "expected_fields": {
+        "order_number": "PO-DEMO-01",
+        "supplier": "星河测试设备有限公司",
+        "total_amount": "100000.00"
+      },
+      "status": "ok",
+      "model_usage": null,
+      "classification": "purchase_order",
+      "actual_fields": {
+        "order_number": "PO-DEMO-01",
+        "supplier": "星河测试设备有限公司",
+        "total_amount": "100000.00"
+      },
+      "field_scores": {
+        "correct": 3,
+        "expected": 3,
+        "predicted": 3
+      },
+      "classification_correct": true,
+      "page_methods": [
+        "rapidocr"
+      ],
+      "latency_ms": 2665.27
+    },
+    {
+      "id": "order-01",
+      "variant": "rotated",
+      "expected_classification": "purchase_order",
+      "expected_fields": {
+        "order_number": "PO-DEMO-01",
+        "supplier": "星河测试设备有限公司",
+        "total_amount": "100000.00"
+      },
+      "status": "ok",
+      "model_usage": null,
+      "classification": "purchase_order",
+      "actual_fields": {
+        "order_number": "PO-DEMO-01",
+        "supplier": "星河测试设备有限公司",
+        "total_amount": "100000.00"
+      },
+      "field_scores": {
+        "correct": 3,
+        "expected": 3,
+        "predicted": 3
+      },
+      "classification_correct": true,
+      "page_methods": [
+        "rapidocr"
+      ],
+      "latency_ms": 2767.29
+    },
+    {
+      "id": "order-01",
+      "variant": "low_resolution",
+      "expected_classification": "purchase_order",
+      "expected_fields": {
+        "order_number": "PO-DEMO-01",
+        "supplier": "星河测试设备有限公司",
+        "total_amount": "100000.00"
+      },
+      "status": "ok",
+      "model_usage": null,
+      "classification": "purchase_order",
+      "actual_fields": {
+        "order_number": "PO-DEMO-01",
+        "supplier": "星河测试设备有限公司",
+        "total_amount": "100000.00"
+      },
+      "field_scores": {
+        "correct": 3,
+        "expected": 3,
+        "predicted": 3
+      },
+      "classification_correct": true,
+      "page_methods": [
+        "rapidocr"
+      ],
+      "latency_ms": 1599.55
+    },
+    {
+      "id": "invoice-01",
+      "variant": "native",
+      "expected_classification": "invoice",
+      "expected_fields": {
+        "invoice_number": "INV-DEMO-01-1",
+        "seller": "星河测试设备有限公司",
+        "tax_amount": "11504.42",
+        "total_with_tax": "100000.00",
+        "invoice_date": "2026-09-25"
+      },
+      "status": "ok",
+      "model_usage": null,
+      "classification": "invoice",
+      "actual_fields": {
+        "invoice_number": "INV-DEMO-01-1",
+        "seller": "星河测试设备有限公司",
+        "tax_amount": "11504.42",
+        "total_with_tax": "100000.00",
+        "invoice_date": "2026-09-25"
+      },
+      "field_scores": {
+        "correct": 5,
+        "expected": 5,
+        "predicted": 5
+      },
+      "classification_correct": true,
+      "page_methods": [
+        "native"
+      ],
+      "latency_ms": 3.68
+    },
+    {
+      "id": "invoice-01",
+      "variant": "scan",
+      "expected_classification": "invoice",
+      "expected_fields": {
+        "invoice_number": "INV-DEMO-01-1",
+        "seller": "星河测试设备有限公司",
+        "tax_amount": "11504.42",
+        "total_with_tax": "100000.00",
+        "invoice_date": "2026-09-25"
+      },
+      "status": "ok",
+      "model_usage": null,
+      "classification": "invoice",
+      "actual_fields": {
+        "invoice_number": "INV-DEMO-01-1",
+        "seller": "星河测试设备有限公司",
+        "tax_amount": "11504.42",
+        "total_with_tax": "100000.00",
+        "invoice_date": "2026-09-25"
+      },
+      "field_scores": {
+        "correct": 5,
+        "expected": 5,
+        "predicted": 5
+      },
+      "classification_correct": true,
+      "page_methods": [
+        "rapidocr"
+      ],
+      "latency_ms": 2745.08
+    },
+    {
+      "id": "invoice-01",
+      "variant": "rotated",
+      "expected_classification": "invoice",
+      "expected_fields": {
+        "invoice_number": "INV-DEMO-01-1",
+        "seller": "星河测试设备有限公司",
+        "tax_amount": "11504.42",
+        "total_with_tax": "100000.00",
+        "invoice_date": "2026-09-25"
+      },
+      "status": "ok",
+      "model_usage": null,
+      "classification": "invoice",
+      "actual_fields": {
+        "invoice_number": "INV-DEMO-01-1",
+        "seller": "星河测试设备有限公司",
+        "tax_amount": "11504.42",
+        "total_with_tax": "100000.00",
+        "invoice_date": "2026-09-25"
+      },
+      "field_scores": {
+        "correct": 5,
+        "expected": 5,
+        "predicted": 5
+      },
+      "classification_correct": true,
+      "page_methods": [
+        "rapidocr"
+      ],
+      "latency_ms": 3182.11
+    },
+    {
+      "id": "invoice-01",
+      "variant": "low_resolution",
+      "expected_classification": "invoice",
+      "expected_fields": {
+        "invoice_number": "INV-DEMO-01-1",
+        "seller": "星河测试设备有限公司",
+        "tax_amount": "11504.42",
+        "total_with_tax": "100000.00",
+        "invoice_date": "2026-09-25"
+      },
+      "status": "ok",
+      "model_usage": null,
+      "classification": "invoice",
+      "actual_fields": {
+        "invoice_number": "INV-DEMO-01-1",
+        "seller": "星河测试设备有限公司",
+        "tax_amount": "11504.42",
+        "total_with_tax": "100000.00",
+        "invoice_date": "2026-09-25"
+      },
+      "field_scores": {
+        "correct": 5,
+        "expected": 5,
+        "predicted": 5
+      },
+      "classification_correct": true,
+      "page_methods": [
+        "rapidocr"
+      ],
+      "latency_ms": 1763.81
+    },
+    {
+      "id": "over-limit",
+      "variant": "native",
+      "expected_classification": "invoice",
+      "expected_fields": {
+        "invoice_number": "INV-DEMO-02-1",
+        "seller": "星河测试设备有限公司",
+        "tax_amount": "11504.42",
+        "total_with_tax": "125000.00",
+        "invoice_date": "2026-09-25"
+      },
+      "status": "ok",
+      "model_usage": null,
+      "classification": "invoice",
+      "actual_fields": {
+        "invoice_number": "INV-DEMO-02-1",
+        "seller": "星河测试设备有限公司",
+        "tax_amount": "11504.42",
+        "total_with_tax": "125000.00",
+        "invoice_date": "2026-09-25"
+      },
+      "field_scores": {
+        "correct": 5,
+        "expected": 5,
+        "predicted": 5
+      },
+      "classification_correct": true,
+      "page_methods": [
+        "native"
+      ],
+      "latency_ms": 2.68
+    },
+    {
+      "id": "over-limit",
+      "variant": "scan",
+      "expected_classification": "invoice",
+      "expected_fields": {
+        "invoice_number": "INV-DEMO-02-1",
+        "seller": "星河测试设备有限公司",
+        "tax_amount": "11504.42",
+        "total_with_tax": "125000.00",
+        "invoice_date": "2026-09-25"
+      },
+      "status": "ok",
+      "model_usage": null,
+      "classification": "invoice",
+      "actual_fields": {
+        "invoice_number": "INV-DEMO-02-1",
+        "seller": "星河测试设备有限公司",
+        "tax_amount": "11504.42",
+        "total_with_tax": "125000.00",
+        "invoice_date": "2026-09-25"
+      },
+      "field_scores": {
+        "correct": 5,
+        "expected": 5,
+        "predicted": 5
+      },
+      "classification_correct": true,
+      "page_methods": [
+        "rapidocr"
+      ],
+      "latency_ms": 2803.18
+    },
+    {
+      "id": "over-limit",
+      "variant": "rotated",
+      "expected_classification": "invoice",
+      "expected_fields": {
+        "invoice_number": "INV-DEMO-02-1",
+        "seller": "星河测试设备有限公司",
+        "tax_amount": "11504.42",
+        "total_with_tax": "125000.00",
+        "invoice_date": "2026-09-25"
+      },
+      "status": "ok",
+      "model_usage": null,
+      "classification": "invoice",
+      "actual_fields": {
+        "invoice_number": "INV-DEMO-02-1",
+        "seller": "星河测试设备有限公司",
+        "tax_amount": "11504.42",
+        "total_with_tax": "125000.00",
+        "invoice_date": "2026-09-25"
+      },
+      "field_scores": {
+        "correct": 5,
+        "expected": 5,
+        "predicted": 5
+      },
+      "classification_correct": true,
+      "page_methods": [
+        "rapidocr"
+      ],
+      "latency_ms": 2829.87
+    },
+    {
+      "id": "over-limit",
+      "variant": "low_resolution",
+      "expected_classification": "invoice",
+      "expected_fields": {
+        "invoice_number": "INV-DEMO-02-1",
+        "seller": "星河测试设备有限公司",
+        "tax_amount": "11504.42",
+        "total_with_tax": "125000.00",
+        "invoice_date": "2026-09-25"
+      },
+      "status": "ok",
+      "model_usage": null,
+      "classification": "invoice",
+      "actual_fields": {
+        "invoice_number": "INV-DEMO-02-1",
+        "seller": "星河测试设备有限公司",
+        "tax_amount": "11504.42",
+        "total_with_tax": "125000.00",
+        "invoice_date": "2026-09-25"
+      },
+      "field_scores": {
+        "correct": 5,
+        "expected": 5,
+        "predicted": 5
+      },
+      "classification_correct": true,
+      "page_methods": [
+        "rapidocr"
+      ],
+      "latency_ms": 1480.09
+    },
+    {
+      "id": "mismatch",
+      "variant": "native",
+      "expected_classification": "invoice",
+      "expected_fields": {
+        "invoice_number": "INV-DEMO-03-1",
+        "seller": "远航测试贸易有限公司",
+        "tax_amount": "11504.42",
+        "total_with_tax": "100000.00",
+        "invoice_date": "2026-08-20"
+      },
+      "status": "ok",
+      "model_usage": null,
+      "classification": "invoice",
+      "actual_fields": {
+        "invoice_number": "INV-DEMO-03-1",
+        "seller": "远航测试贸易有限公司",
+        "tax_amount": "11504.42",
+        "total_with_tax": "100000.00",
+        "invoice_date": "2026-08-20"
+      },
+      "field_scores": {
+        "correct": 5,
+        "expected": 5,
+        "predicted": 5
+      },
+      "classification_correct": true,
+      "page_methods": [
+        "native"
+      ],
+      "latency_ms": 2.47
+    },
+    {
+      "id": "mismatch",
+      "variant": "scan",
+      "expected_classification": "invoice",
+      "expected_fields": {
+        "invoice_number": "INV-DEMO-03-1",
+        "seller": "远航测试贸易有限公司",
+        "tax_amount": "11504.42",
+        "total_with_tax": "100000.00",
+        "invoice_date": "2026-08-20"
+      },
+      "status": "ok",
+      "model_usage": null,
+      "classification": "invoice",
+      "actual_fields": {
+        "invoice_number": "INV-DEMO-03-1",
+        "seller": "远航测试贸易有限公司",
+        "tax_amount": "11504.42",
+        "total_with_tax": "100000.00",
+        "invoice_date": "2026-08-20"
+      },
+      "field_scores": {
+        "correct": 5,
+        "expected": 5,
+        "predicted": 5
+      },
+      "classification_correct": true,
+      "page_methods": [
+        "rapidocr"
+      ],
+      "latency_ms": 2935.19
+    },
+    {
+      "id": "mismatch",
+      "variant": "rotated",
+      "expected_classification": "invoice",
+      "expected_fields": {
+        "invoice_number": "INV-DEMO-03-1",
+        "seller": "远航测试贸易有限公司",
+        "tax_amount": "11504.42",
+        "total_with_tax": "100000.00",
+        "invoice_date": "2026-08-20"
+      },
+      "status": "ok",
+      "model_usage": null,
+      "classification": "invoice",
+      "actual_fields": {
+        "invoice_number": "INV-DEMO-03-1",
+        "seller": "远航测试贸易有限公司",
+        "tax_amount": "11504.42",
+        "total_with_tax": "100000.00",
+        "invoice_date": "2026-08-20"
+      },
+      "field_scores": {
+        "correct": 5,
+        "expected": 5,
+        "predicted": 5
+      },
+      "classification_correct": true,
+      "page_methods": [
+        "rapidocr"
+      ],
+      "latency_ms": 2916.81
+    },
+    {
+      "id": "mismatch",
+      "variant": "low_resolution",
+      "expected_classification": "invoice",
+      "expected_fields": {
+        "invoice_number": "INV-DEMO-03-1",
+        "seller": "远航测试贸易有限公司",
+        "tax_amount": "11504.42",
+        "total_with_tax": "100000.00",
+        "invoice_date": "2026-08-20"
+      },
+      "status": "ok",
+      "model_usage": null,
+      "classification": "invoice",
+      "actual_fields": {
+        "invoice_number": "INV-DEMO-03-1",
+        "seller": "远航测试贸易有限公司",
+        "tax_amount": "11504.42",
+        "total_with_tax": "100000.00",
+        "invoice_date": "2026-08-20"
+      },
+      "field_scores": {
+        "correct": 5,
+        "expected": 5,
+        "predicted": 5
+      },
+      "classification_correct": true,
+      "page_methods": [
+        "rapidocr"
+      ],
+      "latency_ms": 1509.09
+    }
+  ]
+}

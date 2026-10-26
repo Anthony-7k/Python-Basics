@@ -1,0 +1,84 @@
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_DB: docflow
+      POSTGRES_USER: docflow
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-docflow-local}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U docflow -d docflow"]
+      interval: 5s
+      timeout: 3s
+      retries: 15
+    volumes: ["postgres_data:/var/lib/postgresql/data"]
+
+  redis:
+    image: redis:7-alpine
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 15
+
+  minio:
+    image: minio/minio:latest
+    command: server /data --console-address :9001
+    environment:
+      MINIO_ROOT_USER: ${S3_ACCESS_KEY:-docflow}
+      MINIO_ROOT_PASSWORD: ${S3_SECRET_KEY:-docflow-local-secret}
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 5s
+      timeout: 3s
+      retries: 15
+    volumes: ["minio_data:/data"]
+
+  api:
+    build: .
+    environment: &app-env
+      APP_ENV: integration
+      SECRET_KEY: ${SECRET_KEY:-replace-before-production-1234567890}
+      DATABASE_URL: postgresql+psycopg://docflow:${POSTGRES_PASSWORD:-docflow-local}@postgres:5432/docflow
+      AUTO_CREATE_SCHEMA: "false"
+      SEED_DEMO_DATA: "true"
+      OBJECT_STORAGE_BACKEND: s3
+      S3_ENDPOINT: http://minio:9000
+      S3_BUCKET: docflow
+      S3_ACCESS_KEY: ${S3_ACCESS_KEY:-docflow}
+      S3_SECRET_KEY: ${S3_SECRET_KEY:-docflow-local-secret}
+      VIRUS_SCANNER_BACKEND: fake
+      REPORT_RENDERER_BACKEND: pymupdf
+      TASK_QUEUE_BACKEND: celery
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/1
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_healthy }
+      minio: { condition: service_healthy }
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8003/health/ready')"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+    ports: ["8003:8003"]
+
+  worker:
+    build: .
+    command: celery -A app.worker.celery_app worker --loglevel=INFO --concurrency=2
+    environment: *app-env
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_healthy }
+      minio: { condition: service_healthy }
+
+  web:
+    build: ./web
+    depends_on:
+      api: { condition: service_healthy }
+    ports: ["8083:80"]
+
+volumes:
+  postgres_data:
+  minio_data:
+

@@ -1,0 +1,14 @@
+.git
+.env
+.env.*
+.pnpm-store
+*.egg-info
+tmp
+output
+.venv
+__pycache__
+.pytest_cache
+data
+web/node_modules
+web/dist
+

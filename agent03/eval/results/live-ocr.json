@@ -1,0 +1,51 @@
+{
+  "fictional": true,
+  "case_id": "a1541e2d-f7f8-40ca-a517-842a7536dcd0",
+  "job_id": "46a63cd4-44da-437c-afbb-e749cfad088d",
+  "status": "SUCCEEDED",
+  "risks": [],
+  "extractions": [
+    {
+      "document_id": "55a07b9b-f3f6-4a71-a1c2-a9ba683c7996",
+      "classification": "contract",
+      "fields": 5,
+      "metadata": {
+        "provider": "deterministic",
+        "model": null,
+        "cost": null,
+        "page_methods": [
+          "rapidocr"
+        ],
+        "total_latency_ms": 4669.89
+      }
+    },
+    {
+      "document_id": "1de72d14-eae7-459c-8653-50562185146c",
+      "classification": "purchase_order",
+      "fields": 3,
+      "metadata": {
+        "provider": "deterministic",
+        "model": null,
+        "cost": null,
+        "page_methods": [
+          "rapidocr"
+        ],
+        "total_latency_ms": 3065.71
+      }
+    },
+    {
+      "document_id": "3b27547c-ceb8-42ad-a593-5a8d0d68e185",
+      "classification": "invoice",
+      "fields": 5,
+      "metadata": {
+        "provider": "deterministic",
+        "model": null,
+        "cost": null,
+        "page_methods": [
+          "rapidocr"
+        ],
+        "total_latency_ms": 3320.28
+      }
+    }
+  ]
+}

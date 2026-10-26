@@ -1,0 +1,84 @@
+{
+  "fictional": true,
+  "cases": [
+    {
+      "folder": "01_正常三单",
+      "title": "模拟审查 正常三单",
+      "expected": [],
+      "amount": "100000.00",
+      "seller": "星河测试设备有限公司",
+      "date": "2026-09-25",
+      "invoices": 1,
+      "files": [
+        "01_正常三单\\采购合同.pdf",
+        "01_正常三单\\采购单.pdf",
+        "01_正常三单\\模拟发票.pdf"
+      ]
+    },
+    {
+      "folder": "02_金额超限",
+      "title": "模拟审查 金额超限",
+      "expected": [
+        "AMOUNT_HIERARCHY"
+      ],
+      "amount": "125000.00",
+      "seller": "星河测试设备有限公司",
+      "date": "2026-09-25",
+      "invoices": 1,
+      "files": [
+        "02_金额超限\\采购合同.pdf",
+        "02_金额超限\\采购单.pdf",
+        "02_金额超限\\模拟发票.pdf"
+      ]
+    },
+    {
+      "folder": "03_主体与日期异常",
+      "title": "模拟审查 主体与日期异常",
+      "expected": [
+        "SUPPLIER_MATCH",
+        "DATE_SEQUENCE"
+      ],
+      "amount": "100000.00",
+      "seller": "远航测试贸易有限公司",
+      "date": "2026-08-20",
+      "invoices": 1,
+      "files": [
+        "03_主体与日期异常\\采购合同.pdf",
+        "03_主体与日期异常\\采购单.pdf",
+        "03_主体与日期异常\\模拟发票.pdf"
+      ]
+    },
+    {
+      "folder": "04_缺少发票",
+      "title": "模拟审查 缺少发票",
+      "expected": [
+        "REQUIRED_DOCUMENTS"
+      ],
+      "amount": "100000.00",
+      "seller": "星河测试设备有限公司",
+      "date": "2026-09-25",
+      "invoices": 0,
+      "files": [
+        "04_缺少发票\\采购合同.pdf",
+        "04_缺少发票\\采购单.pdf"
+      ]
+    },
+    {
+      "folder": "05_多发票待人工匹配",
+      "title": "模拟审查 多发票待人工匹配",
+      "expected": [
+        "AMBIGUOUS_DOCUMENT_SET"
+      ],
+      "amount": "100000.00",
+      "seller": "星河测试设备有限公司",
+      "date": "2026-09-25",
+      "invoices": 2,
+      "files": [
+        "05_多发票待人工匹配\\采购合同.pdf",
+        "05_多发票待人工匹配\\采购单.pdf",
+        "05_多发票待人工匹配\\模拟发票_1.pdf",
+        "05_多发票待人工匹配\\模拟发票_2.pdf"
+      ]
+    }
+  ]
+}

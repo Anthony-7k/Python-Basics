@@ -1,0 +1,7 @@
+[
+  {"id":"contract-01","file":"01_正常三单/采购合同.pdf","classification":"contract","fields":{"contract_number":"HT-DEMO-01","party_a":"晨曦测试采购有限公司","party_b":"星河测试设备有限公司","total_amount":"120000.00","effective_date":"2026-09-01"}},
+  {"id":"order-01","file":"01_正常三单/采购单.pdf","classification":"purchase_order","fields":{"order_number":"PO-DEMO-01","supplier":"星河测试设备有限公司","total_amount":"100000.00"}},
+  {"id":"invoice-01","file":"01_正常三单/模拟发票.pdf","classification":"invoice","fields":{"invoice_number":"INV-DEMO-01-1","seller":"星河测试设备有限公司","tax_amount":"11504.42","total_with_tax":"100000.00","invoice_date":"2026-09-25"}},
+  {"id":"over-limit","file":"02_金额超限/模拟发票.pdf","classification":"invoice","fields":{"invoice_number":"INV-DEMO-02-1","seller":"星河测试设备有限公司","tax_amount":"11504.42","total_with_tax":"125000.00","invoice_date":"2026-09-25"}},
+  {"id":"mismatch","file":"03_主体与日期异常/模拟发票.pdf","classification":"invoice","fields":{"invoice_number":"INV-DEMO-03-1","seller":"远航测试贸易有限公司","tax_amount":"11504.42","total_with_tax":"100000.00","invoice_date":"2026-08-20"}}
+]

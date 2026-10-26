@@ -1,0 +1,84 @@
+{
+  "dataset": "synthetic-docflow-risk-v1",
+  "samples": 5,
+  "warning": "Five synthetic cases, not real-world risk recall; no OCR or LLM included.",
+  "precision": 1.0,
+  "recall": 1.0,
+  "f1": 1.0,
+  "exact_match_rate": 1.0,
+  "records": [
+    {
+      "scenario": "01_正常三单",
+      "job_status": "SUCCEEDED",
+      "expected": [],
+      "actual": [],
+      "tp": 0,
+      "fp": 0,
+      "fn": 0,
+      "exact_match": true,
+      "latency_ms": 200.42
+    },
+    {
+      "scenario": "02_金额超限",
+      "job_status": "SUCCEEDED",
+      "expected": [
+        "AMOUNT_HIERARCHY"
+      ],
+      "actual": [
+        "AMOUNT_HIERARCHY"
+      ],
+      "tp": 1,
+      "fp": 0,
+      "fn": 0,
+      "exact_match": true,
+      "latency_ms": 132.09
+    },
+    {
+      "scenario": "03_主体与日期异常",
+      "job_status": "SUCCEEDED",
+      "expected": [
+        "DATE_SEQUENCE",
+        "SUPPLIER_MATCH"
+      ],
+      "actual": [
+        "DATE_SEQUENCE",
+        "SUPPLIER_MATCH"
+      ],
+      "tp": 2,
+      "fp": 0,
+      "fn": 0,
+      "exact_match": true,
+      "latency_ms": 151.54
+    },
+    {
+      "scenario": "04_缺少发票",
+      "job_status": "SUCCEEDED",
+      "expected": [
+        "REQUIRED_DOCUMENTS"
+      ],
+      "actual": [
+        "REQUIRED_DOCUMENTS"
+      ],
+      "tp": 1,
+      "fp": 0,
+      "fn": 0,
+      "exact_match": true,
+      "latency_ms": 88.61
+    },
+    {
+      "scenario": "05_多发票待人工匹配",
+      "job_status": "SUCCEEDED",
+      "expected": [
+        "AMBIGUOUS_DOCUMENT_SET"
+      ],
+      "actual": [
+        "AMBIGUOUS_DOCUMENT_SET"
+      ],
+      "tp": 1,
+      "fp": 0,
+      "fn": 0,
+      "exact_match": true,
+      "latency_ms": 149.83
+    }
+  ]
+}
